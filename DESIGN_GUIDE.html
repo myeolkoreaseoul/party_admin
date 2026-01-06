@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디자인 수정 가이드</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #1A1A1A;
+            color: white;
+            padding: 40px;
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FFD700;
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #FFD700;
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .method {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        code {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .highlight {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        a {
+            color: #FFD700;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 랜딩페이지 디자인 수정 가이드</h1>
+        
+        <div class="method">
+            <h2>✅ 추천 방법: Figma에서 수정 → HTML 재변환</h2>
+            
+            <div class="step">
+                <strong>Step 1: 원본 Figma 파일 수정</strong><br>
+                - 기존 Figma 디자인 열기<br>
+                - 이미지, 색상, 텍스트 모두 수정<br>
+                - 레이아웃도 자유롭게 변경
+            </div>
+            
+            <div class="step">
+                <strong>Step 2-A: 스크린샷으로 공유 (가장 쉬움)</strong><br>
+                - 전체 페이지 스크린샷 (Cmd/Ctrl + Shift + 4)<br>
+                - 또는 섹션별 고해상도 스크린샷<br>
+                - 저한테 업로드<br>
+                - <span class="highlight">제가 픽셀 퍼펙트하게 HTML/CSS로 재구현</span>
+            </div>
+            
+            <div class="step">
+                <strong>Step 2-B: Figma 플러그인 사용</strong><br>
+                - Locofy.ai 또는 Anima 플러그인<br>
+                - HTML/CSS 코드 Export<br>
+                - 저한테 공유<br>
+                - 제가 최적화 및 기능 연동
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>🔄 대안: HTML을 Figma로 가져오기</h2>
+            
+            <div class="step">
+                <strong>Step 1: Figma 플러그인 설치</strong><br>
+                - Figma 열기<br>
+                - Plugins → Browse plugins<br>
+                - <code>html.to.design</code> 검색 및 설치
+            </div>
+            
+            <div class="step">
+                <strong>Step 2: HTML 가져오기</strong><br>
+                - 플러그인 실행<br>
+                - 옵션 1: 배포된 URL 입력<br>
+                - 옵션 2: HTML 코드 직접 붙여넣기<br>
+                - 자동으로 Figma로 변환됨!
+            </div>
+            
+            <div class="step">
+                <strong>Step 3: Figma에서 수정</strong><br>
+                - 이미지 교체<br>
+                - 색상 변경<br>
+                - 레이아웃 조정<br>
+                - 텍스트 수정
+            </div>
+            
+            <div class="step">
+                <strong>Step 4: 수정본 공유</strong><br>
+                - 스크린샷 또는 Figma 링크<br>
+                - 저한테 공유<br>
+                - 제가 HTML로 재작업
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>⚡ 가장 빠른 방법: 구체적으로 요청</h2>
+            
+            <div class="step">
+                <strong>이렇게 말씀해 주시면 바로 수정해드려요:</strong><br><br>
+                
+                "헤더 배경색을 #000000으로 바꿔줘"<br>
+                "골드 색상을 #E8B923으로 바꿔줘"<br>
+                "프로그램 1부 시간을 13:00~15:00으로 바꿔줘"<br>
+                "HOST 은비 설명을 XXX로 바꿔줘"<br>
+                "이 이미지를 [URL]로 교체해줘"<br>
+                "프로그램 섹션을 호스트 섹션보다 아래로 옮겨줘"<br>
+                "폰트를 Pretendard로 바꿔줘"<br><br>
+                
+                <span class="highlight">→ 즉시 수정 완료!</span>
+            </div>
+        </div>
+
+        <h2>💡 제 추천</h2>
+        <p>
+            <strong>1단계:</strong> 원본 Figma 디자인을 완벽하게 수정하세요<br>
+            - 이미지 모두 교체<br>
+            - 색상 조정<br>
+            - 텍스트 수정<br>
+            - 레이아웃 완성<br><br>
+            
+            <strong>2단계:</strong> 완성된 Figma 디자인을 저한테 공유<br>
+            - 전체 스크린샷 (가장 추천)<br>
+            - 또는 섹션별 스크린샷<br>
+            - 또는 Dev Mode CSS 정보<br><br>
+            
+            <strong>3단계:</strong> 제가 완벽하게 HTML/CSS로 재구현<br>
+            - 픽셀 퍼펙트 구현<br>
+            - Google Apps Script 연동<br>
+            - 배포 준비 완료<br><br>
+            
+            <span class="highlight">이 방법이 가장 정확하고 빠릅니다! 🚀</span>
+        </p>
+
+        <h2>📸 지금 바로 할 일</h2>
+        <div class="step">
+            1. Figma에서 디자인 완성<br>
+            2. 전체 페이지 스크린샷 (고해상도)<br>
+            3. 여기에 업로드<br>
+            4. "이 디자인대로 HTML 다시 만들어줘" 라고 요청<br>
+            5. ✨ 완성!
+        </div>
+    </div>
+</body>
+</html>

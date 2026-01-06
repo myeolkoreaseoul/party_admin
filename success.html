@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신청 완료 - 뭘 좀 아는 사람들</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #1A1A1A;
+            --bg-secondary: #151515;
+            --bg-dark: #101010;
+            --gold: #FFD700;
+            --gold-light: #FFE55C;
+            --white: #FFFFFF;
+            --gray-100: #F5F5F5;
+            --gray-200: #EEEEEE;
+            --gray-300: #E0E0E0;
+            --gray-400: #BDBDBD;
+            --gray-500: #9E9E9E;
+            --gray-600: #757575;
+            --gray-700: #616161;
+            --gray-800: #424242;
+            --gray-900: #212121;
+            --neon-green: #39FF14;
+            --success: #00C851;
+            --warning: #ffa726;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--white);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Success Animation */
+        .success-animation {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .success-icon-wrapper {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .success-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(57, 255, 20, 0.2), rgba(255, 215, 0, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .success-circle i {
+            font-size: 56px;
+            color: var(--neon-green);
+            animation: checkmark 0.6s ease-out;
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(100px) rotate(720deg); }
+        }
+
+        .success-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        .success-subtitle {
+            font-size: 18px;
+            color: var(--gray-300);
+            margin-bottom: 8px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(57, 255, 20, 0.15);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            border-radius: 30px;
+            padding: 10px 20px;
+            color: var(--neon-green);
+            font-weight: 500;
+            margin-top: 16px;
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 167, 38, 0.15);
+            border-color: rgba(255, 167, 38, 0.3);
+            color: var(--warning);
+        }
+
+        /* Info Card */
+        .info-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .info-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card h3 i {
+            color: var(--gold);
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-item-icon i {
+            color: var(--gold);
+            font-size: 18px;
+        }
+
+        .info-item-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .info-item-content p {
+            font-size: 14px;
+            color: var(--gray-400);
+            line-height: 1.5;
+        }
+
+        /* Steps Card */
+        .steps-card {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .steps-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold);
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--bg-dark);
+        }
+
+        .step-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: var(--gray-400);
+            line-height: 1.5;
+        }
+
+        .step-content .highlight {
+            color: var(--neon-green);
+            font-weight: 600;
+        }
+
+        /* CTA Button */
+        .cta-section {
+            margin-top: 10px;
+        }
+
+        .btn-frip {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border: none;
+            border-radius: 16px;
+            padding: 20px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .btn-frip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-frip i {
+            font-size: 20px;
+        }
+
+        .price-info {
+            text-align: center;
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+
+        .price-info p {
+            font-size: 14px;
+            color: var(--gray-400);
+        }
+
+        .price-info .prices {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .price-info .price-item {
+            font-size: 16px;
+            color: var(--white);
+        }
+
+        .price-info .price-item strong {
+            color: var(--gold);
+        }
+
+        /* Notice */
+        .notice {
+            background: rgba(255, 167, 38, 0.1);
+            border: 1px solid rgba(255, 167, 38, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .notice i {
+            color: var(--warning);
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .notice p {
+            font-size: 14px;
+            color: var(--warning);
+            line-height: 1.6;
+        }
+
+        .notice.success-notice {
+            background: rgba(57, 255, 20, 0.1);
+            border-color: rgba(57, 255, 20, 0.3);
+        }
+
+        .notice.success-notice i,
+        .notice.success-notice p {
+            color: var(--neon-green);
+        }
+
+        .notice.wine-notice {
+            background: linear-gradient(135deg, rgba(128, 0, 128, 0.2), rgba(255, 215, 0, 0.15));
+            border-color: rgba(128, 0, 128, 0.4);
+        }
+
+        .notice.wine-notice i {
+            color: #9b59b6;
+        }
+
+        .notice.wine-notice p {
+            color: var(--white);
+        }
+
+        /* Back Link */
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link a {
+            color: var(--gray-500);
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: var(--white);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px;
+            }
+
+            .success-title {
+                font-size: 26px;
+            }
+
+            .success-subtitle {
+                font-size: 16px;
+            }
+
+            .info-card,
+            .steps-card {
+                padding: 24px 20px;
+            }
+
+            .success-icon-wrapper {
+                width: 100px;
+                height: 100px;
+            }
+
+            .success-circle i {
+                font-size: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Success Animation -->
+        <div class="success-animation">
+            <div class="success-icon-wrapper">
+                <div class="success-circle">
+                    <i class="fas fa-check"></i>
+                </div>
+            </div>
+            <h1 class="success-title">신청이 완료되었습니다!</h1>
+            <p class="success-subtitle" id="subtitleText">인비테이션 패스가 승인되었습니다</p>
+            <div class="status-badge" id="statusBadge">
+                <i class="fas fa-check-circle"></i>
+                <span id="statusText">승인 완료</span>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card" id="infoCard">
+            <h3><i class="fas fa-ticket-alt"></i> 신청 정보</h3>
+            <div class="info-item">
+                <div class="info-item-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="info-item-content">
+                    <h4>자격 요건</h4>
+                    <p id="qualificationInfo">-</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="info-item-content">
+                    <h4>인증 방법</h4>
+                    <p id="authTypeInfo">-</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-icon">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="info-item-content">
+                    <h4>전화번호</h4>
+                    <p id="contactInfo">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Steps Card -->
+        <div class="steps-card">
+            <h3><i class="fas fa-list-ol"></i> 다음 단계 안내</h3>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>프립에서 예약하기</h4>
+                    <p>아래 버튼을 클릭하여 프립 상세페이지로 이동 후 <strong>'초대장' 옵션</strong>을 선택하여 예약해주세요.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>파티 참석하기</h4>
+                    <p>예약 확정 후 파티 당일에 참석해주세요. <span id="onsiteNote"></span></p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>참가비 환급받기</h4>
+                    <p>참석 확인 및 인증 완료 후 <span class="highlight">참가비 전액 환급</span>됩니다!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <a href="https://www.frip.co.kr/products/188435" target="_blank" class="btn-frip" id="fripBtn">
+                <i class="fas fa-external-link-alt"></i>
+                프립에서 예약하기
+            </a>
+
+            <div class="price-info">
+                <p>초대장 옵션 (인비테이션 패스 적용)</p>
+                <div class="prices">
+                    <span class="price-item">☕ 커피: <strong>5,000원</strong></span>
+                    <span class="price-item">🍷 와인: <strong>10,000원</strong></span>
+                </div>
+            </div>
+
+            <!-- Notice for onsite verification -->
+            <div class="notice" id="onsiteNotice" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>현장 인증을 선택하셨습니다. 파티 당일 <strong>신분증, 명함 등 증빙서류</strong>를 지참해주세요. 현장에서 인증이 확인되면 환급됩니다.</p>
+            </div>
+
+            <!-- Notice for coupon verification -->
+            <div class="notice success-notice" id="couponNotice" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <p>쿠폰이 확인되었습니다. 추가 인증 없이 바로 환급 대상입니다!</p>
+            </div>
+
+            <!-- Wine bonus notice -->
+            <div class="notice wine-notice" id="wineBonusNotice" style="display: none;">
+                <i class="fas fa-wine-bottle"></i>
+                <p>🎉 <strong>2개 영역 이상 선택!</strong> 파티 당일 와인 1병이 선물로 제공됩니다!</p>
+            </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="back-link">
+            <a href="index.html"><i class="fas fa-arrow-left"></i> 메인 페이지로 돌아가기</a>
+        </div>
+    </div>
+
+    <script>
+        // Qualification labels
+        const qualificationLabels = {
+            '직업': '전문직/대기업/공기업/공무원',
+            '학력': 'SKY 및 해외대학 졸업자',
+            '연봉자산': '연봉 8천만원 / 자산 5억원 이상',
+            'SNS': '소셜미디어 팔로워 5천명 이상',
+            '운동': '크로스핏/마라톤 완주 또는 체지방 미만',
+            '외모': '승무원/아나운서/미인대회 등',
+            '득표3표': '기존 파티 동시 득표 3표 이상',
+            '추천': '호스트 추천'
+        };
+
+        // Auth type labels
+        const authTypeLabels = {
+            'upload': '증빙자료 첨부 완료',
+            'onsite': '현장에서 인증 예정',
+            'coupon': '쿠폰 코드 확인 완료',
+            'host_referral': '호스트 추천 (심사 예정)',
+            'unknown': '확인 중'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const qualificationsParam = urlParams.get('qualifications') || '';
+            const authType = urlParams.get('authType') || '';
+            const phone = urlParams.get('phone') || '';
+            const wineBonus = urlParams.get('wineBonus') === 'true';
+
+            const qualifications = qualificationsParam ? qualificationsParam.split(',') : [];
+
+            // Update qualification info (여러 개면 쉼표로 구분)
+            if (qualifications.length > 0) {
+                const labels = qualifications.map(q => qualificationLabels[q] || q);
+                document.getElementById('qualificationInfo').textContent = labels.join(', ');
+            } else {
+                document.getElementById('qualificationInfo').textContent = '-';
+            }
+
+            // Update auth type info
+            document.getElementById('authTypeInfo').textContent = 
+                authTypeLabels[authType] || authType || '-';
+
+            // Update phone info (mask middle part for privacy)
+            if (phone) {
+                // 전화번호 마스킹: 010-****-1234 형식
+                const cleanPhone = phone.replace(/-/g, '');
+                if (cleanPhone.length === 11) {
+                    document.getElementById('contactInfo').textContent = 
+                        cleanPhone.substring(0, 3) + '-****-' + cleanPhone.slice(-4);
+                } else {
+                    document.getElementById('contactInfo').textContent = phone;
+                }
+            }
+
+            // 와인 보너스 표시
+            if (wineBonus) {
+                const wineBonusEl = document.getElementById('wineBonusNotice');
+                if (wineBonusEl) {
+                    wineBonusEl.style.display = 'flex';
+                }
+            }
+
+            // Update based on auth type
+            if (authType === 'onsite') {
+                document.getElementById('subtitleText').textContent = '현장 인증으로 신청되었습니다';
+                document.getElementById('statusBadge').classList.add('pending');
+                document.getElementById('statusText').textContent = '현장 인증 대기';
+                document.getElementById('onsiteNote').textContent = '증빙서류를 지참해주세요.';
+                document.getElementById('onsiteNotice').style.display = 'flex';
+            } else if (authType === 'coupon') {
+                document.getElementById('subtitleText').textContent = '쿠폰이 확인되어 인비테이션 패스가 승인되었습니다';
+                document.getElementById('statusText').textContent = '즉시 승인';
+                document.getElementById('couponNotice').style.display = 'flex';
+            } else if (authType === 'host_referral') {
+                document.getElementById('subtitleText').textContent = '호스트 추천 심사가 진행됩니다';
+                document.getElementById('statusBadge').classList.add('pending');
+                document.getElementById('statusText').textContent = '심사 중';
+            } else if (authType === 'upload') {
+                document.getElementById('subtitleText').textContent = '증빙자료가 제출되어 인비테이션 패스가 승인되었습니다';
+                document.getElementById('statusText').textContent = '승인 완료';
+            }
+
+            // Add confetti animation
+            createConfetti();
+        });
+
+        // Confetti animation
+        function createConfetti() {
+            const wrapper = document.querySelector('.success-icon-wrapper');
+            const colors = ['#FFD700', '#39FF14', '#FF6B6B', '#4ECDC4', '#A855F7'];
+            
+            for (let i = 0; i < 12; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = (Math.random() * 100) + '%';
+                confetti.style.top = (Math.random() * 100) + '%';
+                confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+                wrapper.appendChild(confetti);
+            }
+        }
+    </script>
+</body>
+</html>

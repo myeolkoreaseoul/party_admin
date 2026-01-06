@@ -1,0 +1,1731 @@
+// ========================================
+// 뭘 좀 아는 사람들 - GAS v7 (정규화 구조)
+// 고객마스터 중심 데이터 관리
+// ========================================
+
+const SPREADSHEET_ID = '1dZGU-x2xNgFSGyv_esL95AZ5A20EtWbwgHCpLjFYtiU';
+const DRIVE_FOLDER_NAME = '뭘좀아는사람들_인증자료';
+
+// ========================================
+// doGet - 읽기 전용 요청
+// ========================================
+function doGet(e) {
+  var action = e.parameter.action || 'read';
+  
+  try {
+    // === 시트 데이터 읽기 ===
+    if (action === 'read') {
+      var sheetName = e.parameter.sheet;
+      if (!sheetName) {
+        return jsonResponse(false, 'sheet 파라미터가 필요합니다');
+      }
+      return readSheet(sheetName);
+    }
+    
+    // === 고객 통합 조회 (관리자 페이지용) - 기존 방식 ===
+    if (action === 'getCustomers') {
+      return getCustomersWithDetails();
+    }
+    
+    // === 통합 고객 조회 (1예약=1행, 새 방식) ===
+    if (action === 'getIntegratedCustomers') {
+      return getIntegratedCustomers();
+    }
+    
+    // === 통합뷰 새로고침 ===
+    if (action === 'refreshIntegratedView') {
+      var count = generateIntegratedView();
+      return jsonResponse(true, '통합뷰 갱신 완료', { rowCount: count });
+    }
+    
+    // === 쿠폰 검증 ===
+    if (action === 'verifyCoupon') {
+      var code = (e.parameter.code || '').toUpperCase().trim();
+      return verifyCoupon(code);
+    }
+    
+    // === Tasker용: 프립 예약/취소 ===
+    if (action === 'fripReservation') {
+      var message = decodeURIComponent(e.parameter.message || '');
+      return handleFripReservation(message);
+    }
+    
+    // === Tasker용: 사전조사 미작성자 ===
+    if (action === 'getUnsurveyed') {
+      return getUnsurveyed();
+    }
+    
+    // === Tasker용: 설문 완료자 ===
+    if (action === 'getNewSurveyCompleted') {
+      return getNewSurveyCompleted();
+    }
+    
+    // === Tasker용: 프립 미예약자 ===
+    if (action === 'getUnreserved') {
+      return getUnreserved();
+    }
+    
+    // === 웹사이트용: 라인업 JSON ===
+    if (action === 'getLineup') {
+      return getLineupForWebsite();
+    }
+    
+    // === 사전조사 중복 체크 ===
+    if (action === 'checkSurvey') {
+      var phone = e.parameter.phone || '';
+      return checkSurveyDuplicate(phone);
+    }
+    
+    // === 기본: 모든 시트 목록 ===
+    return getSheetList();
+    
+  } catch (error) {
+    return jsonResponse(false, '오류: ' + error.toString());
+  }
+}
+
+// ========================================
+// doPost - 쓰기/수정/삭제 요청
+// ========================================
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var action = data.action;
+    
+    // === 행 추가 ===
+    if (action === 'write') {
+      return writeRow(data.sheet, data.row);
+    }
+    
+    // === 행 수정 ===
+    if (action === 'update') {
+      return updateRow(data.sheet, data.rowIndex, data.row);
+    }
+    
+    // === 행 삭제 ===
+    if (action === 'delete') {
+      return deleteRow(data.sheet, data.rowIndex);
+    }
+    
+    // === 다중 행 추가 ===
+    if (action === 'writeMultiple') {
+      return writeMultipleRows(data.sheet, data.rows);
+    }
+    
+    // === 다중 행 수정 ===
+    if (action === 'updateMultiple') {
+      return updateMultipleRows(data.sheet, data.updates);
+    }
+    
+    // === 초대장 신청 (웹사이트용) ===
+    if (action === 'verification') {
+      return handleVerification(data);
+    }
+    
+    // === 프립 예약/취소 (Tasker용) ===
+    if (action === 'fripReservation') {
+      return handleFripReservation(data.message || '');
+    }
+    
+    // === 쿠폰 검증 ===
+    if (action === 'verifyCoupon') {
+      var code = (data.code || '').toUpperCase().trim();
+      return verifyCoupon(code);
+    }
+    
+    // === 사전조사 제출 ===
+    if (action === 'submitSurvey') {
+      return handleSurveySubmit(data);
+    }
+    
+    // === 고객마스터 수정 ===
+    if (action === 'updateCustomer') {
+      return updateCustomerMaster(data.phone, data.updates);
+    }
+    
+    return jsonResponse(false, '알 수 없는 action: ' + action);
+    
+  } catch (error) {
+    return jsonResponse(false, '오류: ' + error.toString());
+  }
+}
+
+
+// ========================================
+// 고객마스터 관리 함수들
+// ========================================
+
+// 고객마스터 시트 초기화 (없으면 생성)
+function getOrCreateCustomerMasterSheet(ss) {
+  var sheet = ss.getSheetByName('고객마스터');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('고객마스터');
+    sheet.appendRow([
+      '연락처', '이름', '성별', '출생연도', '신장', 
+      '직업분류', '직업상세', '직업인증서류', 
+      '유입경로', '최초등록일', '최종수정일', '메모'
+    ]);
+    // 연락처 컬럼 서식 (중복 방지 하이라이트용)
+    sheet.getRange('A:A').setNumberFormat('@');
+  }
+  
+  return sheet;
+}
+
+// 고객마스터에서 연락처로 찾기
+function findCustomerByPhone(ss, phone) {
+  var sheet = ss.getSheetByName('고객마스터');
+  if (!sheet) return null;
+  
+  var normalizedPhone = normalizePhone(phone);
+  var data = sheet.getDataRange().getValues();
+  
+  for (var i = 1; i < data.length; i++) {
+    if (normalizePhone(data[i][0]) === normalizedPhone) {
+      return {
+        rowIndex: i + 1,
+        data: {
+          '연락처': data[i][0],
+          '이름': data[i][1],
+          '성별': data[i][2],
+          '출생연도': data[i][3],
+          '신장': data[i][4],
+          '직업분류': data[i][5],
+          '직업상세': data[i][6],
+          '직업인증서류': data[i][7],
+          '유입경로': data[i][8],
+          '최초등록일': data[i][9],
+          '최종수정일': data[i][10],
+          '메모': data[i][11]
+        }
+      };
+    }
+  }
+  
+  return null;
+}
+
+// 고객마스터에 신규 생성 또는 업데이트
+function upsertCustomerMaster(ss, phone, customerData, source) {
+  var sheet = getOrCreateCustomerMasterSheet(ss);
+  var normalizedPhone = normalizePhone(phone);
+  var formattedPhone = formatPhone(phone);
+  var existing = findCustomerByPhone(ss, phone);
+  var now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+  
+  if (existing) {
+    // 기존 고객 업데이트 (비어있는 필드만 채움)
+    var rowIndex = existing.rowIndex;
+    var headers = ['연락처', '이름', '성별', '출생연도', '신장', '직업분류', '직업상세', '직업인증서류', '유입경로', '최초등록일', '최종수정일', '메모'];
+    
+    var updatedRow = headers.map(function(h, idx) {
+      if (h === '최종수정일') return now;
+      if (h === '연락처') return existing.data['연락처'] || formattedPhone;
+      if (h === '최초등록일') return existing.data['최초등록일'];
+      if (h === '메모') return existing.data['메모'];
+      
+      // 새 데이터가 있고, 기존 데이터가 비어있으면 업데이트
+      if (customerData[h] && !existing.data[h]) {
+        return customerData[h];
+      }
+      // 강제 업데이트 플래그가 있으면 덮어쓰기
+      if (customerData[h] && customerData._forceUpdate) {
+        return customerData[h];
+      }
+      return existing.data[h] || '';
+    });
+    
+    sheet.getRange(rowIndex, 1, 1, updatedRow.length).setValues([updatedRow]);
+    
+    return { action: 'updated', rowIndex: rowIndex };
+    
+  } else {
+    // 신규 고객 생성
+    sheet.appendRow([
+      formattedPhone,
+      customerData['이름'] || '',
+      customerData['성별'] || '',
+      customerData['출생연도'] || '',
+      customerData['신장'] || '',
+      customerData['직업분류'] || '',
+      customerData['직업상세'] || '',
+      customerData['직업인증서류'] || '',
+      source || 'unknown',
+      now,
+      now,
+      ''
+    ]);
+    
+    return { action: 'created', rowIndex: sheet.getLastRow() };
+  }
+}
+
+// 고객마스터 직접 수정 (관리자용)
+function updateCustomerMaster(phone, updates) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var existing = findCustomerByPhone(ss, phone);
+  
+  if (!existing) {
+    return jsonResponse(false, '고객을 찾을 수 없습니다');
+  }
+  
+  updates._forceUpdate = true;
+  var result = upsertCustomerMaster(ss, phone, updates, null);
+  
+  return jsonResponse(true, '고객 정보가 수정되었습니다', result);
+}
+
+
+// ========================================
+// 고객 통합 조회 (관리자 페이지용)
+// ========================================
+function getCustomersWithDetails() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // 고객마스터 읽기
+  var customerSheet = ss.getSheetByName('고객마스터');
+  var customers = [];
+  
+  if (customerSheet) {
+    var customerData = customerSheet.getDataRange().getValues();
+    var customerHeaders = customerData[0];
+    
+    for (var i = 1; i < customerData.length; i++) {
+      var customer = { _rowIndex: i + 1 };
+      for (var j = 0; j < customerHeaders.length; j++) {
+        customer[customerHeaders[j]] = customerData[i][j];
+      }
+      customer._normalizedPhone = normalizePhone(customer['연락처']);
+      customers.push(customer);
+    }
+  }
+  
+  // 초대장 신청 읽기
+  var invSheet = ss.getSheetByName('초대장 신청');
+  var invitations = [];
+  
+  if (invSheet) {
+    var invData = invSheet.getDataRange().getValues();
+    var invHeaders = invData[0];
+    
+    for (var i = 1; i < invData.length; i++) {
+      var inv = { _rowIndex: i + 1 };
+      for (var j = 0; j < invHeaders.length; j++) {
+        inv[invHeaders[j]] = invData[i][j];
+      }
+      inv._normalizedPhone = normalizePhone(inv['전화번호']);
+      invitations.push(inv);
+    }
+  }
+  
+  // 프립예약 읽기
+  var fripSheet = ss.getSheetByName('프립예약');
+  var reservations = [];
+  
+  if (fripSheet) {
+    var fripData = fripSheet.getDataRange().getValues();
+    var fripHeaders = fripData[0];
+    
+    for (var i = 1; i < fripData.length; i++) {
+      var res = { _rowIndex: i + 1 };
+      for (var j = 0; j < fripHeaders.length; j++) {
+        res[fripHeaders[j]] = fripData[i][j];
+      }
+      res._normalizedPhone = normalizePhone(res['크루연락처']);
+      reservations.push(res);
+    }
+  }
+  
+  // 고객별로 데이터 조합
+  var result = customers.map(function(customer) {
+    var phone = customer._normalizedPhone;
+    
+    // 해당 고객의 초대장 찾기
+    var customerInv = invitations.find(function(inv) {
+      return inv._normalizedPhone === phone;
+    });
+    
+    // 해당 고객의 모든 예약 찾기
+    var customerReservations = reservations.filter(function(res) {
+      return res._normalizedPhone === phone;
+    });
+    
+    // 상태 계산
+    var hasSurvey = customer['성별'] && customer['출생연도'];
+    var activeReservations = customerReservations.filter(function(r) {
+      return r['상태'] === '예약완료';
+    });
+    
+    var status = '미확인';
+    if (hasSurvey && activeReservations.length > 0) {
+      status = '참여확정';
+    } else if (activeReservations.length > 0) {
+      status = '조사필요';
+    } else if (customerInv) {
+      status = '예약대기';
+    }
+    
+    return {
+      // 고객 기본 정보
+      연락처: customer['연락처'],
+      이름: customer['이름'],
+      성별: customer['성별'],
+      출생연도: customer['출생연도'],
+      신장: customer['신장'],
+      직업분류: customer['직업분류'],
+      직업상세: customer['직업상세'],
+      유입경로: customer['유입경로'],
+      최초등록일: customer['최초등록일'],
+      
+      // 초대장 정보
+      초대장: customerInv ? {
+        선택자격: customerInv['선택자격'],
+        와인보너스: customerInv['와인보너스'],
+        인증방법: customerInv['인증방법'],
+        승인상태: customerInv['승인상태'],
+        배포처: customerInv['배포처']
+      } : null,
+      
+      // 예약 목록 (다중 예약)
+      예약목록: customerReservations.map(function(r) {
+        return {
+          진행일시: r['진행일시'],
+          옵션: r['옵션'],
+          예약번호: r['예약번호'],
+          상태: r['상태'],
+          등록일시: r['등록일시']
+        };
+      }),
+      
+      // 계산된 상태
+      예약수: activeReservations.length,
+      사전조사완료: hasSurvey,
+      현재상태: status,
+      
+      _rowIndex: customer._rowIndex
+    };
+  });
+  
+  return jsonResponse(true, '고객 데이터 조회 완료', {
+    customers: result,
+    total: result.length
+  });
+}
+
+
+// ========================================
+// CRUD 함수들
+// ========================================
+
+function getSheetList() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheets = ss.getSheets();
+  var names = sheets.map(function(s) { return s.getName(); });
+  return jsonResponse(true, '시트 목록', { sheets: names });
+}
+
+function readSheet(sheetName) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    return jsonResponse(false, '시트를 찾을 수 없습니다: ' + sheetName);
+  }
+  
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var rows = [];
+  
+  for (var i = 1; i < data.length; i++) {
+    var row = { _rowIndex: i + 1 };
+    for (var j = 0; j < headers.length; j++) {
+      row[headers[j]] = data[i][j];
+    }
+    rows.push(row);
+  }
+  
+  return jsonResponse(true, '데이터 조회 완료', {
+    sheet: sheetName,
+    headers: headers,
+    rows: rows,
+    totalRows: rows.length
+  });
+}
+
+function writeRow(sheetName, rowData) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    return jsonResponse(false, '시트를 찾을 수 없습니다: ' + sheetName);
+  }
+  
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var newRow = headers.map(function(h) { return rowData[h] || ''; });
+  
+  sheet.appendRow(newRow);
+  var newRowIndex = sheet.getLastRow();
+  
+  return jsonResponse(true, '행 추가 완료', { rowIndex: newRowIndex });
+}
+
+function updateRow(sheetName, rowIndex, rowData) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    return jsonResponse(false, '시트를 찾을 수 없습니다: ' + sheetName);
+  }
+  
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var updatedRow = headers.map(function(h) { return rowData[h] !== undefined ? rowData[h] : ''; });
+  
+  sheet.getRange(rowIndex, 1, 1, updatedRow.length).setValues([updatedRow]);
+  
+  return jsonResponse(true, '행 수정 완료', { rowIndex: rowIndex });
+}
+
+function deleteRow(sheetName, rowIndex) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    return jsonResponse(false, '시트를 찾을 수 없습니다: ' + sheetName);
+  }
+  
+  sheet.deleteRow(rowIndex);
+  
+  return jsonResponse(true, '행 삭제 완료', { rowIndex: rowIndex });
+}
+
+function writeMultipleRows(sheetName, rows) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    return jsonResponse(false, '시트를 찾을 수 없습니다: ' + sheetName);
+  }
+  
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var newRows = rows.map(function(rowData) {
+    return headers.map(function(h) { return rowData[h] || ''; });
+  });
+  
+  var startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+  
+  return jsonResponse(true, newRows.length + '개 행 추가 완료', { startRow: startRow });
+}
+
+function updateMultipleRows(sheetName, updates) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    return jsonResponse(false, '시트를 찾을 수 없습니다: ' + sheetName);
+  }
+  
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  
+  updates.forEach(function(update) {
+    var rowIndex = update.rowIndex;
+    var rowData = update.row;
+    var updatedRow = headers.map(function(h) { return rowData[h] !== undefined ? rowData[h] : ''; });
+    sheet.getRange(rowIndex, 1, 1, updatedRow.length).setValues([updatedRow]);
+  });
+  
+  return jsonResponse(true, updates.length + '개 행 수정 완료');
+}
+
+
+// ========================================
+// 쿠폰 검증
+// ========================================
+function verifyCoupon(code) {
+  if (!code) {
+    return jsonResponse(false, '쿠폰 코드를 입력해주세요');
+  }
+  
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('쿠폰관리');
+  
+  if (!sheet) {
+    return jsonResponse(false, '쿠폰관리 시트가 없습니다');
+  }
+  
+  var data = sheet.getDataRange().getValues();
+  
+  for (var i = 1; i < data.length; i++) {
+    var couponCode = String(data[i][0]).toUpperCase().trim();
+    var isActive = String(data[i][1]).toUpperCase() === 'TRUE';
+    
+    if (couponCode === code) {
+      if (isActive) {
+        return jsonResponse(true, '유효한 쿠폰입니다');
+      } else {
+        return jsonResponse(false, '만료된 쿠폰입니다');
+      }
+    }
+  }
+  
+  return jsonResponse(false, '유효하지 않은 쿠폰 코드입니다');
+}
+
+
+// ========================================
+// Tasker용: 프립 예약/취소 처리
+// ========================================
+function handleFripReservation(message) {
+  if (!message) {
+    return jsonResponse(false, '메시지가 없습니다');
+  }
+  
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  if (message.indexOf('프립 판매 안내') > -1) {
+    return handleNewReservation(ss, message);
+  } else if (message.indexOf('프립 결제 취소 안내') > -1) {
+    return handleCancelReservation(ss, message);
+  } else if (message.indexOf('프립 판매 중지 안내') > -1) {
+    return jsonResponse(true, '판매 중지 안내는 처리하지 않습니다');
+  } else if (message.indexOf('1:1문의 등록') > -1) {
+    return jsonResponse(true, '1:1 문의는 처리하지 않습니다');
+  }
+  
+  return jsonResponse(false, '알 수 없는 메시지 유형');
+}
+
+// 신규 예약 처리 (고객마스터 연동)
+function handleNewReservation(ss, message) {
+  var sheet = ss.getSheetByName('프립예약');
+
+  if (!sheet) {
+    sheet = ss.insertSheet('프립예약');
+    sheet.appendRow(['진행일시', '옵션', '크루명', '크루연락처', '예약번호', '등록일시', '상태', '사전조사완료', '사전조사독촉발송', '예약확정문자발송']);
+  }
+
+  var eventDate = extractBetween(message, '- 진행일시:', '- 옵션:');
+  var option = extractBetween(message, '- 옵션:', '- 수량:');
+  var crewName = extractBetween(message, '- 크루:', '- 크루 연락처:');
+  var crewPhone = extractBetween(message, '- 크루 연락처:', '- 신청 마감');
+  crewPhone = formatPhone(crewPhone);
+  var reservationId = extractValue(message, 'detail/(\\d+)');
+
+  // ⚠️ 중복 체크: 예약번호로 기존 예약 확인
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][4]) === reservationId) {
+      return jsonResponse(true, '이미 등록된 예약입니다', {
+        duplicate: true,
+        reservationId: reservationId,
+        crewPhone: crewPhone
+      });
+    }
+  }
+
+  // 프립예약 시트에 저장
+  sheet.appendRow([
+    eventDate.trim(),
+    option.trim(),
+    crewName.trim(),
+    crewPhone.trim(),
+    reservationId,
+    new Date(),
+    '예약완료',
+    'N',
+    'N',
+    'N'
+  ]);
+  
+  // 고객마스터에 추가/업데이트
+  var isInvitation = option.indexOf('인비테이션') > -1 || option.indexOf('invitation') > -1;
+  var source = isInvitation ? 'invitation' : 'organic';
+  
+  upsertCustomerMaster(ss, crewPhone, {
+    '이름': crewName.trim()
+  }, source);
+  
+  return jsonResponse(true, '신규 예약 기록 완료', {
+    crewName: crewName.trim(),
+    crewPhone: crewPhone.trim()
+  });
+}
+
+// 예약 취소 처리
+function handleCancelReservation(ss, message) {
+  var sheet = ss.getSheetByName('프립예약');
+  
+  if (!sheet) {
+    return jsonResponse(false, '프립예약 시트가 없습니다');
+  }
+  
+  var reservationId = extractValue(message, 'detail/(\\d+)');
+  var data = sheet.getDataRange().getValues();
+  
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][4]) === reservationId) {
+      sheet.getRange(i + 1, 7).setValue('취소됨');
+      return jsonResponse(true, '예약 취소 처리 완료', { reservationId: reservationId });
+    }
+  }
+  
+  return jsonResponse(false, '해당 예약을 찾지 못했습니다');
+}
+
+
+// ========================================
+// Tasker용: 사전조사 미작성자
+// ========================================
+function getUnsurveyed() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var fripSheet = ss.getSheetByName('프립예약');
+  var customerSheet = ss.getSheetByName('고객마스터');
+  
+  if (!fripSheet) {
+    return jsonResponse(true, '', { count: 0 });
+  }
+  
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  var fripData = fripSheet.getDataRange().getValues();
+  var fripHeaders = fripData[0];
+  var sentColIndex = fripHeaders.indexOf('사전조사독촉발송');
+  
+  // 고객마스터에서 사전조사 완료 여부 확인
+  var surveyedPhones = [];
+  if (customerSheet) {
+    var customerData = customerSheet.getDataRange().getValues();
+    for (var c = 1; c < customerData.length; c++) {
+      // 성별과 출생연도가 있으면 사전조사 완료로 판단
+      if (customerData[c][2] && customerData[c][3]) {
+        surveyedPhones.push(normalizePhone(customerData[c][0]));
+      }
+    }
+  }
+  
+  // 미작성자 찾기
+  for (var i = 1; i < fripData.length; i++) {
+    var status = fripData[i][6];
+    if (status !== '예약완료') continue;
+    
+    var eventDate = parseEventDate(fripData[i][0]);
+    if (!eventDate || eventDate < today) continue;
+    
+    var phone = normalizePhone(fripData[i][3]);
+    var sent = fripData[i][sentColIndex];
+    
+    if (sent !== 'Y' && surveyedPhones.indexOf(phone) === -1) {
+      // 독촉 발송 표시
+      if (sentColIndex > -1) {
+        fripSheet.getRange(i + 1, sentColIndex + 1).setValue('Y');
+      }
+      
+      return jsonResponse(true, '', {
+        name: fripData[i][2],
+        phone: '0' + phone,
+        count: 1
+      });
+    }
+  }
+  
+  return jsonResponse(true, '', { count: 0 });
+}
+
+
+// ========================================
+// Tasker용: 설문 완료자
+// ========================================
+function getNewSurveyCompleted() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var fripSheet = ss.getSheetByName('프립예약');
+  var customerSheet = ss.getSheetByName('고객마스터');
+  
+  if (!fripSheet || !customerSheet) {
+    return jsonResponse(true, '', { count: 0 });
+  }
+  
+  var fripData = fripSheet.getDataRange().getValues();
+  var fripHeaders = fripData[0];
+  var surveyColIndex = fripHeaders.indexOf('사전조사완료');
+  var sentColIndex = fripHeaders.indexOf('예약확정문자발송');
+  
+  // 고객마스터에서 사전조사 완료된 전화번호
+  var surveyedPhones = {};
+  var customerData = customerSheet.getDataRange().getValues();
+  for (var c = 1; c < customerData.length; c++) {
+    if (customerData[c][2] && customerData[c][3]) { // 성별, 출생연도
+      surveyedPhones[normalizePhone(customerData[c][0])] = true;
+    }
+  }
+  
+  // 예약 중 사전조사 완료 + 문자 미발송 찾기
+  for (var i = 1; i < fripData.length; i++) {
+    var status = fripData[i][6];
+    if (status !== '예약완료') continue;
+    
+    var phone = normalizePhone(fripData[i][3]);
+    var surveyDone = fripData[i][surveyColIndex];
+    var sent = fripData[i][sentColIndex];
+    
+    if (surveyedPhones[phone] && sent !== 'Y') {
+      // 사전조사완료 Y로 업데이트
+      if (surveyColIndex > -1) {
+        fripSheet.getRange(i + 1, surveyColIndex + 1).setValue('Y');
+      }
+      // 발송 표시
+      if (sentColIndex > -1) {
+        fripSheet.getRange(i + 1, sentColIndex + 1).setValue('Y');
+      }
+      
+      return jsonResponse(true, '', {
+        phone: '0' + phone,
+        eventDate: fripData[i][0],
+        option: fripData[i][1],
+        count: 1
+      });
+    }
+  }
+  
+  return jsonResponse(true, '', { count: 0 });
+}
+
+
+// ========================================
+// Tasker용: 프립 미예약자
+// ========================================
+function getUnreserved() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var invSheet = ss.getSheetByName('초대장 신청');
+  var fripSheet = ss.getSheetByName('프립예약');
+  
+  if (!invSheet || !fripSheet) {
+    return jsonResponse(true, '', { count: 0 });
+  }
+  
+  var invData = invSheet.getDataRange().getValues();
+  var headers = invData[0];
+  
+  var phoneColIndex = headers.indexOf('전화번호');
+  var sentColIndex = headers.indexOf('예약독촉발송');
+  var timestampColIndex = headers.indexOf('프립이동일시');
+  
+  if (phoneColIndex === -1) phoneColIndex = 0;
+  if (sentColIndex === -1) {
+    sentColIndex = headers.length;
+    invSheet.getRange(1, sentColIndex + 1).setValue('예약독촉발송');
+  }
+  
+  // 프립예약 전화번호 목록
+  var fripData = fripSheet.getDataRange().getValues();
+  var reservedPhones = [];
+  for (var f = 1; f < fripData.length; f++) {
+    reservedPhones.push(normalizePhone(fripData[f][3]));
+  }
+  
+  var now = new Date();
+  var tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+  
+  for (var i = 1; i < invData.length; i++) {
+    if (invData[i][sentColIndex] === 'Y') continue;
+    
+    var phone = normalizePhone(invData[i][phoneColIndex]);
+    if (!phone) continue;
+    
+    var timestamp = invData[i][timestampColIndex];
+    if (!timestamp) continue;
+    
+    var applyTime = new Date(timestamp);
+    if (applyTime > tenMinutesAgo) continue;
+    
+    if (reservedPhones.indexOf(phone) === -1) {
+      invSheet.getRange(i + 1, sentColIndex + 1).setValue('Y');
+      
+      return jsonResponse(true, '', {
+        phone: '0' + phone,
+        count: 1
+      });
+    }
+  }
+  
+  return jsonResponse(true, '', { count: 0 });
+}
+
+
+// ========================================
+// 웹사이트용: 라인업 JSON
+// ========================================
+function getLineupForWebsite() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var lineupSheet = ss.getSheetByName('파티별라인업');
+  
+  if (!lineupSheet) {
+    return jsonResponse(true, '라인업 데이터', { parties: [] });
+  }
+  
+  var data = lineupSheet.getDataRange().getValues();
+  var headers = data[0];
+  
+  var cols = {};
+  headers.forEach(function(h, idx) { cols[h] = idx; });
+  
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  var parties = {};
+  
+  for (var i = 1; i < data.length; i++) {
+    var dateVal = data[i][cols['날짜']];
+    var partyName = data[i][cols['파티']];
+    var time = data[i][cols['시간']];
+    var gender = data[i][cols['성별']];
+    var birthYear = data[i][cols['출생연도']];
+    var height = data[i][cols['키']];
+    var job = data[i][cols['직업']];
+    var status = data[i][cols['상태']];
+    
+    var partyDate;
+    if (dateVal instanceof Date) {
+      partyDate = new Date(dateVal);
+    } else {
+      continue;
+    }
+    
+    if (partyDate < today) continue;
+    
+    var m = partyDate.getMonth() + 1;
+    var d = partyDate.getDate();
+    var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    var dayName = dayNames[partyDate.getDay()];
+    var dateStr = m + '/' + d + ' ' + dayName;
+    
+    var key = dateStr + '|' + partyName;
+    
+    if (!parties[key]) {
+      parties[key] = {
+        date: dateStr,
+        party: partyName,
+        time: time,
+        male: { total: 0, filled: 0, members: [] },
+        female: { total: 0, filled: 0, members: [] }
+      };
+    }
+    
+    var genderKey = gender === '남자' ? 'male' : 'female';
+    parties[key][genderKey].total++;
+    
+    if (status === '예약완료') {
+      parties[key][genderKey].filled++;
+      parties[key][genderKey].members.push({
+        ageGroup: getAgeGroup(birthYear),
+        height: height,
+        job: job
+      });
+    }
+  }
+  
+  var result = Object.values(parties);
+  
+  result.sort(function(a, b) {
+    var matchA = a.date.match(/(\d+)\/(\d+)/);
+    var matchB = b.date.match(/(\d+)\/(\d+)/);
+    if (matchA && matchB) {
+      if (parseInt(matchA[1]) !== parseInt(matchB[1])) {
+        return parseInt(matchA[1]) - parseInt(matchB[1]);
+      }
+      return parseInt(matchA[2]) - parseInt(matchB[2]);
+    }
+    return 0;
+  });
+  
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// ========================================
+// 초대장 신청 처리 (고객마스터 연동)
+// ========================================
+function handleVerification(data) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('초대장 신청');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('초대장 신청');
+    sheet.appendRow([
+      '전화번호', '선택자격', '선택그룹', '와인보너스',
+      '인증방법', 'SNS링크', '파일링크', '쿠폰코드', '호스트명',
+      '추천경위', '승인상태', '프립이동일시', '배포처', '메모', '예약독촉발송'
+    ]);
+  }
+  
+  var phone = data.phone || '';
+  var qualifications = Array.isArray(data.qualifications) ? data.qualifications.join(', ') : String(data.qualifications || '');
+  var groups = Array.isArray(data.groups) ? data.groups.join(', ') : String(data.groups || '');
+  var wineBonus = data.wineBonus === 'true' || data.wineBonus === true;
+  var authType = data.authType || '';
+  var snsLink = (data.additionalData && data.additionalData.snsLink) || '';
+  var couponCode = (data.additionalData && data.additionalData.couponCode) || '';
+  var hostName = (data.additionalData && data.additionalData.hostName) || '';
+  var referralReason = (data.additionalData && data.additionalData.referralReason) || '';
+  var source = data.source || 'direct';
+  
+  // 파일 업로드
+  var fileLinks = '';
+  if (data.files && data.files.length > 0) {
+    try {
+      var uploadedLinks = saveFilesToDrive(phone, data.files);
+      fileLinks = uploadedLinks.join('\n');
+    } catch (e) {
+      Logger.log('파일 업로드 오류: ' + e.toString());
+    }
+  }
+  
+  // 승인 상태
+  var approvalStatus = '인증대기';
+  if (authType === 'coupon') approvalStatus = '쿠폰승인';
+  else if (authType === 'host_referral') approvalStatus = '승인완료';
+  else if (authType === 'upload' && fileLinks) approvalStatus = '서류제출완료';
+  else if (authType === 'onsite') approvalStatus = '현장인증예정';
+  
+  sheet.appendRow([
+    phone,
+    qualifications,
+    groups,
+    wineBonus ? 'Y' : 'N',
+    authType,
+    snsLink,
+    fileLinks,
+    couponCode,
+    hostName,
+    referralReason,
+    approvalStatus,
+    new Date(),
+    source,
+    '',
+    ''
+  ]);
+  
+  // 고객마스터에 추가 (유입경로: invitation)
+  upsertCustomerMaster(ss, phone, {}, 'invitation');
+  
+  return jsonResponse(true, '신청이 완료되었습니다', {
+    approvalStatus: approvalStatus,
+    wineBonus: wineBonus
+  });
+}
+
+
+// ========================================
+// Google Drive 파일 저장
+// ========================================
+function saveFilesToDrive(phone, files) {
+  var fileUrls = [];
+  if (!files || files.length === 0) return fileUrls;
+  
+  var mainFolder = getOrCreateFolder(DRIVE_FOLDER_NAME);
+  var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  var dateFolder = getOrCreateSubFolder(mainFolder, today);
+  var phoneFolder = getOrCreateSubFolder(dateFolder, phone);
+  
+  for (var i = 0; i < files.length; i++) {
+    try {
+      var fileData = files[i];
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'HHmmss');
+      var fileName = phone + '_' + timestamp + '_' + (i + 1) + '_' + fileData.name;
+      
+      var decoded = Utilities.base64Decode(fileData.data);
+      var blob = Utilities.newBlob(decoded, fileData.type, fileName);
+      var file = phoneFolder.createFile(blob);
+      fileUrls.push(file.getUrl());
+    } catch (e) {
+      Logger.log('파일 저장 오류: ' + e.toString());
+    }
+  }
+  
+  return fileUrls;
+}
+
+function getOrCreateFolder(folderName) {
+  var folders = DriveApp.getFoldersByName(folderName);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+}
+
+function getOrCreateSubFolder(parent, name) {
+  var folders = parent.getFoldersByName(name);
+  return folders.hasNext() ? folders.next() : parent.createFolder(name);
+}
+
+
+// ========================================
+// 사전조사 중복 체크 (1달 내)
+// ========================================
+function checkSurveyDuplicate(phone) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('사전조사');
+  
+  if (!sheet) {
+    return jsonResponse(true, '', { exists: false });
+  }
+  
+  var normalizedPhone = normalizePhone(phone);
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  
+  var phoneColIndex = headers.indexOf('연락처');
+  if (phoneColIndex === -1) phoneColIndex = 7;
+  
+  var dateColIndex = headers.indexOf('Submitted at');
+  if (dateColIndex === -1) dateColIndex = 2;
+  
+  var oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  
+  for (var i = 1; i < data.length; i++) {
+    var rowPhone = normalizePhone(data[i][phoneColIndex]);
+    var submitDate = new Date(data[i][dateColIndex]);
+    
+    if (rowPhone === normalizedPhone && submitDate >= oneMonthAgo) {
+      return jsonResponse(true, '', { exists: true });
+    }
+  }
+  
+  return jsonResponse(true, '', { exists: false });
+}
+
+
+// ========================================
+// 사전조사 제출 처리 (고객마스터 연동)
+// ========================================
+function handleSurveySubmit(data) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('사전조사');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('사전조사');
+    sheet.appendRow([
+      'Submission ID', 'Respondent ID', 'Submitted at', '성별', '이름', 
+      '출생연도', '신장(cm)', '연락처', '직업(분류)', '직업(상세)',
+      '직업인증서류(명함, 사원증 등)', '이용약관(필수)', '이용약관(필수) (동의합니다.)',
+      '이용약관(필수) ((선택)정보 수신에 동의합니다. )', '완료문자발송'
+    ]);
+  }
+  
+  var submissionId = Utilities.getUuid().substring(0, 7);
+  var respondentId = Utilities.getUuid().substring(0, 7);
+  var submittedAt = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+  
+  // 직업인증서류 파일 처리
+  var jobCertFileUrl = '';
+  if (data.jobCertFile && data.jobCertFile.data) {
+    try {
+      var mainFolder = getOrCreateFolder(DRIVE_FOLDER_NAME);
+      var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+      var dateFolder = getOrCreateSubFolder(mainFolder, today);
+      var phone = data.phone || 'unknown';
+      var phoneFolder = getOrCreateSubFolder(dateFolder, phone);
+      
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'HHmmss');
+      var fileName = phone + '_사전조사_' + timestamp + '_' + data.jobCertFile.name;
+      
+      var decoded = Utilities.base64Decode(data.jobCertFile.data);
+      var blob = Utilities.newBlob(decoded, data.jobCertFile.type, fileName);
+      var file = phoneFolder.createFile(blob);
+      jobCertFileUrl = file.getUrl();
+    } catch (e) {
+      Logger.log('직업인증서류 업로드 오류: ' + e.toString());
+    }
+  }
+  
+  // 사전조사 시트에 저장
+  sheet.appendRow([
+    submissionId,
+    respondentId,
+    submittedAt,
+    data.gender || '',
+    data.name || '',
+    data.birthYear || '',
+    data.height || '',
+    data.phone || '',
+    data.jobCategory || '',
+    data.jobDetail || '',
+    jobCertFileUrl,
+    '(필수)이용약관 및 개인정보 수집에 동의합니다.',
+    data.termsRequired ? 'TRUE' : 'FALSE',
+    data.termsMarketing ? 'TRUE' : 'FALSE',
+    ''
+  ]);
+  
+  // 고객마스터에 업데이트 (핵심!)
+  upsertCustomerMaster(ss, data.phone, {
+    '이름': data.name || '',
+    '성별': data.gender || '',
+    '출생연도': data.birthYear || '',
+    '신장': data.height || '',
+    '직업분류': data.jobCategory || '',
+    '직업상세': data.jobDetail || '',
+    '직업인증서류': jobCertFileUrl
+  }, 'survey');
+  
+  return jsonResponse(true, '사전조사가 제출되었습니다', {
+    submissionId: submissionId
+  });
+}
+
+
+// ========================================
+// 유틸리티 함수들
+// ========================================
+
+function jsonResponse(success, message, data) {
+  var response = { success: success, message: message };
+  if (data) {
+    for (var key in data) {
+      response[key] = data[key];
+    }
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function formatPhone(phone) {
+  var numbers = String(phone).replace(/[^0-9]/g, '');
+  if (numbers.length === 10 && numbers.charAt(0) !== '0') {
+    numbers = '0' + numbers;
+  }
+  if (numbers.length === 11) {
+    return numbers.substring(0, 3) + '-' + numbers.substring(3, 7) + '-' + numbers.substring(7);
+  }
+  return numbers;
+}
+
+function normalizePhone(phone) {
+  var numbers = String(phone).replace(/[^0-9]/g, '');
+  if (numbers.indexOf('82') === 0) {
+    numbers = numbers.substring(2);
+  }
+  return numbers.length >= 10 ? numbers.slice(-10) : numbers;
+}
+
+function extractBetween(text, start, end) {
+  var startIdx = text.indexOf(start);
+  if (startIdx === -1) return '';
+  startIdx += start.length;
+  
+  var endIdx = text.indexOf(end, startIdx);
+  if (endIdx === -1) {
+    endIdx = text.indexOf('\n', startIdx);
+    if (endIdx === -1) endIdx = text.length;
+  }
+  
+  return text.substring(startIdx, endIdx).trim();
+}
+
+function extractValue(text, pattern) {
+  var regex = new RegExp(pattern);
+  var match = text.match(regex);
+  return match && match[1] ? match[1].trim() : '';
+}
+
+function parseEventDate(dateStr) {
+  if (!dateStr) return null;
+  var match = String(dateStr).match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+  if (match) {
+    return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+  }
+  return null;
+}
+
+function getAgeGroup(birthYear) {
+  if (!birthYear) return '';
+  var age = new Date().getFullYear() - birthYear + 1;
+  
+  if (age >= 20 && age <= 24) return '20대 초반';
+  if (age >= 25 && age <= 27) return '20대 중반';
+  if (age >= 28 && age <= 29) return '20대 후반';
+  if (age >= 30 && age <= 34) return '30대 초반';
+  if (age >= 35 && age <= 37) return '30대 중반';
+  if (age >= 38 && age <= 39) return '30대 후반';
+  if (age >= 40 && age <= 44) return '40대 초반';
+  if (age >= 45 && age <= 47) return '40대 중반';
+  if (age >= 48 && age <= 49) return '40대 후반';
+  if (age >= 50) return '50대';
+  
+  return '';
+}
+
+
+// ========================================
+// 마이그레이션 함수 (1회성 실행)
+// ========================================
+function migrateToCustomerMaster() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var customerSheet = getOrCreateCustomerMasterSheet(ss);
+  
+  // 기존 데이터에서 고객 추출
+  var phones = {};
+  
+  // 1. 사전조사에서 추출 (가장 상세한 정보)
+  var surveySheet = ss.getSheetByName('사전조사');
+  if (surveySheet) {
+    var surveyData = surveySheet.getDataRange().getValues();
+    for (var i = 1; i < surveyData.length; i++) {
+      var phone = normalizePhone(surveyData[i][7]); // 연락처
+      if (phone && !phones[phone]) {
+        phones[phone] = {
+          '이름': surveyData[i][4],
+          '성별': surveyData[i][3],
+          '출생연도': surveyData[i][5],
+          '신장': surveyData[i][6],
+          '직업분류': surveyData[i][8],
+          '직업상세': surveyData[i][9],
+          '직업인증서류': surveyData[i][10],
+          '유입경로': 'survey',
+          'phone': phone
+        };
+      }
+    }
+  }
+  
+  // 2. 프립예약에서 추출
+  var fripSheet = ss.getSheetByName('프립예약');
+  if (fripSheet) {
+    var fripData = fripSheet.getDataRange().getValues();
+    for (var i = 1; i < fripData.length; i++) {
+      var phone = normalizePhone(fripData[i][3]);
+      var option = String(fripData[i][1]);
+      var isInvitation = option.indexOf('인비테이션') > -1;
+      
+      if (phone && !phones[phone]) {
+        phones[phone] = {
+          '이름': fripData[i][2],
+          '유입경로': isInvitation ? 'invitation' : 'organic',
+          'phone': phone
+        };
+      }
+    }
+  }
+  
+  // 3. 초대장신청에서 추출
+  var invSheet = ss.getSheetByName('초대장 신청');
+  if (invSheet) {
+    var invData = invSheet.getDataRange().getValues();
+    for (var i = 1; i < invData.length; i++) {
+      var phone = normalizePhone(invData[i][0]);
+      if (phone && !phones[phone]) {
+        phones[phone] = {
+          '유입경로': 'invitation',
+          'phone': phone
+        };
+      }
+    }
+  }
+  
+  // 고객마스터에 추가
+  var count = 0;
+  for (var phone in phones) {
+    var data = phones[phone];
+    var existing = findCustomerByPhone(ss, phone);
+    
+    if (!existing) {
+      var now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+      customerSheet.appendRow([
+        formatPhone(phone),
+        data['이름'] || '',
+        data['성별'] || '',
+        data['출생연도'] || '',
+        data['신장'] || '',
+        data['직업분류'] || '',
+        data['직업상세'] || '',
+        data['직업인증서류'] || '',
+        data['유입경로'] || 'unknown',
+        now,
+        now,
+        ''
+      ]);
+      count++;
+    }
+  }
+  
+  Logger.log('마이그레이션 완료: ' + count + '명 추가');
+  return count;
+}
+
+
+// ========================================
+// 통합고객관리 뷰 생성 (1예약 = 1행)
+// ========================================
+function generateIntegratedView() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // 각 시트 데이터 읽기
+  var customerSheet = ss.getSheetByName('고객마스터');
+  var invSheet = ss.getSheetByName('초대장 신청');
+  var fripSheet = ss.getSheetByName('프립예약');
+  var surveySheet = ss.getSheetByName('사전조사');
+  
+  // 고객마스터 맵 생성 (연락처 → 데이터)
+  var customers = {};
+  if (customerSheet) {
+    var customerData = customerSheet.getDataRange().getValues();
+    var customerHeaders = customerData[0];
+    for (var i = 1; i < customerData.length; i++) {
+      var phone = normalizePhone(customerData[i][0]);
+      if (phone) {
+        var customer = {};
+        for (var j = 0; j < customerHeaders.length; j++) {
+          customer[customerHeaders[j]] = customerData[i][j];
+        }
+        customers[phone] = customer;
+      }
+    }
+  }
+  
+  // 초대장신청 맵 생성 (연락처 → 데이터)
+  var invitations = {};
+  if (invSheet) {
+    var invData = invSheet.getDataRange().getValues();
+    var invHeaders = invData[0];
+    for (var i = 1; i < invData.length; i++) {
+      var phone = normalizePhone(invData[i][0]); // 전화번호
+      if (phone) {
+        var inv = {};
+        for (var j = 0; j < invHeaders.length; j++) {
+          inv[invHeaders[j]] = invData[i][j];
+        }
+        invitations[phone] = inv;
+      }
+    }
+  }
+  
+  // 사전조사 전화번호 목록 (중복체크용)
+  var surveyPhones = {};
+  if (surveySheet) {
+    var surveyData = surveySheet.getDataRange().getValues();
+    for (var i = 1; i < surveyData.length; i++) {
+      var phone = normalizePhone(surveyData[i][7]); // 연락처 컬럼
+      if (phone) surveyPhones[phone] = true;
+    }
+  }
+  
+  // 프립예약 읽기 (1예약 = 1행 기준)
+  var reservations = [];
+  if (fripSheet) {
+    var fripData = fripSheet.getDataRange().getValues();
+    var fripHeaders = fripData[0];
+    for (var i = 1; i < fripData.length; i++) {
+      var res = {};
+      for (var j = 0; j < fripHeaders.length; j++) {
+        res[fripHeaders[j]] = fripData[i][j];
+      }
+      res._phone = normalizePhone(res['크루연락처']);
+      res._rowIndex = i + 1;
+      reservations.push(res);
+    }
+  }
+  
+  // 통합뷰 생성 또는 초기화
+  var viewSheet = ss.getSheetByName('통합고객관리');
+  if (viewSheet) {
+    // 헤더 행 유지, 데이터 삭제
+    if (viewSheet.getLastRow() > 1) {
+      viewSheet.deleteRows(2, viewSheet.getLastRow() - 1);
+    }
+  } else {
+    viewSheet = ss.insertSheet('통합고객관리');
+  }
+  
+  // 헤더 설정
+  var viewHeaders = [
+    'ID', '현재단계', '유입경로', '크루명', '연락처', '성별', '출생연도', '신장',
+    '직업분류', '직업상세', '선택자격', '선택그룹', '와인보너스', '인증방법',
+    'SNS링크', '초대장파일링크', '쿠폰코드', '호스트명', '추천경위', '배포처',
+    '직업인증서류', '진행일시', '프로그램', '프립예약번호', '예약상태',
+    '사전조사완료', '승인상태', '참석여부', '환급여부', '메모'
+  ];
+  viewSheet.getRange(1, 1, 1, viewHeaders.length).setValues([viewHeaders]);
+  
+  // 데이터 생성 (1예약 = 1행)
+  var rows = [];
+  var id = 1;
+  
+  // 예약이 있는 경우
+  for (var r = 0; r < reservations.length; r++) {
+    var res = reservations[r];
+    var phone = res._phone;
+    var customer = customers[phone] || {};
+    var inv = invitations[phone] || {};
+    var hasSurvey = surveyPhones[phone] || (customer['성별'] && customer['출생연도']);
+    
+    // 현재단계 계산
+    var stage = '2.프립예약';
+    if (hasSurvey) stage = '3.사전조사완료';
+    
+    // 초대장 신청이 있으면 invitation
+    var hasInvitation = inv && inv['전화번호'];
+    
+    rows.push([
+      id++,
+      stage,
+      hasInvitation ? 'invitation' : (customer['유입경로'] || 'organic'),
+      customer['이름'] || res['크루명'] || '',
+      customer['연락처'] || formatPhone('0' + phone),
+      customer['성별'] || '',
+      customer['출생연도'] || '',
+      customer['신장'] || '',
+      customer['직업분류'] || '',
+      customer['직업상세'] || '',
+      inv['선택자격'] || '',
+      inv['선택그룹'] || '',
+      inv['와인보너스'] || '',
+      inv['인증방법'] || '',
+      inv['SNS링크'] || '',
+      inv['파일링크'] || '',
+      inv['쿠폰코드'] || '',
+      inv['호스트명'] || '',
+      inv['추천경위'] || '',
+      inv['배포처'] || '',
+      customer['직업인증서류'] || '',
+      res['진행일시'] || '',
+      res['옵션'] || '',
+      res['예약번호'] || '',
+      res['상태'] || '',
+      hasSurvey ? 'Y' : 'N',
+      inv['승인상태'] || '',
+      '', // 참석여부
+      '', // 환급여부
+      customer['메모'] || ''
+    ]);
+  }
+  
+  // 예약 없이 초대장만 신청한 경우
+  for (var phone in invitations) {
+    var hasReservation = reservations.some(function(r) { return r._phone === phone; });
+    if (!hasReservation) {
+      var inv = invitations[phone];
+      var customer = customers[phone] || {};
+      var hasSurvey = surveyPhones[phone] || (customer['성별'] && customer['출생연도']);
+      
+      rows.push([
+        id++,
+        '1.초대장신청',
+        'invitation',
+        customer['이름'] || '',
+        customer['연락처'] || formatPhone('0' + phone),
+        customer['성별'] || '',
+        customer['출생연도'] || '',
+        customer['신장'] || '',
+        customer['직업분류'] || '',
+        customer['직업상세'] || '',
+        inv['선택자격'] || '',
+        inv['선택그룹'] || '',
+        inv['와인보너스'] || '',
+        inv['인증방법'] || '',
+        inv['SNS링크'] || '',
+        inv['파일링크'] || '',
+        inv['쿠폰코드'] || '',
+        inv['호스트명'] || '',
+        inv['추천경위'] || '',
+        inv['배포처'] || '',
+        customer['직업인증서류'] || '',
+        '', // 진행일시
+        '', // 프로그램
+        '', // 프립예약번호
+        '', // 예약상태
+        hasSurvey ? 'Y' : 'N',
+        inv['승인상태'] || '',
+        '', // 참석여부
+        '', // 환급여부
+        customer['메모'] || ''
+      ]);
+    }
+  }
+  
+  // 시트에 데이터 쓰기
+  if (rows.length > 0) {
+    viewSheet.getRange(2, 1, rows.length, viewHeaders.length).setValues(rows);
+  }
+  
+  Logger.log('통합고객관리 뷰 생성 완료: ' + rows.length + '행');
+  return rows.length;
+}
+
+
+// ========================================
+// 관리자 페이지용: 통합 데이터 조회 (1예약=1행)
+// ========================================
+function getIntegratedCustomers() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // 각 시트 데이터 읽기
+  var customerSheet = ss.getSheetByName('고객마스터');
+  var invSheet = ss.getSheetByName('초대장 신청');
+  var fripSheet = ss.getSheetByName('프립예약');
+  var surveySheet = ss.getSheetByName('사전조사');
+  
+  // 고객마스터 맵
+  var customers = {};
+  if (customerSheet) {
+    var data = customerSheet.getDataRange().getValues();
+    var headers = data[0];
+    for (var i = 1; i < data.length; i++) {
+      var phone = normalizePhone(data[i][0]);
+      if (phone) {
+        var obj = {};
+        for (var j = 0; j < headers.length; j++) obj[headers[j]] = data[i][j];
+        customers[phone] = obj;
+      }
+    }
+  }
+  
+  // 초대장신청 맵
+  var invitations = {};
+  if (invSheet) {
+    var data = invSheet.getDataRange().getValues();
+    var headers = data[0];
+    for (var i = 1; i < data.length; i++) {
+      var phone = normalizePhone(data[i][0]);
+      if (phone) {
+        var obj = {};
+        for (var j = 0; j < headers.length; j++) obj[headers[j]] = data[i][j];
+        invitations[phone] = obj;
+      }
+    }
+  }
+  
+  // 사전조사 전화번호 목록
+  var surveyPhones = {};
+  if (surveySheet) {
+    var data = surveySheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      var phone = normalizePhone(data[i][7]);
+      if (phone) surveyPhones[phone] = true;
+    }
+  }
+  
+  // 프립예약 읽기
+  var reservations = [];
+  if (fripSheet) {
+    var data = fripSheet.getDataRange().getValues();
+    var headers = data[0];
+    for (var i = 1; i < data.length; i++) {
+      var obj = { _rowIndex: i + 1 };
+      for (var j = 0; j < headers.length; j++) obj[headers[j]] = data[i][j];
+      obj._phone = normalizePhone(obj['크루연락처']);
+      reservations.push(obj);
+    }
+  }
+  
+  // 결과 생성 (1예약 = 1행)
+  var result = [];
+  var id = 1;
+  
+  // 예약이 있는 경우
+  reservations.forEach(function(res) {
+    var phone = res._phone;
+    var customer = customers[phone] || {};
+    var inv = invitations[phone] || {};
+    var hasSurvey = surveyPhones[phone] || (customer['성별'] && customer['출생연도']);
+    
+    // 초대장 신청이 있으면 invitation
+    var hasInvitation = inv && inv['전화번호'];
+    
+    result.push({
+      id: id++,
+      현재단계: hasSurvey ? '3.사전조사완료' : '2.프립예약',
+      유입경로: hasInvitation ? 'invitation' : (customer['유입경로'] || 'organic'),
+      크루명: customer['이름'] || res['크루명'] || '',
+      연락처: customer['연락처'] || formatPhone('0' + phone),
+      성별: customer['성별'] || '',
+      출생연도: customer['출생연도'] || '',
+      신장: customer['신장'] || '',
+      직업분류: customer['직업분류'] || '',
+      직업상세: customer['직업상세'] || '',
+      선택자격: inv['선택자격'] || '',
+      선택그룹: inv['선택그룹'] || '',
+      와인보너스: inv['와인보너스'] || '',
+      인증방법: inv['인증방법'] || '',
+      SNS링크: inv['SNS링크'] || '',
+      초대장파일링크: inv['파일링크'] || '',
+      쿠폰코드: inv['쿠폰코드'] || '',
+      호스트명: inv['호스트명'] || '',
+      추천경위: inv['추천경위'] || '',
+      배포처: inv['배포처'] || '',
+      직업인증서류: customer['직업인증서류'] || '',
+      진행일시: res['진행일시'] || '',
+      프로그램: res['옵션'] || '',
+      프립예약번호: res['예약번호'] || '',
+      예약상태: res['상태'] || '',
+      사전조사완료: hasSurvey ? 'Y' : 'N',
+      승인상태: inv['승인상태'] || '',
+      참석여부: '',
+      환급여부: '',
+      메모: customer['메모'] || '',
+      _phone: phone
+    });
+  });
+  
+  // 예약 없이 초대장만 신청한 경우
+  for (var phone in invitations) {
+    var hasRes = reservations.some(function(r) { return r._phone === phone; });
+    if (!hasRes) {
+      var inv = invitations[phone];
+      var customer = customers[phone] || {};
+      var hasSurvey = surveyPhones[phone] || (customer['성별'] && customer['출생연도']);
+      
+      result.push({
+        id: id++,
+        현재단계: '1.초대장신청',
+        유입경로: 'invitation',
+        크루명: customer['이름'] || '',
+        연락처: customer['연락처'] || formatPhone('0' + phone),
+        성별: customer['성별'] || '',
+        출생연도: customer['출생연도'] || '',
+        신장: customer['신장'] || '',
+        직업분류: customer['직업분류'] || '',
+        직업상세: customer['직업상세'] || '',
+        선택자격: inv['선택자격'] || '',
+        선택그룹: inv['선택그룹'] || '',
+        와인보너스: inv['와인보너스'] || '',
+        인증방법: inv['인증방법'] || '',
+        SNS링크: inv['SNS링크'] || '',
+        초대장파일링크: inv['파일링크'] || '',
+        쿠폰코드: inv['쿠폰코드'] || '',
+        호스트명: inv['호스트명'] || '',
+        추천경위: inv['추천경위'] || '',
+        배포처: inv['배포처'] || '',
+        직업인증서류: customer['직업인증서류'] || '',
+        진행일시: '',
+        프로그램: '',
+        프립예약번호: '',
+        예약상태: '',
+        사전조사완료: hasSurvey ? 'Y' : 'N',
+        승인상태: inv['승인상태'] || '',
+        참석여부: '',
+        환급여부: '',
+        메모: customer['메모'] || '',
+        _phone: phone
+      });
+    }
+  }
+  
+  return jsonResponse(true, '통합 고객 데이터 조회 완료', {
+    rows: result,
+    total: result.length
+  });
+}
+
+
+// ========================================
+// 스프레드시트 메뉴
+// ========================================
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('🎉 뭘좀 관리')
+    .addItem('📊 통합고객관리 뷰 새로고침', 'generateIntegratedView')
+    .addItem('👥 고객마스터 마이그레이션', 'migrateToCustomerMaster')
+    .addToUi();
+}

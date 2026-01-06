@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뭘 좀 아는 사람들 - 홍보 카드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #1a1a1a;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .page-title {
+            text-align: center;
+            color: #FFD700;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .page-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* 카드 공통 스타일 - 1080x1080 비율 (스퀘어) */
+        .promo-card {
+            width: 400px;
+            height: 400px;
+            border-radius: 0;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        /* 카드 1: 메인 타이틀 */
+        .card-main {
+            background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            border: 1px solid #333;
+        }
+        
+        .card-main .badge {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+        
+        .card-main .main-title {
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+        
+        .card-main .main-title .highlight {
+            color: #FFD700;
+        }
+        
+        .card-main .subtitle {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        
+        .card-main .tagline {
+            font-size: 14px;
+            color: #FFD700;
+            font-weight: 500;
+            padding: 10px 24px;
+            border: 1px solid #FFD700;
+            border-radius: 30px;
+        }
+        
+        .card-main .insta-handle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 카드 2: 1월 일정 */
+        .card-schedule {
+            background: #000;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+        
+        .card-schedule .card-header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .card-schedule .month-badge {
+            background: #FFD700;
+            color: #000;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .card-schedule .schedule-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .schedule-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            background: #111;
+            border-radius: 8px;
+            padding: 9px 12px;
+            border: 1px solid #222;
+        }
+        
+        .schedule-date {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            min-width: 70px;
+            text-align: center;
+        }
+        
+        .schedule-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+        
+        .schedule-location {
+            font-size: 12px;
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .schedule-times {
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .schedule-times span {
+            margin-right: 6px;
+        }
+        
+        .card-schedule .card-footer {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .schedule-grid {
+            position: relative;
+        }
+        
+        .schedule-item.fade-item {
+            opacity: 0.5;
+        }
+        
+        .schedule-item.fade-item-more {
+            opacity: 0.25;
+        }
+        
+        .schedule-fade-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            background: linear-gradient(to bottom, transparent 0%, #000 100%);
+            pointer-events: none;
+        }
+        
+        /* 카드 3: 자격 요건 */
+        .card-qualification {
+            background: #000;
+            padding: 16px;
+            border: 1px solid #333;
+        }
+        
+        .card-qualification .card-header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .card-qualification .qual-badge {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .card-qualification .qual-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .card-qualification .qual-subtitle {
+            font-size: 10px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .qual-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        
+        .qual-item {
+            background: #111;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #222;
+        }
+        
+        .qual-item .icon {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        
+        .qual-item .qual-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        
+        .qual-item .qual-desc {
+            font-size: 7px;
+            color: #666;
+            line-height: 1.2;
+        }
+        
+        .qual-footer {
+            margin-top: 12px;
+            text-align: center;
+        }
+        
+        .wine-bonus {
+            background: linear-gradient(135deg, #722F37 0%, #8B0000 100%);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+        
+        .wine-note {
+            font-size: 7px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .price-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .discount-tag {
+            background: #FFD700;
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+        
+        .price-detail {
+            color: #aaa;
+            font-size: 8px;
+        }
+        
+        /* 카드 4: 차별점 */
+        .card-diff {
+            background: linear-gradient(180deg, #000 0%, #0a0a0a 100%);
+            padding: 30px;
+            border: 1px solid #333;
+        }
+        
+        .card-diff .card-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .card-diff .diff-badge {
+            background: #39FF14;
+            color: #000;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        .card-diff .diff-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .diff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .diff-item {
+            display: flex;
+            align-items: center;
+            background: #111;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #222;
+        }
+        
+        .diff-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .diff-content {
+            margin-left: 14px;
+        }
+        
+        .diff-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .diff-content p {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        /* 카드 5: 가격/CTA */
+        .card-cta {
+            background: linear-gradient(180deg, #000 0%, #111 100%);
+            padding: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid #FFD700;
+        }
+        
+        .card-cta .price-badge {
+            background: #FFD700;
+            color: #000;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        
+        .card-cta .cta-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        
+        .price-comparison {
+            margin-bottom: 24px;
+        }
+        
+        .original-price {
+            font-size: 18px;
+            color: #666;
+            text-decoration: line-through;
+            margin-bottom: 8px;
+        }
+        
+        .sale-price {
+            font-size: 36px;
+            font-weight: 900;
+            color: #FFD700;
+        }
+        
+        .sale-price span {
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .free-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #39FF14 0%, #00ff88 100%);
+            color: #000;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .cta-url {
+            background: #FFD700;
+            color: #000;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        
+        .general-offer {
+            margin-bottom: 16px;
+        }
+        
+        .general-offer-title {
+            font-size: 11px;
+            color: #FFD700;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .general-offer-prices {
+            font-size: 10px;
+            color: #aaa;
+        }
+        
+        .general-price {
+            background: #111;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #333;
+        }
+        
+        .general-title {
+            font-size: 11px;
+            color: #FFD700;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .general-detail {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        
+        .cta-subtext {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: #222;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-link:hover {
+            background: #FFD700;
+            color: #000;
+        }
+        
+        /* 다운로드 안내 */
+        .download-guide {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: #111;
+            border-radius: 10px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .download-guide h3 {
+            color: #FFD700;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .download-guide p {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .download-guide code {
+            background: #222;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #39FF14;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="page-title">🎴 홍보 카드 세트</h1>
+    <p class="page-subtitle">인스타그램, 블로그, 고파스 홍보용 | 1:1 스퀘어 (1080x1080px 권장)</p>
+    
+    <div class="cards-container">
+        <!-- 카드 1: 메인 타이틀 -->
+        <div class="promo-card card-main">
+            <div class="badge">PREMIUM SOCIAL PARTY</div>
+            <h1 class="main-title">
+                <span class="highlight">뭘 좀</span> 아는<br>사람들
+            </h1>
+            <p class="subtitle">
+                직업인증 기반 프리미엄 소셜 파티<br>
+                사당 프라이빗 라운지
+            </p>
+            <div class="tagline">✨ 검증된 사람들과의 특별한 만남</div>
+            <div class="insta-handle">@svvy.s</div>
+        </div>
+        
+        <!-- 카드 2: 1월 일정 -->
+        <div class="promo-card card-schedule">
+            <div class="card-header">
+                <div class="month-badge">📅 JANUARY 2025</div>
+                <h2 class="schedule-title">1월 파티 일정</h2>
+            </div>
+            <div class="schedule-grid">
+                <div class="schedule-item">
+                    <div class="schedule-date">1/11(일)</div>
+                    <div class="schedule-info">
+                        <div class="schedule-location">사당 프라이빗 라운지</div>
+                        <div class="schedule-times">
+                            <span>☕ 12시·15시</span>
+                            <span>🍷 19시</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="schedule-date">1/17(토)</div>
+                    <div class="schedule-info">
+                        <div class="schedule-location">사당 프라이빗 라운지</div>
+                        <div class="schedule-times">
+                            <span>☕ 12시·15시</span>
+                            <span>🍷 19시</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="schedule-date">1/18(일)</div>
+                    <div class="schedule-info">
+                        <div class="schedule-location">사당 프라이빗 라운지</div>
+                        <div class="schedule-times">
+                            <span>☕ 12시·15시</span>
+                            <span>🍷 19시</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-item fade-item">
+                    <div class="schedule-date">1/24(토)</div>
+                    <div class="schedule-info">
+                        <div class="schedule-location">사당 프라이빗 라운지</div>
+                        <div class="schedule-times">
+                            <span>☕ 12시·15시</span>
+                            <span>🍷 19시</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-item fade-item-more">
+                    <div class="schedule-date">1/25(일)</div>
+                    <div class="schedule-info">
+                        <div class="schedule-location">사당 프라이빗 라운지</div>
+                        <div class="schedule-times">
+                            <span>☕ 12시·15시</span>
+                            <span>🍷 19시</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-fade-overlay"></div>
+            </div>
+            <div class="card-footer">☕ 커피 12명 · 🍷 와인 24명 (1:1 성비)</div>
+        </div>
+        
+        <!-- 카드 3: 자격 요건 -->
+        <div class="promo-card card-qualification">
+            <div class="card-header">
+                <div class="qual-badge">🎫 INVITATION PASS</div>
+                <h2 class="qual-title">참가비 지원 대상</h2>
+                <p class="qual-subtitle">아래 8가지 중 1개 이상 해당 시 신청 가능</p>
+            </div>
+            <div class="qual-grid">
+                <div class="qual-item">
+                    <div class="icon">💼</div>
+                    <div class="qual-name">직업</div>
+                    <div class="qual-desc">전문직·대기업·금융권<br>공기업·외국계</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">🎓</div>
+                    <div class="qual-name">학력</div>
+                    <div class="qual-desc">SKY 또는<br>QS 200위 해외대</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">💰</div>
+                    <div class="qual-name">연봉/자산</div>
+                    <div class="qual-desc">연봉 8천만원 이상<br>자산 5억원 이상</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">✨</div>
+                    <div class="qual-name">외모</div>
+                    <div class="qual-desc">승무원·아나운서<br>모델·미인대회</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">💪</div>
+                    <div class="qual-name">운동</div>
+                    <div class="qual-desc">마라톤·크로스핏<br>체지방 남15%/여23%</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">📱</div>
+                    <div class="qual-name">SNS</div>
+                    <div class="qual-desc">팔로워<br>5,000명 이상</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">🏆</div>
+                    <div class="qual-name">득표</div>
+                    <div class="qual-desc">소셜파티<br>3표 이상 득표</div>
+                </div>
+                <div class="qual-item">
+                    <div class="icon">🤝</div>
+                    <div class="qual-name">추천</div>
+                    <div class="qual-desc">호스트<br>지인 추천</div>
+                </div>
+            </div>
+            <div class="qual-footer">
+                <div class="wine-bonus">🍷 유형별 3개 카테고리 중 2개 충족 시 와인 1병 증정!</div>
+                <p class="wine-note">(상세내용 초대신청 페이지 참고)</p>
+            </div>
+        </div>
+        
+        <!-- 카드 4: 차별점 -->
+        <div class="promo-card card-diff">
+            <div class="card-header">
+                <div class="diff-badge">✓ ONLY HERE</div>
+                <h2 class="diff-title">뭘좀이 특별한 이유</h2>
+            </div>
+            <div class="diff-list">
+                <div class="diff-item">
+                    <div class="diff-icon">👀</div>
+                    <div class="diff-content">
+                        <h4>실시간 라인업 공개</h4>
+                        <p>참가 전 미리 확인 가능</p>
+                    </div>
+                </div>
+                <div class="diff-item">
+                    <div class="diff-icon">⚖️</div>
+                    <div class="diff-content">
+                        <h4>1:1 성비 운영</h4>
+                        <p>남녀 동일 인원 매칭</p>
+                    </div>
+                </div>
+                <div class="diff-item">
+                    <div class="diff-icon">🗳️</div>
+                    <div class="diff-content">
+                        <h4>투표 매칭 시스템</h4>
+                        <p>서로 선택 시 연락처 교환</p>
+                    </div>
+                </div>
+                <div class="diff-item">
+                    <div class="diff-icon">🔒</div>
+                    <div class="diff-content">
+                        <h4>프라이빗 라운지</h4>
+                        <p>외부 노출 없는 단독 공간</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 카드 5: 가격/CTA -->
+        <div class="promo-card card-cta">
+            <div class="price-badge">💎 SPECIAL OFFER</div>
+            <h2 class="cta-title">초대장 신청하고<br>무료로 참가하세요</h2>
+            <div class="price-comparison">
+                <div class="original-price">일반가 39,000원</div>
+                <div class="free-badge">🎉 초대장 소지자 무료!</div>
+            </div>
+            <div class="general-offer">
+                <p class="general-offer-title">일반 신청도 최대 47% 할인 중!</p>
+                <p class="general-offer-prices">☕ 커피 9,900원   |   🍷 와인 19,900원~</p>
+            </div>
+            <div class="cta-url">뭘 좀 아는 사람들</div>
+        </div>
+    </div>
+    
+    <div class="download-guide">
+        <h3>📥 이미지 저장 방법</h3>
+        <p>
+            각 카드에서 <code>우클릭 → 다른 이름으로 저장</code> 또는<br>
+            개발자 도구(F12)로 캡처하거나,<br>
+            브라우저 확장 프로그램으로 1080x1080 스크린샷 권장
+        </p>
+    </div>
+</body>
+</html>

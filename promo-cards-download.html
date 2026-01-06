@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뭘 좀 아는 사람들 - 홍보 카드 다운로드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #0a0a0a;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .page-title {
+            color: #FFD700;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .page-subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .download-all-btn {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .download-all-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .card-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .card-label {
+            color: #FFD700;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        /* 미리보기 컨테이너 - scale로 축소 */
+        .card-preview {
+            width: 324px;
+            height: 324px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .card-preview:hover {
+            transform: translateY(-3px);
+        }
+        
+        .card-preview .promo-card {
+            transform: scale(0.3);
+            transform-origin: top left;
+        }
+        
+        .download-btn {
+            margin-top: 12px;
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: #FFD700;
+            color: #000;
+        }
+        
+        /* 프로모 카드 - 실제 1080x1080 */
+        .promo-card {
+            width: 1080px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 카드 1: 메인 타이틀 */
+        .card-main {
+            background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 100px;
+            border: 1px solid #333;
+        }
+        
+        .card-main .badge {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 22px 54px;
+            border-radius: 50px;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 60px;
+        }
+        
+        .card-main .main-title {
+            font-size: 130px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 40px;
+            letter-spacing: -2px;
+        }
+        
+        .card-main .main-title .highlight {
+            color: #FFD700;
+        }
+        
+        .card-main .subtitle {
+            font-size: 42px;
+            color: #aaa;
+            margin-bottom: 60px;
+            line-height: 1.6;
+        }
+        
+        .card-main .tagline {
+            font-size: 38px;
+            color: #FFD700;
+            font-weight: 500;
+            padding: 28px 65px;
+            border: 2px solid #FFD700;
+            border-radius: 60px;
+        }
+        
+        .card-main .insta-handle {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            font-size: 32px;
+            color: #666;
+        }
+        
+        /* 카드 2: 1월 일정 */
+        .card-schedule {
+            background: #000;
+            padding: 60px;
+            border: 1px solid #333;
+        }
+        
+        .card-schedule .card-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .card-schedule .month-badge {
+            background: #FFD700;
+            color: #000;
+            padding: 14px 36px;
+            border-radius: 30px;
+            font-size: 30px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+        
+        .card-schedule .schedule-title {
+            font-size: 62px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .schedule-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: relative;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            background: #111;
+            border-radius: 16px;
+            padding: 28px 36px;
+            border: 1px solid #222;
+        }
+        
+        .schedule-date {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 18px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 32px;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .schedule-info {
+            flex: 1;
+            margin-left: 36px;
+        }
+        
+        .schedule-location {
+            font-size: 34px;
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .schedule-times {
+            font-size: 28px;
+            color: #888;
+        }
+        
+        .schedule-times span {
+            margin-right: 24px;
+        }
+        
+        .card-schedule .card-footer {
+            text-align: center;
+            margin-top: 35px;
+            font-size: 28px;
+            color: #666;
+        }
+        
+        .schedule-item.fade-item {
+            opacity: 0.5;
+        }
+        
+        .schedule-item.fade-item-more {
+            opacity: 0.25;
+        }
+        
+        .schedule-fade-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 180px;
+            background: linear-gradient(to bottom, transparent 0%, #000 100%);
+            pointer-events: none;
+        }
+        
+        /* 카드 3: 자격 요건 */
+        .card-qualification {
+            background: #000;
+            padding: 50px;
+            border: 1px solid #333;
+        }
+        
+        .card-qualification .card-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .card-qualification .qual-badge {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 14px 36px;
+            border-radius: 30px;
+            font-size: 28px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+        
+        .card-qualification .qual-title {
+            font-size: 58px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .card-qualification .qual-subtitle {
+            font-size: 28px;
+            color: #888;
+            margin-top: 12px;
+        }
+        
+        .qual-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+        
+        .qual-item {
+            background: #111;
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            border: 1px solid #222;
+        }
+        
+        .qual-item .icon {
+            font-size: 50px;
+            margin-bottom: 18px;
+        }
+        
+        .qual-item .qual-name {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        
+        .qual-item .qual-desc {
+            font-size: 20px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .qual-footer {
+            margin-top: 35px;
+            text-align: center;
+        }
+        
+        .wine-bonus {
+            background: linear-gradient(135deg, #722F37 0%, #8B0000 100%);
+            color: #fff;
+            padding: 22px 45px;
+            border-radius: 16px;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        
+        .wine-note {
+            font-size: 22px;
+            color: #666;
+            margin-top: 12px;
+        }
+        
+        /* 카드 4: 차별점 */
+        .card-diff {
+            background: linear-gradient(180deg, #000 0%, #0a0a0a 100%);
+            padding: 85px;
+            border: 1px solid #333;
+        }
+        
+        .card-diff .card-header {
+            text-align: center;
+            margin-bottom: 65px;
+        }
+        
+        .card-diff .diff-badge {
+            background: #39FF14;
+            color: #000;
+            padding: 16px 45px;
+            border-radius: 30px;
+            font-size: 30px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 28px;
+        }
+        
+        .card-diff .diff-title {
+            font-size: 62px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .diff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+        }
+        
+        .diff-item {
+            display: flex;
+            align-items: center;
+            background: #111;
+            border-radius: 20px;
+            padding: 40px 45px;
+            border: 1px solid #222;
+        }
+        
+        .diff-icon {
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            flex-shrink: 0;
+        }
+        
+        .diff-content {
+            margin-left: 40px;
+        }
+        
+        .diff-content h4 {
+            font-size: 38px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        .diff-content p {
+            font-size: 30px;
+            color: #888;
+        }
+        
+        /* 카드 5: 가격/CTA */
+        .card-cta {
+            background: linear-gradient(180deg, #000 0%, #111 100%);
+            padding: 90px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FFD700;
+        }
+        
+        .card-cta .price-badge {
+            background: #FFD700;
+            color: #000;
+            padding: 16px 45px;
+            border-radius: 30px;
+            font-size: 30px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 55px;
+        }
+        
+        .card-cta .cta-title {
+            font-size: 58px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 55px;
+            line-height: 1.4;
+        }
+        
+        .price-comparison {
+            margin-bottom: 50px;
+        }
+        
+        .original-price {
+            font-size: 48px;
+            color: #666;
+            text-decoration: line-through;
+            margin-bottom: 25px;
+        }
+        
+        .free-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #39FF14 0%, #00ff88 100%);
+            color: #000;
+            padding: 28px 65px;
+            border-radius: 50px;
+            font-size: 40px;
+            font-weight: 700;
+        }
+        
+        .general-offer {
+            margin-bottom: 55px;
+        }
+        
+        .general-offer-title {
+            font-size: 32px;
+            color: #FFD700;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+        
+        .general-offer-prices {
+            font-size: 30px;
+            color: #aaa;
+        }
+        
+        .cta-url {
+            background: #FFD700;
+            color: #000;
+            padding: 35px 80px;
+            border-radius: 20px;
+            font-size: 42px;
+            font-weight: 700;
+            display: inline-block;
+        }
+        
+        /* 안내 */
+        .instructions {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            background: #111;
+            border-radius: 15px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .instructions h3 {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+        
+        .instructions p {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .instructions code {
+            background: #222;
+            padding: 3px 10px;
+            border-radius: 4px;
+            color: #39FF14;
+        }
+        
+        /* 로딩 오버레이 */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #333;
+            border-top: 4px solid #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #fff;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        
+        /* 숨김 다운로드 영역 - 실제 1080x1080 크기 유지 */
+        .download-area {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            width: 1080px;
+            height: 1080px;
+            overflow: visible;
+        }
+        
+        .download-area .promo-card {
+            width: 1080px !important;
+            height: 1080px !important;
+            transform: none !important;
+            transform-origin: top left !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">이미지 생성 중...</div>
+    </div>
+    
+    <div class="page-header">
+        <h1 class="page-title">🎴 홍보 카드 다운로드</h1>
+        <p class="page-subtitle">인스타그램, 블로그, 고파스 홍보용 | 1080x1080px</p>
+        <button class="download-all-btn" onclick="downloadAll()">
+            <i class="fas fa-download"></i> 전체 다운로드 (5장)
+        </button>
+    </div>
+    
+    <div class="cards-grid">
+        <!-- 카드 1: 메인 타이틀 -->
+        <div class="card-wrapper">
+            <div class="card-label">카드 1: 메인 타이틀</div>
+            <div class="card-preview" onclick="downloadCard(1)">
+                <div class="promo-card card-main" id="card1">
+                    <div class="badge">PREMIUM SOCIAL PARTY</div>
+                    <h1 class="main-title">
+                        <span class="highlight">뭘 좀</span> 아는<br>사람들
+                    </h1>
+                    <p class="subtitle">
+                        직업인증 기반 프리미엄 소셜 파티<br>
+                        사당 프라이빗 라운지
+                    </p>
+                    <div class="tagline">✨ 검증된 사람들과의 특별한 만남</div>
+                    <div class="insta-handle">@svvy.s</div>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadCard(1)">
+                <i class="fas fa-download"></i> 다운로드
+            </button>
+        </div>
+        
+        <!-- 카드 2: 1월 일정 -->
+        <div class="card-wrapper">
+            <div class="card-label">카드 2: 1월 일정</div>
+            <div class="card-preview" onclick="downloadCard(2)">
+                <div class="promo-card card-schedule" id="card2">
+                    <div class="card-header">
+                        <div class="month-badge">📅 JANUARY 2026</div>
+                        <h2 class="schedule-title">1월 파티 일정</h2>
+                    </div>
+                    <div class="schedule-grid">
+                        <div class="schedule-item">
+                            <div class="schedule-date">1/11(토)</div>
+                            <div class="schedule-info">
+                                <div class="schedule-location">사당 프라이빗 라운지</div>
+                                <div class="schedule-times">
+                                    <span>☕ 12시·15시</span>
+                                    <span>🍷 19시</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="schedule-date">1/12(일)</div>
+                            <div class="schedule-info">
+                                <div class="schedule-location">사당 프라이빗 라운지</div>
+                                <div class="schedule-times">
+                                    <span>☕ 12시·15시</span>
+                                    <span>🍷 19시</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="schedule-date">1/18(토)</div>
+                            <div class="schedule-info">
+                                <div class="schedule-location">사당 프라이빗 라운지</div>
+                                <div class="schedule-times">
+                                    <span>☕ 12시·15시</span>
+                                    <span>🍷 19시</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="schedule-item fade-item">
+                            <div class="schedule-date">1/19(일)</div>
+                            <div class="schedule-info">
+                                <div class="schedule-location">사당 프라이빗 라운지</div>
+                                <div class="schedule-times">
+                                    <span>☕ 12시·15시</span>
+                                    <span>🍷 19시</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="schedule-item fade-item-more">
+                            <div class="schedule-date">1/25(토)</div>
+                            <div class="schedule-info">
+                                <div class="schedule-location">사당 프라이빗 라운지</div>
+                                <div class="schedule-times">
+                                    <span>☕ 12시·15시</span>
+                                    <span>🍷 19시</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="schedule-fade-overlay"></div>
+                    </div>
+                    <div class="card-footer">☕ 커피 12명 · 🍷 와인 24명 (1:1 성비)</div>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadCard(2)">
+                <i class="fas fa-download"></i> 다운로드
+            </button>
+        </div>
+        
+        <!-- 카드 3: 자격 요건 -->
+        <div class="card-wrapper">
+            <div class="card-label">카드 3: 참가비 지원 대상 (8가지 자격)</div>
+            <div class="card-preview" onclick="downloadCard(3)">
+                <div class="promo-card card-qualification" id="card3">
+                    <div class="card-header">
+                        <div class="qual-badge">🎫 INVITATION PASS</div>
+                        <h2 class="qual-title">참가비 지원 대상</h2>
+                        <p class="qual-subtitle">아래 8가지 중 1개 이상 해당 시 신청 가능</p>
+                    </div>
+                    <div class="qual-grid">
+                        <div class="qual-item">
+                            <div class="icon">💼</div>
+                            <div class="qual-name">직업</div>
+                            <div class="qual-desc">전문직·대기업·금융권<br>공기업·외국계</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">🎓</div>
+                            <div class="qual-name">학력</div>
+                            <div class="qual-desc">SKY 또는<br>QS 200위 해외대</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">💰</div>
+                            <div class="qual-name">연봉/자산</div>
+                            <div class="qual-desc">연봉 8천만원 이상<br>자산 5억원 이상</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">✨</div>
+                            <div class="qual-name">외모</div>
+                            <div class="qual-desc">승무원·아나운서<br>모델·미인대회</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">💪</div>
+                            <div class="qual-name">운동</div>
+                            <div class="qual-desc">마라톤·크로스핏<br>체지방 남15%/여23%</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">📱</div>
+                            <div class="qual-name">SNS</div>
+                            <div class="qual-desc">팔로워<br>5,000명 이상</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">🏆</div>
+                            <div class="qual-name">득표</div>
+                            <div class="qual-desc">소셜파티<br>3표 이상 득표</div>
+                        </div>
+                        <div class="qual-item">
+                            <div class="icon">🤝</div>
+                            <div class="qual-name">추천</div>
+                            <div class="qual-desc">호스트<br>지인 추천</div>
+                        </div>
+                    </div>
+                    <div class="qual-footer">
+                        <div class="wine-bonus">🍷 유형별 3개 카테고리 중 2개 충족 시 와인 1병 증정!</div>
+                        <p class="wine-note">(상세내용 초대신청 페이지 참고)</p>
+                    </div>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadCard(3)">
+                <i class="fas fa-download"></i> 다운로드
+            </button>
+        </div>
+        
+        <!-- 카드 4: 차별점 -->
+        <div class="card-wrapper">
+            <div class="card-label">카드 4: 뭘좀이 특별한 이유</div>
+            <div class="card-preview" onclick="downloadCard(4)">
+                <div class="promo-card card-diff" id="card4">
+                    <div class="card-header">
+                        <div class="diff-badge">✓ ONLY HERE</div>
+                        <h2 class="diff-title">뭘좀이 특별한 이유</h2>
+                    </div>
+                    <div class="diff-list">
+                        <div class="diff-item">
+                            <div class="diff-icon">👀</div>
+                            <div class="diff-content">
+                                <h4>실시간 라인업 공개</h4>
+                                <p>참가 전 미리 확인 가능</p>
+                            </div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-icon">⚖️</div>
+                            <div class="diff-content">
+                                <h4>1:1 성비 운영</h4>
+                                <p>남녀 동일 인원 매칭</p>
+                            </div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-icon">🗳️</div>
+                            <div class="diff-content">
+                                <h4>투표 매칭 시스템</h4>
+                                <p>서로 선택 시 연락처 교환</p>
+                            </div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-icon">🔒</div>
+                            <div class="diff-content">
+                                <h4>프라이빗 라운지</h4>
+                                <p>외부 노출 없는 단독 공간</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadCard(4)">
+                <i class="fas fa-download"></i> 다운로드
+            </button>
+        </div>
+        
+        <!-- 카드 5: 가격/CTA -->
+        <div class="card-wrapper">
+            <div class="card-label">카드 5: 가격 & 신청 안내</div>
+            <div class="card-preview" onclick="downloadCard(5)">
+                <div class="promo-card card-cta" id="card5">
+                    <div class="price-badge">💎 SPECIAL OFFER</div>
+                    <h2 class="cta-title">초대장 신청하고<br>무료로 참가하세요</h2>
+                    <div class="price-comparison">
+                        <div class="original-price">일반가 39,000원</div>
+                        <div class="free-badge">🎉 초대장 소지자 무료!</div>
+                    </div>
+                    <div class="general-offer">
+                        <p class="general-offer-title">일반 신청도 최대 47% 할인 중!</p>
+                        <p class="general-offer-prices">☕ 커피 9,900원   |   🍷 와인 19,900원~</p>
+                    </div>
+                    <div class="cta-url">뭘 좀 아는 사람들</div>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadCard(5)">
+                <i class="fas fa-download"></i> 다운로드
+            </button>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>📥 사용 방법</h3>
+        <p>
+            1. 각 카드 아래 <code>다운로드</code> 버튼 클릭<br>
+            2. 또는 <code>전체 다운로드</code>로 5장 한번에 저장<br>
+            3. 1080x1080px PNG 파일로 저장됨<br>
+            4. 인스타그램 피드/고파스/블로그에 바로 업로드 가능
+        </p>
+    </div>
+    
+    <!-- 숨김 다운로드 영역 -->
+    <div class="download-area" id="downloadArea"></div>
+    
+    <script>
+        const cardNames = [
+            'main-title',
+            'january-schedule',
+            'qualifications',
+            'differences',
+            'price-cta'
+        ];
+        
+        async function downloadCard(cardNum) {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('show');
+            
+            try {
+                // 미리보기에서 원본 카드 가져오기
+                const previewWrapper = document.querySelectorAll('.card-preview')[cardNum - 1];
+                const originalCard = previewWrapper.querySelector('.promo-card');
+                
+                // 복제해서 다운로드 영역에 넣기
+                const downloadArea = document.getElementById('downloadArea');
+                const clonedCard = originalCard.cloneNode(true);
+                clonedCard.id = ''; // ID 중복 방지
+                clonedCard.classList.add('download-ready');
+                
+                downloadArea.innerHTML = '';
+                downloadArea.appendChild(clonedCard);
+                
+                // 레이아웃 재계산 대기
+                await new Promise(r => setTimeout(r, 100));
+                
+                // 정확한 1:1 비율 캡처를 위한 설정
+                const canvas = await html2canvas(clonedCard, {
+                    width: 1080,
+                    height: 1080,
+                    scale: 1,
+                    windowWidth: 1080,
+                    windowHeight: 1080,
+                    backgroundColor: '#000000',
+                    useCORS: true,
+                    logging: false,
+                    imageTimeout: 0,
+                    onclone: function(clonedDoc, element) {
+                        // 복제된 요소의 스타일 강제 적용
+                        element.style.width = '1080px';
+                        element.style.height = '1080px';
+                        element.style.transform = 'none';
+                        element.style.transformOrigin = 'top left';
+                        element.style.position = 'absolute';
+                        element.style.top = '0';
+                        element.style.left = '0';
+                    }
+                });
+                
+                const link = document.createElement('a');
+                link.download = `뭘좀_${cardNames[cardNum-1]}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                downloadArea.innerHTML = '';
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('다운로드 중 오류가 발생했습니다.');
+            }
+            
+            overlay.classList.remove('show');
+        }
+        
+        async function downloadAll() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('show');
+            
+            for (let i = 1; i <= 5; i++) {
+                document.querySelector('.loading-text').textContent = `이미지 생성 중... (${i}/5)`;
+                
+                try {
+                    // 미리보기에서 원본 카드 가져오기
+                    const previewWrapper = document.querySelectorAll('.card-preview')[i - 1];
+                    const originalCard = previewWrapper.querySelector('.promo-card');
+                    
+                    const downloadArea = document.getElementById('downloadArea');
+                    const clonedCard = originalCard.cloneNode(true);
+                    clonedCard.id = '';
+                    clonedCard.classList.add('download-ready');
+                    
+                    downloadArea.innerHTML = '';
+                    downloadArea.appendChild(clonedCard);
+                    
+                    await new Promise(r => setTimeout(r, 100));
+                    
+                    const canvas = await html2canvas(clonedCard, {
+                        width: 1080,
+                        height: 1080,
+                        scale: 1,
+                        windowWidth: 1080,
+                        windowHeight: 1080,
+                        backgroundColor: '#000000',
+                        useCORS: true,
+                        logging: false,
+                        imageTimeout: 0,
+                        onclone: function(clonedDoc, element) {
+                            element.style.width = '1080px';
+                            element.style.height = '1080px';
+                            element.style.transform = 'none';
+                            element.style.transformOrigin = 'top left';
+                            element.style.position = 'absolute';
+                            element.style.top = '0';
+                            element.style.left = '0';
+                        }
+                    });
+                    
+                    const link = document.createElement('a');
+                    link.download = `뭘좀_${i}_${cardNames[i-1]}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    downloadArea.innerHTML = '';
+                    await new Promise(r => setTimeout(r, 600));
+                } catch (error) {
+                    console.error('Download error:', error);
+                }
+            }
+            
+            overlay.classList.remove('show');
+            document.querySelector('.loading-text').textContent = '이미지 생성 중...';
+        }
+    </script>
+</body>
+</html>

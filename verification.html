@@ -1,0 +1,2597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>증빙자료 첨부 - 뭘 좀 아는 사람들</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #1A1A1A;
+            --bg-secondary: #151515;
+            --bg-dark: #101010;
+            --gold: #FFD700;
+            --gold-light: #FFE55C;
+            --white: #FFFFFF;
+            --gray-100: #F5F5F5;
+            --gray-200: #EEEEEE;
+            --gray-300: #E0E0E0;
+            --gray-400: #BDBDBD;
+            --gray-500: #9E9E9E;
+            --gray-600: #757575;
+            --gray-700: #616161;
+            --gray-800: #424242;
+            --gray-900: #212121;
+            --neon-green: #39FF14;
+            --error: #ff4444;
+            --success: #00C851;
+            --warning: #ffa726;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--white);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .verification-header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .verification-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .verification-header p {
+            color: var(--gray-400);
+            font-size: 16px;
+        }
+
+        /* Selected Qualification Display */
+        .selected-qualification {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .selected-qualification h3 {
+            font-size: 14px;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .qualification-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .qualification-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid var(--gold);
+            border-radius: 30px;
+            padding: 10px 16px;
+            color: var(--gold);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .qualification-badge i {
+            font-size: 16px;
+        }
+
+        .wine-bonus-banner {
+            background: linear-gradient(135deg, rgba(128, 0, 128, 0.3), rgba(255, 215, 0, 0.2));
+            border: 1px solid rgba(128, 0, 128, 0.5);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--white);
+            font-size: 15px;
+        }
+
+        .wine-bonus-banner i {
+            font-size: 24px;
+            color: #9b59b6;
+        }
+
+        /* Sensitive Notice */
+        .sensitive-notice {
+            background: rgba(255, 167, 38, 0.15);
+            border: 1px solid rgba(255, 167, 38, 0.4);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sensitive-notice i {
+            font-size: 24px;
+            color: var(--warning);
+        }
+
+        .sensitive-notice p {
+            color: var(--warning);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* SNS Link Section */
+        .sns-link-section {
+            background: rgba(225, 48, 108, 0.1);
+            border: 1px solid rgba(225, 48, 108, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sns-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sns-section-title i {
+            color: #E1306C;
+        }
+
+        .sns-platform-select {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .platform-option {
+            cursor: pointer;
+        }
+
+        .platform-option input {
+            display: none;
+        }
+
+        .platform-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--gray-400);
+            transition: all 0.2s;
+        }
+
+        .platform-option input:checked + .platform-label {
+            background: rgba(225, 48, 108, 0.2);
+            border-color: #E1306C;
+            color: var(--white);
+        }
+
+        .platform-label:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .platform-label i {
+            font-size: 16px;
+        }
+
+        .platform-option input[value="instagram"]:checked + .platform-label i { color: #E1306C; }
+        .platform-option input[value="youtube"]:checked + .platform-label i { color: #FF0000; }
+        .platform-option input[value="tiktok"]:checked + .platform-label i { color: #00F2EA; }
+        .platform-option input[value="other"]:checked + .platform-label i { color: var(--gold); }
+
+        .sns-input-wrapper {
+            margin-top: 16px;
+        }
+
+        .sns-input-wrapper label {
+            display: block;
+            font-size: 14px;
+            color: var(--white);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .sns-error {
+            color: #ff4444;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 8px;
+        }
+
+        /* Auth Method Selection */
+        .auth-method-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .auth-method-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-method-section h2 i {
+            color: var(--gold);
+        }
+
+        .auth-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-option:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .auth-option.selected {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .auth-option input[type="radio"] {
+            display: none;
+        }
+
+        .radio-custom {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-top: 2px;
+        }
+
+        .auth-option.selected .radio-custom {
+            border-color: var(--gold);
+            background: var(--gold);
+        }
+
+        .auth-option.selected .radio-custom::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--bg-dark);
+            border-radius: 50%;
+        }
+
+        .auth-option-content {
+            flex: 1;
+        }
+
+        .auth-option-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-option-content h4 i {
+            color: var(--gold);
+            font-size: 14px;
+        }
+
+        .auth-option-content p {
+            font-size: 14px;
+            color: var(--gray-400);
+            line-height: 1.5;
+        }
+
+        .badge-recommended {
+            background: var(--neon-green);
+            color: var(--bg-dark);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        .badge-easy {
+            background: var(--gold);
+            color: var(--bg-dark);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .upload-section.active {
+            display: block;
+        }
+
+        .upload-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-section h2 i {
+            color: var(--gold);
+        }
+
+        .upload-description {
+            color: var(--gray-400);
+            font-size: 14px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .required-docs {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .required-docs h4 {
+            font-size: 14px;
+            color: var(--gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .required-docs ul {
+            list-style: none;
+        }
+
+        .required-docs li {
+            color: var(--gray-300);
+            font-size: 14px;
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .required-docs li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--neon-green);
+        }
+
+        /* File Upload Area */
+        .file-upload-area {
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(255, 215, 0, 0.02);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover,
+        .file-upload-area.dragover {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        .file-upload-area i {
+            font-size: 48px;
+            color: var(--gold);
+            margin-bottom: 16px;
+        }
+
+        .file-upload-area h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .file-upload-area p {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* Uploaded Files List */
+        .uploaded-files {
+            margin-top: 20px;
+        }
+
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .uploaded-file i.file-icon {
+            font-size: 24px;
+            color: var(--gold);
+        }
+
+        .uploaded-file .file-info {
+            flex: 1;
+        }
+
+        .uploaded-file .file-name {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .uploaded-file .file-size {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .uploaded-file .remove-file {
+            background: rgba(255, 68, 68, 0.2);
+            border: none;
+            color: var(--error);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .uploaded-file .remove-file:hover {
+            background: rgba(255, 68, 68, 0.4);
+        }
+
+        .file-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        /* 항목별 인증 섹션 */
+        .qualification-sections-container {
+            margin-top: 20px;
+        }
+
+        .qualification-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .qualification-section.sensitive {
+            border-color: rgba(255, 167, 38, 0.4);
+            background: rgba(255, 167, 38, 0.05);
+        }
+
+        .qual-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .qual-header i {
+            font-size: 24px;
+            color: var(--gold);
+        }
+
+        .qual-header-text h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .qual-header-text p {
+            font-size: 13px;
+            color: var(--gray-400);
+        }
+
+        .sensitive-badge {
+            background: rgba(255, 167, 38, 0.2);
+            color: var(--warning);
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+
+        /* 항목별 인증방법 선택 */
+        .qual-auth-method {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .qual-auth-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .qual-auth-option:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .qual-auth-option.selected {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .qual-auth-option input {
+            display: none;
+        }
+
+        .qual-auth-radio {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--gray-500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .qual-auth-option.selected .qual-auth-radio {
+            border-color: var(--gold);
+        }
+
+        .qual-auth-option.selected .qual-auth-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+
+        .qual-auth-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .qual-auth-label i {
+            margin-right: 6px;
+            font-size: 14px;
+        }
+
+        /* 현장 인증 안내 */
+        .onsite-info {
+            display: none;
+            padding: 14px 16px;
+            background: rgba(57, 255, 20, 0.1);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--neon-green);
+        }
+
+        .onsite-info.active {
+            display: block;
+        }
+
+        .onsite-info i {
+            margin-right: 8px;
+        }
+
+        /* 업로드 필드 영역 */
+        .qual-upload-fields {
+            display: none;
+        }
+
+        .qual-upload-fields.active {
+            display: block;
+        }
+
+        .qualification-field-group {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        .qualification-field-group h4 {
+            display: none;
+        }
+
+        .field-item {
+            margin-bottom: 16px;
+        }
+
+        .field-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .field-label .required-mark {
+            color: var(--error);
+            font-size: 12px;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 6px;
+        }
+
+        .field-file-upload {
+            border: 2px dashed rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 215, 0, 0.02);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .field-file-upload:hover,
+        .field-file-upload.dragover {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.06);
+        }
+
+        .field-file-upload.has-file {
+            border-color: var(--success);
+            background: rgba(0, 200, 81, 0.05);
+        }
+
+        .field-file-upload i {
+            font-size: 28px;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .field-file-upload.has-file i {
+            color: var(--success);
+        }
+
+        .field-file-upload p {
+            font-size: 13px;
+            color: var(--gray-400);
+        }
+
+        .field-file-upload input[type="file"] {
+            display: none;
+        }
+
+        .field-file-info {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(0, 200, 81, 0.1);
+            border-radius: 8px;
+        }
+
+        .field-file-info.active {
+            display: flex;
+        }
+
+        .field-file-info .file-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--success);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .field-file-info .remove-btn {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+        }
+
+        .field-text-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--white);
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .field-text-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .field-text-input::placeholder {
+            color: var(--gray-600);
+        }
+
+        /* SNS 플랫폼 선택 */
+        .sns-platform-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .sns-platform-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+        }
+
+        .sns-platform-btn:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+            color: var(--white);
+        }
+
+        .sns-platform-btn.selected {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--white);
+        }
+
+        .sns-platform-btn i {
+            font-size: 20px;
+        }
+
+        .sns-platform-btn.selected i.fa-instagram { color: #E1306C; }
+        .sns-platform-btn.selected i.fa-youtube { color: #FF0000; }
+        .sns-platform-btn.selected i.fa-tiktok { color: #00F2EA; }
+        .sns-platform-btn.selected i.fa-globe { color: var(--gold); }
+
+        .sns-account-input-wrapper {
+            display: none;
+        }
+
+        .sns-account-input-wrapper.active {
+            display: block;
+        }
+
+        /* 추천 섹션 (호스트 추천 전용) */
+        .referral-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .referral-section.active {
+            display: block;
+        }
+
+        .referral-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .referral-section h2 i {
+            color: var(--gold);
+        }
+
+        .referral-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .referral-tab {
+            flex: 1;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .referral-tab:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .referral-tab.active {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--gold);
+        }
+
+        .referral-content {
+            display: none;
+        }
+
+        .referral-content.active {
+            display: block;
+        }
+
+        .coupon-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coupon-input-group input {
+            flex: 1;
+        }
+
+        .btn-verify-coupon {
+            background: var(--gold);
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--bg-dark);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .btn-verify-coupon:hover {
+            background: var(--gold-light);
+        }
+
+        .coupon-status {
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .coupon-status.success {
+            display: block;
+            background: rgba(57, 255, 20, 0.1);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            color: var(--neon-green);
+        }
+
+        .coupon-status.error {
+            display: block;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: var(--error);
+        }
+
+        /* Contact Info Section */
+        .contact-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .contact-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contact-section h2 i {
+            color: var(--gold);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--gray-400);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 16px;
+            color: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray-600);
+        }
+
+        .form-input textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 20px 0;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .form-divider::before,
+        .form-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Privacy Checkbox */
+        .privacy-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .privacy-check input {
+            display: none;
+        }
+
+        .custom-checkbox {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-top: 2px;
+        }
+
+        .privacy-check input:checked + .custom-checkbox {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .privacy-check input:checked + .custom-checkbox::after {
+            content: '✓';
+            color: var(--bg-dark);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .privacy-text {
+            font-size: 14px;
+            color: var(--gray-400);
+            line-height: 1.5;
+        }
+
+        .privacy-text a {
+            color: var(--gold);
+            text-decoration: underline;
+        }
+
+        /* Warning Notice */
+        .warning-notice {
+            background: rgba(255, 167, 38, 0.1);
+            border: 1px solid rgba(255, 167, 38, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .warning-notice i {
+            color: var(--warning);
+            font-size: 20px;
+        }
+
+        .warning-notice p {
+            color: var(--warning);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Info Notice (for onsite) */
+        .info-notice {
+            background: rgba(57, 255, 20, 0.1);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .info-notice.active {
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-notice i {
+            color: var(--neon-green);
+            font-size: 20px;
+        }
+
+        .info-notice p {
+            color: var(--neon-green);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Error message */
+        .error-message {
+            display: none;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            color: var(--error);
+            font-size: 14px;
+        }
+
+        /* Submit Section */
+        .submit-section {
+            padding: 20px 0 40px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border: none;
+            border-radius: 16px;
+            padding: 18px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-back {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        .btn-back:hover {
+            border-color: var(--white);
+            color: var(--white);
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: var(--bg-dark);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px;
+            }
+
+            .verification-header {
+                padding: 30px 16px;
+            }
+
+            .verification-header h1 {
+                font-size: 24px;
+            }
+
+            .upload-section,
+            .contact-section,
+            .auth-method-section,
+            .referral-section {
+                padding: 24px 20px;
+            }
+
+            .file-upload-area {
+                padding: 30px 16px;
+            }
+
+            .file-upload-area i {
+                font-size: 36px;
+            }
+
+            .coupon-input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="verification-header">
+            <h1>📎 인비테이션 패스 신청</h1>
+            <p>자격 인증 방법을 선택해주세요</p>
+        </div>
+
+        <!-- Selected Qualifications -->
+        <div class="selected-qualification">
+            <h3>선택한 자격 요건</h3>
+            <div id="qualificationBadges" class="qualification-badges">
+                <!-- 동적으로 생성됨 -->
+            </div>
+            <!-- 와인 인센티브 배너 -->
+            <div class="wine-bonus-banner" id="wineBonusBanner" style="display: none;">
+                <i class="fas fa-wine-bottle"></i>
+                <span>🎉 2개 영역 이상 선택! <strong>와인 1병 선물</strong></span>
+            </div>
+        </div>
+
+        <!-- 항목별 인증 섹션 (동적 생성) -->
+        <div class="qualification-sections-container" id="qualificationSectionsContainer">
+            <!-- 자바스크립트로 동적 생성 -->
+        </div>
+
+        <!-- 추천 섹션 (쿠폰 입력 전용) -->
+        <div class="referral-section" id="referralSection">
+            <h2><i class="fas fa-ticket-alt"></i> 추천 코드 입력</h2>
+            
+            <!-- 쿠폰 번호 입력 -->
+            <div class="referral-content active" id="couponContent">
+                <div class="form-group">
+                    <label>추천 코드</label>
+                    <div class="coupon-input-group">
+                        <input type="text" id="couponInput" class="form-input" placeholder="추천 코드를 입력하세요" maxlength="20">
+                        <button type="button" class="btn-verify-coupon" id="verifyCouponBtn">확인</button>
+                    </div>
+                    <div class="coupon-status" id="couponStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="contact-section">
+            <h2><i class="fas fa-phone-alt"></i> 연락처 정보</h2>
+            
+            <div class="form-group">
+                <label for="phoneInput">전화번호 <span style="color: var(--gold); font-size: 12px;">* 프립 예약 시 동일한 번호를 입력해주세요</span></label>
+                <input type="tel" id="phoneInput" class="form-input" placeholder="010-0000-0000" maxlength="13">
+            </div>
+
+            <div class="form-group">
+                <label class="privacy-check">
+                    <input type="checkbox" id="privacyCheck">
+                    <span class="custom-checkbox"></span>
+                    <span class="privacy-text">
+                        <a href="terms.html" target="_blank">개인정보 수집 및 이용</a>에 동의합니다 (필수)
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Warning Notice (업로드 선택 시) -->
+        <div class="warning-notice" id="warningNotice">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>인증 자료 미흡 또는 허위신청 시 참가비 환급이 불가합니다.</p>
+        </div>
+
+        <!-- Info Notice (현장 인증 선택 시) -->
+        <div class="info-notice" id="infoNotice">
+            <i class="fas fa-info-circle"></i>
+            <p>파티 당일 신분증, 명함 등 증빙서류를 지참해주세요. 현장에서 인증이 확인되면 환급됩니다.</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Submit Section -->
+        <div class="submit-section">
+            <button type="button" class="btn-submit" id="submitBtn" disabled>
+                <span class="loading-spinner" id="loadingSpinner"></span>
+                <span id="submitText">신청 완료하기</span>
+                <i class="fas fa-arrow-right" id="submitIcon"></i>
+            </button>
+            <button type="button" class="btn-back" id="backBtn">
+                <i class="fas fa-arrow-left"></i> 이전 페이지로
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // Constants
+        // ========================================
+        // Supabase 설정 (공개 키 - 신청/조회만 가능)
+        const SUPABASE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcHhkeHNneG9hcGd1a254d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjUyNDAsImV4cCI6MjA4MzEwMTI0MH0.v_r3wIIIe024k-H-9dyHH-LJj73kP9iU_eYgHZX7CGA';
+        const API_BASE = `${SUPABASE_URL}/rest/v1`;
+        
+        const SUPABASE_HEADERS = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+        // 파일 업로드와 백업 모두 같은 GAS 사용
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzW9ts1S4krUi1FKW9mYCGbksIHv1MaqMlYNRa07dPy2887DLjOfcbmjZAsrARXj3X-/exec';
+        const FILE_UPLOAD_GAS_URL = GAS_URL;
+        const BACKUP_GAS_URL = GAS_URL;
+        // 쿠폰 검증용 (나중에 배포 후 URL 업데이트 필요)
+
+        // 쿠폰 검증은 서버(GAS)에서 수행
+
+        // Qualification data mapping - 항목별 인증방법 선택 + 필드 정의
+        const qualificationData = {
+            '직업': {
+                icon: 'fa-briefcase',
+                label: '전문직/대기업/공기업/공무원',
+                description: '대기업, 전문직, 공기업, 공무원 재직자',
+                onsiteDocs: '명함 또는 사원증',
+                defaultAuth: 'upload',
+                fields: [
+                    { id: 'job_cert', type: 'file', label: '명함/사원증/재직증명서', required: false, accept: 'image/*,application/pdf', hint: '명함, 사원증, 또는 재직증명서 이미지' }
+                ]
+            },
+            '학력': {
+                icon: 'fa-graduation-cap',
+                label: 'SKY 및 해외대학 졸업자',
+                description: '서울대, 연세대, 고려대 또는 해외 유명대학',
+                onsiteDocs: '학생증 또는 졸업증명서',
+                defaultAuth: 'upload',
+                fields: [
+                    { id: 'edu_cert', type: 'file', label: '졸업증명서/학생증', required: false, accept: 'image/*,application/pdf', hint: '졸업증명서 또는 학생증 이미지' }
+                ]
+            },
+            '연봉자산': {
+                icon: 'fa-chart-line',
+                label: '연봉 8천만원 / 자산 5억원 이상',
+                description: '고소득자 또는 고자산가',
+                onsiteDocs: '소득/자산 증빙 서류',
+                sensitive: true,
+                defaultAuth: 'onsite',  // 민감정보는 현장 인증 기본
+                fields: [
+                    { id: 'asset_cert', type: 'file', label: '소득/자산 증빙 서류', required: false, accept: 'image/*,application/pdf', hint: '연봉 또는 자산 증빙 서류' }
+                ]
+            },
+            'SNS': {
+                icon: 'fa-hashtag',
+                label: '소셜미디어 팔로워 5천명 이상',
+                description: '인스타그램, 유튜브, 틱톡 등',
+                onsiteDocs: 'SNS 계정 화면',
+                defaultAuth: 'upload',
+                hasPlatformSelect: true,  // 플랫폼 선택 필요
+                fields: [
+                    { id: 'sns_platform', type: 'platform', label: 'SNS 플랫폼', required: true },
+                    { id: 'sns_account', type: 'sns_input', label: '계정 정보', required: true, hint: '플랫폼 선택 후 입력' },
+                    { id: 'sns_screenshot', type: 'file', label: '팔로워 스크린샷', required: false, accept: 'image/*', hint: '팔로워 수가 보이는 스크린샷 (선택)' }
+                ]
+            },
+            '운동': {
+                icon: 'fa-running',
+                label: '크로스핏/마라톤 완주 또는 체지방',
+                description: '운동 성과 보유자',
+                onsiteDocs: '완주 메달 또는 인바디 결과지',
+                defaultAuth: 'upload',
+                fields: [
+                    { id: 'fitness_cert', type: 'file', label: '완주 인증서/인바디', required: false, accept: 'image/*,application/pdf', hint: '완주 인증서 또는 인바디 결과지' }
+                ]
+            },
+            '외모': {
+                icon: 'fa-gem',
+                label: '승무원/아나운서/미인대회 등',
+                description: '외모 자신있는 분',
+                onsiteDocs: '신분증 (현장 확인)',
+                defaultAuth: 'upload',
+                fields: [
+                    { id: 'photo_1', type: 'file', label: '본인 사진 1', required: false, accept: 'image/*', hint: '얼굴이 잘 보이는 사진' },
+                    { id: 'photo_2', type: 'file', label: '본인 사진 2', required: false, accept: 'image/*', hint: '전신 또는 다른 각도 사진' }
+                ]
+            },
+            '득표3표': {
+                icon: 'fa-trophy',
+                label: '기존 파티 동시 득표 3표 이상',
+                description: '이전 파티에서 인기 검증',
+                onsiteDocs: '호스트에게 확인',
+                defaultAuth: 'upload',
+                fields: [
+                    { id: 'party_name', type: 'text', label: '참석했던 파티 이름', required: true, placeholder: '예: 2024년 12월 크리스마스 파티', hint: '득표를 받은 파티 이름' },
+                    { id: 'vote_screenshot', type: 'file', label: '득표 인증 스크린샷', required: false, accept: 'image/*', hint: '득표 화면 캡처 (있다면)' }
+                ]
+            },
+            '추천': {
+                icon: 'fa-ticket-alt',
+                label: '추천 코드 보유',
+                description: '호스트 또는 지인 추천',
+                onsiteDocs: '',
+                defaultAuth: 'coupon',
+                fields: []
+            }
+        };
+
+        // 항목별 데이터 저장 (인증방법 + 필드값)
+        let qualificationFields = {};
+
+        // State
+        let selectedQualifications = [];
+        let selectedGroups = [];
+        let wineBonus = false;
+        let couponVerified = false;
+
+        // ========================================
+        // Initialize
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get qualifications from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const qualificationsParam = urlParams.get('qualifications') || '';
+            const groupsParam = urlParams.get('groups') || '';
+            wineBonus = urlParams.get('wineBonus') === 'true';
+
+            selectedQualifications = qualificationsParam ? qualificationsParam.split(',') : [];
+            selectedGroups = groupsParam ? groupsParam.split(',') : [];
+
+            // 유효성 검사
+            if (selectedQualifications.length === 0) {
+                alert('자격 요건을 선택해주세요.');
+                window.location.href = 'index.html#apply';
+                return;
+            }
+
+            // 모든 선택된 자격이 유효한지 확인
+            const invalidQuals = selectedQualifications.filter(q => !qualificationData[q]);
+            if (invalidQuals.length > 0) {
+                alert('유효하지 않은 자격 요건이 있습니다.');
+                window.location.href = 'index.html#apply';
+                return;
+            }
+
+            // 항목별 데이터 초기화
+            selectedQualifications.forEach(qual => {
+                const data = qualificationData[qual];
+                qualificationFields[qual] = {
+                    authMethod: data.defaultAuth || 'upload',
+                    fields: {}
+                };
+            });
+
+            // Display selected qualifications
+            displayQualifications();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Check for stored contact info
+            loadStoredContactInfo();
+
+            // 추천 항목만 선택한 경우 특별 처리
+            if (selectedQualifications.length === 1 && selectedQualifications[0] === '추천') {
+                document.getElementById('referralSection').classList.add('active');
+                document.getElementById('warningNotice').style.display = 'none';
+            }
+        });
+
+        // ========================================
+        // Display Qualifications (복수)
+        // ========================================
+        function displayQualifications() {
+            const badgesContainer = document.getElementById('qualificationBadges');
+            
+            // 각 자격에 대해 배지 생성
+            badgesContainer.innerHTML = selectedQualifications.map(qual => {
+                const data = qualificationData[qual];
+                return `
+                    <div class="qualification-badge">
+                        <i class="fas ${data.icon}"></i>
+                        <span>${qual}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // 와인 보너스 배너 표시
+            if (wineBonus) {
+                document.getElementById('wineBonusBanner').style.display = 'flex';
+            }
+
+            // 항목별 인증 섹션 생성
+            renderQualificationSections();
+        }
+
+        // ========================================
+        // Render Qualification Sections (항목별 인증방법 + 필드)
+        // ========================================
+        function renderQualificationSections() {
+            const container = document.getElementById('qualificationSectionsContainer');
+            container.innerHTML = '';
+
+            selectedQualifications.forEach(qual => {
+                const data = qualificationData[qual];
+                if (qual === '추천') return; // 추천은 별도 섹션
+
+                const sensitiveClass = data.sensitive ? 'sensitive' : '';
+                const sensitiveBadge = data.sensitive ? '<span class="sensitive-badge">⚠️ 민감정보</span>' : '';
+                const defaultAuth = qualificationFields[qual]?.authMethod || data.defaultAuth || 'upload';
+
+                const sectionHtml = `
+                    <div class="qualification-section ${sensitiveClass}" data-qual="${qual}">
+                        <div class="qual-header">
+                            <i class="fas ${data.icon}"></i>
+                            <div class="qual-header-text">
+                                <h4>${qual}</h4>
+                                <p>${data.label}</p>
+                            </div>
+                            ${sensitiveBadge}
+                        </div>
+                        
+                        <!-- 인증방법 선택 -->
+                        <div class="qual-auth-method">
+                            <label class="qual-auth-option ${defaultAuth === 'upload' ? 'selected' : ''}" data-qual="${qual}" data-method="upload">
+                                <input type="radio" name="auth_${qual}" value="upload" ${defaultAuth === 'upload' ? 'checked' : ''}>
+                                <span class="qual-auth-radio"></span>
+                                <span class="qual-auth-label"><i class="fas fa-cloud-upload-alt"></i> 지금 첨부</span>
+                            </label>
+                            <label class="qual-auth-option ${defaultAuth === 'onsite' ? 'selected' : ''}" data-qual="${qual}" data-method="onsite">
+                                <input type="radio" name="auth_${qual}" value="onsite" ${defaultAuth === 'onsite' ? 'checked' : ''}>
+                                <span class="qual-auth-radio"></span>
+                                <span class="qual-auth-label"><i class="fas fa-building"></i> 현장 인증</span>
+                            </label>
+                        </div>
+                        
+                        <!-- 현장 인증 안내 -->
+                        <div class="onsite-info ${defaultAuth === 'onsite' ? 'active' : ''}" id="onsite_${qual}">
+                            <i class="fas fa-info-circle"></i>
+                            파티 당일 <strong>${data.onsiteDocs}</strong>을(를) 지참해주세요.
+                        </div>
+                        
+                        <!-- 업로드 필드 영역 -->
+                        <div class="qual-upload-fields ${defaultAuth === 'upload' ? 'active' : ''}" id="fields_${qual}">
+                            ${renderQualificationFields(qual, data)}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += sectionHtml;
+            });
+
+            // 이벤트 바인딩
+            bindSectionEvents();
+        }
+
+        function renderQualificationFields(qual, data) {
+            if (!data.fields || data.fields.length === 0) return '';
+
+            return data.fields.map(field => {
+                const fieldKey = `${qual}_${field.id}`;
+                const requiredMark = field.required ? '<span class="required-mark">*필수</span>' : '';
+
+                // SNS 플랫폼 선택
+                if (field.type === 'platform') {
+                    return `
+                        <div class="field-item" data-field-key="${fieldKey}">
+                            <div class="field-label">${field.label} ${requiredMark}</div>
+                            <div class="sns-platform-buttons" data-qual="${qual}">
+                                <button type="button" class="sns-platform-btn" data-platform="instagram">
+                                    <i class="fab fa-instagram"></i>
+                                    <span>인스타그램</span>
+                                </button>
+                                <button type="button" class="sns-platform-btn" data-platform="youtube">
+                                    <i class="fab fa-youtube"></i>
+                                    <span>유튜브</span>
+                                </button>
+                                <button type="button" class="sns-platform-btn" data-platform="tiktok">
+                                    <i class="fab fa-tiktok"></i>
+                                    <span>틱톡</span>
+                                </button>
+                                <button type="button" class="sns-platform-btn" data-platform="other">
+                                    <i class="fas fa-globe"></i>
+                                    <span>기타</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // SNS 계정 입력 (플랫폼에 따라 다름)
+                if (field.type === 'sns_input') {
+                    return `
+                        <div class="field-item sns-account-input-wrapper" data-field-key="${fieldKey}" id="sns_input_wrapper_${qual}">
+                            <div class="field-label" id="sns_label_${qual}">${field.label} ${requiredMark}</div>
+                            <input type="text" class="field-text-input" id="sns_account_${qual}" 
+                                   placeholder="플랫폼을 먼저 선택해주세요" 
+                                   data-field-key="${fieldKey}" disabled>
+                            <div class="field-hint" id="sns_hint_${qual}">${field.hint || ''}</div>
+                        </div>
+                    `;
+                }
+
+                // 파일 업로드
+                if (field.type === 'file') {
+                    return `
+                        <div class="field-item" data-field-key="${fieldKey}">
+                            <div class="field-label">${field.label} ${requiredMark}</div>
+                            <div class="field-file-upload" data-field-key="${fieldKey}">
+                                <input type="file" id="file_${fieldKey}" accept="${field.accept || 'image/*,application/pdf'}" style="display:none;">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>클릭하여 파일 선택</p>
+                            </div>
+                            <div class="field-file-info" id="info_${fieldKey}">
+                                <i class="fas fa-file"></i>
+                                <span class="file-name" id="name_${fieldKey}"></span>
+                                <button type="button" class="remove-btn" data-field-key="${fieldKey}"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="field-hint">${field.hint || ''}</div>
+                        </div>
+                    `;
+                }
+
+                // 텍스트 입력
+                if (field.type === 'text') {
+                    return `
+                        <div class="field-item" data-field-key="${fieldKey}">
+                            <div class="field-label">${field.label} ${requiredMark}</div>
+                            <input type="text" class="field-text-input" id="text_${fieldKey}" 
+                                   placeholder="${field.placeholder || ''}" 
+                                   data-field-key="${fieldKey}">
+                            <div class="field-hint">${field.hint || ''}</div>
+                        </div>
+                    `;
+                }
+
+                return '';
+            }).join('');
+        }
+
+        function bindSectionEvents() {
+            // 인증방법 선택
+            document.querySelectorAll('.qual-auth-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const qual = this.dataset.qual;
+                    const method = this.dataset.method;
+                    
+                    // 라디오 상태 업데이트
+                    document.querySelectorAll(`.qual-auth-option[data-qual="${qual}"]`).forEach(opt => {
+                        opt.classList.remove('selected');
+                        opt.querySelector('input').checked = false;
+                    });
+                    this.classList.add('selected');
+                    this.querySelector('input').checked = true;
+                    
+                    // 데이터 저장
+                    qualificationFields[qual].authMethod = method;
+                    
+                    // UI 토글
+                    const onsiteInfo = document.getElementById(`onsite_${qual}`);
+                    const fieldsArea = document.getElementById(`fields_${qual}`);
+                    
+                    if (method === 'onsite') {
+                        onsiteInfo.classList.add('active');
+                        fieldsArea.classList.remove('active');
+                    } else {
+                        onsiteInfo.classList.remove('active');
+                        fieldsArea.classList.add('active');
+                    }
+                    
+                    validateForm();
+                });
+            });
+
+            // SNS 플랫폼 선택
+            document.querySelectorAll('.sns-platform-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const qual = this.closest('.sns-platform-buttons').dataset.qual;
+                    const platform = this.dataset.platform;
+                    
+                    // 선택 상태 업데이트
+                    this.closest('.sns-platform-buttons').querySelectorAll('.sns-platform-btn').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    
+                    // 계정 입력 필드 활성화 및 설정
+                    const wrapper = document.getElementById(`sns_input_wrapper_${qual}`);
+                    const input = document.getElementById(`sns_account_${qual}`);
+                    const label = document.getElementById(`sns_label_${qual}`);
+                    const hint = document.getElementById(`sns_hint_${qual}`);
+                    
+                    wrapper.classList.add('active');
+                    input.disabled = false;
+                    input.value = '';
+                    
+                    // 플랫폼별 설정
+                    switch(platform) {
+                        case 'instagram':
+                            label.innerHTML = '<i class="fab fa-instagram" style="color:#E1306C"></i> 인스타그램 아이디 <span class="required-mark">*필수</span>';
+                            input.placeholder = '@ 없이 아이디만 입력 (예: svvy_official)';
+                            hint.textContent = '아이디만 입력하면 됩니다. 링크는 자동 생성됩니다.';
+                            input.type = 'text';
+                            break;
+                        case 'youtube':
+                            label.innerHTML = '<i class="fab fa-youtube" style="color:#FF0000"></i> 유튜브 채널 <span class="required-mark">*필수</span>';
+                            input.placeholder = '채널 링크 (https://youtube.com/...)';
+                            hint.textContent = '채널 링크를 붙여넣어주세요.';
+                            input.type = 'url';
+                            break;
+                        case 'tiktok':
+                            label.innerHTML = '<i class="fab fa-tiktok" style="color:#00F2EA"></i> 틱톡 아이디 <span class="required-mark">*필수</span>';
+                            input.placeholder = '@ 없이 아이디만 입력 (예: svvy_official)';
+                            hint.textContent = '아이디만 입력하면 됩니다. 링크는 자동 생성됩니다.';
+                            input.type = 'text';
+                            break;
+                        case 'other':
+                            label.innerHTML = '<i class="fas fa-globe" style="color:#FFD700"></i> SNS 링크 <span class="required-mark">*필수</span>';
+                            input.placeholder = 'https://...';
+                            hint.textContent = '전체 링크를 입력해주세요.';
+                            input.type = 'url';
+                            break;
+                    }
+                    
+                    // 데이터 저장
+                    if (!qualificationFields[qual].fields) qualificationFields[qual].fields = {};
+                    qualificationFields[qual].fields.sns_platform = { type: 'text', value: platform };
+                    
+                    input.focus();
+                    validateForm();
+                });
+            });
+
+            // SNS 계정 입력
+            document.querySelectorAll('[id^="sns_account_"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    const qual = this.id.replace('sns_account_', '');
+                    const platform = qualificationFields[qual]?.fields?.sns_platform?.value;
+                    let value = this.value.trim().replace(/^@/, '');
+                    
+                    // 플랫폼별 링크 변환
+                    let snsLink = value;
+                    if (platform === 'instagram' && value && !value.includes('instagram.com')) {
+                        snsLink = `https://instagram.com/${value}`;
+                    } else if (platform === 'tiktok' && value && !value.includes('tiktok.com')) {
+                        snsLink = `https://tiktok.com/@${value}`;
+                    }
+                    
+                    // 데이터 저장
+                    if (!qualificationFields[qual].fields) qualificationFields[qual].fields = {};
+                    qualificationFields[qual].fields.sns_account = { type: 'text', value: value, link: snsLink };
+                    
+                    validateForm();
+                });
+            });
+
+            // 파일 업로드 영역 클릭
+            document.querySelectorAll('.field-file-upload').forEach(area => {
+                area.addEventListener('click', function() {
+                    const fieldKey = this.dataset.fieldKey;
+                    document.getElementById(`file_${fieldKey}`).click();
+                });
+
+                // 드래그 앤 드롭
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+                    const fieldKey = area.dataset.fieldKey;
+                    handleFieldFile(fieldKey, e.dataTransfer.files[0]);
+                });
+            });
+
+            // 파일 input change
+            document.querySelectorAll('.field-file-upload input[type="file"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    const fieldKey = this.id.replace('file_', '');
+                    if (this.files.length > 0) {
+                        handleFieldFile(fieldKey, this.files[0]);
+                    }
+                });
+            });
+
+            // 파일 삭제 버튼
+            document.querySelectorAll('.field-file-info .remove-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const fieldKey = this.dataset.fieldKey;
+                    removeFieldFile(fieldKey);
+                });
+            });
+
+            // 텍스트 입력
+            document.querySelectorAll('.field-text-input:not([id^="sns_account_"])').forEach(input => {
+                input.addEventListener('input', function() {
+                    const fieldKey = this.dataset.fieldKey;
+                    const [qual, ...rest] = fieldKey.split('_');
+                    const fieldId = rest.join('_');
+                    
+                    if (!qualificationFields[qual].fields) qualificationFields[qual].fields = {};
+                    qualificationFields[qual].fields[fieldId] = { type: 'text', value: this.value };
+                    validateForm();
+                });
+            });
+        }
+
+        function handleFieldFile(fieldKey, file) {
+            if (!file) return;
+
+            // 파일 크기 체크 (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('파일 크기는 10MB 이하로 제한됩니다.');
+                return;
+            }
+
+            const [qual, ...rest] = fieldKey.split('_');
+            const fieldId = rest.join('_');
+
+            // qualificationFields에 저장 (새 구조)
+            if (!qualificationFields[qual]) qualificationFields[qual] = { authMethod: 'upload', fields: {} };
+            if (!qualificationFields[qual].fields) qualificationFields[qual].fields = {};
+            qualificationFields[qual].fields[fieldId] = { type: 'file', file: file, name: file.name };
+
+            // UI 업데이트
+            const uploadArea = document.querySelector(`.field-file-upload[data-field-key="${fieldKey}"]`);
+            const fileInfo = document.getElementById(`info_${fieldKey}`);
+            const fileName = document.getElementById(`name_${fieldKey}`);
+
+            if (uploadArea) uploadArea.classList.add('has-file');
+            if (fileInfo) fileInfo.classList.add('active');
+            if (fileName) fileName.textContent = file.name;
+
+            validateForm();
+        }
+
+        function removeFieldFile(fieldKey) {
+            const [qual, ...rest] = fieldKey.split('_');
+            const fieldId = rest.join('_');
+
+            // qualificationFields에서 제거
+            if (qualificationFields[qual]?.fields?.[fieldId]) {
+                delete qualificationFields[qual].fields[fieldId];
+            }
+
+            // UI 업데이트
+            const uploadArea = document.querySelector(`.field-file-upload[data-field-key="${fieldKey}"]`);
+            const fileInfo = document.getElementById(`info_${fieldKey}`);
+            const fileInput = document.getElementById(`file_${fieldKey}`);
+
+            if (uploadArea) uploadArea.classList.remove('has-file');
+            if (fileInfo) fileInfo.classList.remove('active');
+            if (fileInput) fileInput.value = '';
+
+            validateForm();
+        }
+
+        // ========================================
+        // Event Listeners
+        // ========================================
+        function setupEventListeners() {
+            // Auth method selection
+            document.querySelectorAll('.auth-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    selectAuthMethod(this.dataset.method);
+                });
+            });
+
+            // Phone number formatting
+            document.getElementById('phoneInput').addEventListener('input', formatPhoneNumber);
+
+            // Privacy checkbox
+            document.getElementById('privacyCheck').addEventListener('change', validateForm);
+
+            // Contact inputs
+            document.getElementById('phoneInput').addEventListener('input', validateForm);
+
+            // Submit button
+            document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'index.html#apply';
+            });
+
+            // 쿠폰 확인 버튼
+            document.getElementById('verifyCouponBtn').addEventListener('click', verifyCoupon);
+
+            // 쿠폰 입력 엔터키
+            document.getElementById('couponInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyCoupon();
+            });
+        }
+
+        // ========================================
+        // Select Auth Method
+        // ========================================
+        function selectAuthMethod(method) {
+            selectedAuthMethod = method;
+
+            // Update UI
+            document.querySelectorAll('.auth-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.method === method) {
+                    opt.classList.add('selected');
+                    opt.querySelector('input').checked = true;
+                }
+            });
+
+            // Show/hide sections
+            const uploadSection = document.getElementById('uploadSection');
+            const warningNotice = document.getElementById('warningNotice');
+            const infoNotice = document.getElementById('infoNotice');
+
+            if (method === 'upload') {
+                uploadSection.classList.add('active');
+                warningNotice.style.display = 'flex';
+                infoNotice.classList.remove('active');
+            } else if (method === 'onsite') {
+                uploadSection.classList.remove('active');
+                warningNotice.style.display = 'none';
+                infoNotice.classList.add('active');
+            }
+
+            validateForm();
+        }
+
+
+
+        // ========================================
+        // Verify Coupon (서버 검증)
+        // ========================================
+        async function verifyCoupon() {
+            const couponInput = document.getElementById('couponInput');
+            const couponStatus = document.getElementById('couponStatus');
+            const coupon = couponInput.value.trim().toUpperCase();
+
+            if (!coupon) {
+                couponStatus.className = 'coupon-status error';
+                couponStatus.textContent = '쿠폰 번호를 입력해주세요.';
+                couponVerified = false;
+                validateForm();
+                return;
+            }
+
+            // 로딩 표시
+            couponStatus.className = 'coupon-status';
+            couponStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 확인 중...';
+
+            try {
+                // Supabase로 쿠폰 검증
+                const response = await fetch(`${API_BASE}/coupons?id=eq.${encodeURIComponent(coupon)}&select=*`, {
+                    headers: SUPABASE_HEADERS
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const couponData = result[0];  // Supabase는 배열 반환
+                    if (couponData && couponData.is_active) {
+                        couponStatus.className = 'coupon-status success';
+                        couponStatus.innerHTML = '<i class="fas fa-check-circle"></i> 유효한 쿠폰입니다. 인비테이션 패스가 적용됩니다!';
+                        couponVerified = true;
+                    } else {
+                        couponStatus.className = 'coupon-status error';
+                        couponStatus.textContent = '만료된 쿠폰입니다.';
+                        couponVerified = false;
+                    }
+                } else {
+                    couponStatus.className = 'coupon-status error';
+                    couponStatus.textContent = '유효하지 않은 쿠폰 번호입니다.';
+                    couponVerified = false;
+                }
+            } catch (error) {
+                console.error('쿠폰 검증 오류:', error);
+                // 네트워크 오류 시 로컬 백업 검증
+                const backupCoupons = ['WELCOME23', 'VIP2024', 'HOST001', 'SVVY2024'];
+                if (backupCoupons.includes(coupon)) {
+                    couponStatus.className = 'coupon-status success';
+                    couponStatus.innerHTML = '<i class="fas fa-check-circle"></i> 유효한 쿠폰입니다!';
+                    couponVerified = true;
+                } else {
+                    couponStatus.className = 'coupon-status error';
+                    couponStatus.textContent = '유효하지 않은 쿠폰 번호입니다.';
+                    couponVerified = false;
+                }
+            }
+
+            validateForm();
+        }
+
+        // ========================================
+        // SNS Platform Change Handler
+        // ========================================
+        let selectedPlatform = '';
+        
+        function handlePlatformChange(e) {
+            selectedPlatform = e.target.value;
+            const wrapper = document.getElementById('snsInputWrapper');
+            const label = document.getElementById('snsInputLabel');
+            const input = document.getElementById('snsAccountInput');
+            const hint = document.getElementById('snsInputHint');
+            const error = document.getElementById('snsError');
+            
+            wrapper.style.display = 'block';
+            error.style.display = 'none';
+            input.value = '';
+            
+            switch(selectedPlatform) {
+                case 'instagram':
+                    label.innerHTML = '<i class="fab fa-instagram" style="color:#E1306C"></i> 인스타그램 아이디';
+                    input.placeholder = '@ 없이 아이디만 입력 (예: svvy_official)';
+                    hint.textContent = '아이디만 입력하면 됩니다. 링크는 자동 생성됩니다.';
+                    input.type = 'text';
+                    break;
+                case 'youtube':
+                    label.innerHTML = '<i class="fab fa-youtube" style="color:#FF0000"></i> 유튜브 채널';
+                    input.placeholder = '채널명 또는 채널 링크';
+                    hint.textContent = '채널명만 입력하거나, 채널 링크를 붙여넣어도 됩니다.';
+                    input.type = 'text';
+                    break;
+                case 'tiktok':
+                    label.innerHTML = '<i class="fab fa-tiktok" style="color:#00F2EA"></i> 틱톡 아이디';
+                    input.placeholder = '@ 없이 아이디만 입력 (예: svvy_official)';
+                    hint.textContent = '아이디만 입력하면 됩니다. 링크는 자동 생성됩니다.';
+                    input.type = 'text';
+                    break;
+                case 'other':
+                    label.innerHTML = '<i class="fas fa-globe" style="color:#FFD700"></i> SNS 링크';
+                    input.placeholder = 'https://...';
+                    hint.textContent = '전체 링크를 입력해주세요.';
+                    input.type = 'url';
+                    break;
+            }
+            
+            validateForm();
+        }
+
+        // SNS 입력값을 링크로 변환
+        function getSnsLink() {
+            const input = document.getElementById('snsAccountInput');
+            if (!input) return '';
+            
+            const value = input.value.trim().replace(/^@/, ''); // @ 제거
+            
+            if (!value) return '';
+            
+            switch(selectedPlatform) {
+                case 'instagram':
+                    // 이미 링크면 그대로, 아니면 링크 생성
+                    if (value.includes('instagram.com')) return value;
+                    return 'instagram.com/' + value;
+                case 'youtube':
+                    // 이미 링크면 그대로, 아니면 채널명으로 저장
+                    if (value.includes('youtube.com') || value.includes('youtu.be')) return value;
+                    return 'youtube: ' + value;
+                case 'tiktok':
+                    if (value.includes('tiktok.com')) return value;
+                    return 'tiktok.com/@' + value;
+                case 'other':
+                    return value;
+                default:
+                    return value;
+            }
+        }
+
+        // SNS 입력 검증
+        function validateSnsInput() {
+            const input = document.getElementById('snsAccountInput');
+            const error = document.getElementById('snsError');
+            
+            if (!selectedPlatform) {
+                error.textContent = '플랫폼을 선택해주세요.';
+                error.style.display = 'block';
+                return false;
+            }
+            
+            const value = input.value.trim();
+            
+            if (!value) {
+                error.textContent = '계정 정보를 입력해주세요.';
+                error.style.display = 'block';
+                return false;
+            }
+            
+            // 기타인 경우 링크 형식 검증
+            if (selectedPlatform === 'other') {
+                if (!value.startsWith('http://') && !value.startsWith('https://')) {
+                    error.textContent = '링크 형식으로 입력해주세요. (https://...)';
+                    error.style.display = 'block';
+                    return false;
+                }
+            }
+            
+            error.style.display = 'none';
+            return true;
+        }
+
+        // ========================================
+        // Load Stored Contact Info
+        // ========================================
+        function loadStoredContactInfo() {
+            const storedPhone = localStorage.getItem('user_phone');
+
+            if (storedPhone) {
+                document.getElementById('phoneInput').value = storedPhone;
+            }
+
+            validateForm();
+        }
+
+        // ========================================
+        // Phone Number Formatting
+        // ========================================
+        function formatPhoneNumber(e) {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            
+            if (value.length <= 3) {
+                e.target.value = value;
+            } else if (value.length <= 7) {
+                e.target.value = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length <= 11) {
+                e.target.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+            } else {
+                e.target.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+            }
+        }
+
+        // ========================================
+        // Handle Files
+        // ========================================
+        function handleFiles(files) {
+            for (let file of files) {
+                if (file.size > 10 * 1024 * 1024) {
+                    showError('파일 크기는 10MB 이하여야 합니다.');
+                    continue;
+                }
+
+                if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+                    showError('이미지(JPG, PNG) 또는 PDF 파일만 업로드 가능합니다.');
+                    continue;
+                }
+
+                uploadedFiles.push(file);
+            }
+
+            renderUploadedFiles();
+            validateForm();
+        }
+
+        // ========================================
+        // Render Uploaded Files
+        // ========================================
+        function renderUploadedFiles() {
+            const container = document.getElementById('uploadedFiles');
+            
+            if (uploadedFiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = uploadedFiles.map((file, index) => `
+                <div class="uploaded-file">
+                    ${getFilePreview(file, index)}
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            uploadedFiles.forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const previewImg = document.getElementById(`preview-${index}`);
+                        if (previewImg) {
+                            previewImg.src = e.target.result;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function getFilePreview(file, index) {
+            if (file.type.startsWith('image/')) {
+                return `<img id="preview-${index}" class="file-preview" src="" alt="Preview">`;
+            } else {
+                return `<i class="fas fa-file-pdf file-icon"></i>`;
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            renderUploadedFiles();
+            validateForm();
+        }
+
+        // ========================================
+        // Validate Form (항목별 인증방법 기반)
+        // ========================================
+        function validateForm() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const privacyChecked = document.getElementById('privacyCheck').checked;
+
+            // 전화번호 형식 검증 (11자리)
+            const phoneDigits = phone.replace(/[^0-9]/g, '');
+            const hasValidPhone = phoneDigits.length === 11 && phoneDigits.startsWith('010');
+            let isValid = hasValidPhone && privacyChecked;
+
+            // 추천 항목만 선택한 경우
+            if (selectedQualifications.length === 1 && selectedQualifications[0] === '추천') {
+                isValid = isValid && couponVerified;
+            } else {
+                // 항목별 검증 (각 항목의 인증방법에 따라)
+                let allFieldsValid = true;
+                
+                selectedQualifications.forEach(qual => {
+                    if (qual === '추천') return; // 추천은 별도 처리
+                    
+                    const data = qualificationData[qual];
+                    const qualFields = qualificationFields[qual];
+                    const authMethod = qualFields?.authMethod || 'upload';
+                    
+                    // 현장 인증 선택 시 해당 항목은 추가 검증 없음
+                    if (authMethod === 'onsite') return;
+                    
+                    // 지금 첨부 선택 시 필수 필드 검증
+                    if (authMethod === 'upload' && data && data.fields) {
+                        data.fields.forEach(field => {
+                            if (field.required) {
+                                const fieldData = qualFields?.fields?.[field.id];
+                                
+                                if (field.type === 'platform') {
+                                    // SNS 플랫폼 선택 필수
+                                    if (!fieldData || !fieldData.value) {
+                                        allFieldsValid = false;
+                                    }
+                                } else if (field.type === 'sns_input') {
+                                    // SNS 계정 정보 필수
+                                    const accountData = qualFields?.fields?.sns_account;
+                                    if (!accountData || !accountData.value?.trim()) {
+                                        allFieldsValid = false;
+                                    }
+                                } else if (field.type === 'text') {
+                                    if (!fieldData || !fieldData.value?.trim()) {
+                                        allFieldsValid = false;
+                                    }
+                                } else if (field.type === 'file') {
+                                    // 필수 파일 (현재 모든 파일은 선택)
+                                    if (!fieldData || !fieldData.file) {
+                                        allFieldsValid = false;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                isValid = isValid && allFieldsValid;
+            }
+
+            document.getElementById('submitBtn').disabled = !isValid;
+            hideError();
+        }
+
+        // ========================================
+        // Show/Hide Error
+        // ========================================
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // ========================================
+        // Handle Submit (항목별 인증방법 기반)
+        // ========================================
+        async function handleSubmit() {
+            const phone = document.getElementById('phoneInput').value.trim();
+
+            // Validate phone format
+            const phoneDigits = phone.replace(/[^0-9]/g, '');
+            if (phoneDigits.length !== 11 || !phoneDigits.startsWith('010')) {
+                showError('올바른 전화번호 형식을 입력해주세요.');
+                return;
+            }
+
+            // 전화번호 형식 통일 (010-XXXX-XXXX)
+            const formattedPhone = phoneDigits.substring(0, 3) + '-' + phoneDigits.substring(3, 7) + '-' + phoneDigits.substring(7);
+
+            setLoading(true);
+
+            try {
+                // Store contact info
+                localStorage.setItem('user_phone', formattedPhone);
+
+                // Prepare data
+                let snsLink = '';
+                let couponCode = '';
+                let hostName = '';
+                let referralReason = '';
+
+                // 추천 항목만 선택한 경우 특별 처리
+                if (selectedQualifications.length === 1 && selectedQualifications[0] === '추천') {
+                    couponCode = document.getElementById('couponInput').value.trim().toUpperCase();
+                }
+
+                // 항목별 데이터 수집 및 파일 업로드 (새 구조)
+                let fieldDataJson = {};  // { 자격명: { authMethod, fields: {...}, onsiteDocs } }
+                let hasUpload = false;
+                let hasOnsite = false;
+                
+                for (const qual of selectedQualifications) {
+                    if (qual === '추천') continue;
+                    
+                    const qualData = qualificationFields[qual];
+                    const data = qualificationData[qual];
+                    if (!qualData) continue;
+                    
+                    const authMethod = qualData.authMethod || 'upload';
+                    fieldDataJson[qual] = {
+                        authMethod: authMethod,
+                        onsiteDocs: data.onsiteDocs || '',
+                        fields: {}
+                    };
+                    
+                    if (authMethod === 'onsite') {
+                        hasOnsite = true;
+                        continue;  // 현장인증은 파일 업로드 없음
+                    }
+                    
+                    hasUpload = true;
+                    const fields = qualData.fields || {};
+                    
+                    for (const [fieldId, fieldData] of Object.entries(fields)) {
+                        if (fieldData.type === 'text') {
+                            fieldDataJson[qual].fields[fieldId] = { type: 'text', value: fieldData.value };
+                            
+                            // SNS 링크 특별 처리
+                            if (fieldId === 'sns_account' && fieldData.link) {
+                                snsLink = fieldData.link;
+                                fieldDataJson[qual].fields[fieldId].link = fieldData.link;
+                            }
+                        } else if (fieldData.type === 'file' && fieldData.file) {
+                            // 파일 업로드
+                            try {
+                                const fileBase64 = await fileToBase64(fieldData.file);
+                                const uploadRes = await fetch(FILE_UPLOAD_GAS_URL, {
+                                    method: 'POST',
+                                    redirect: 'follow',
+                                    body: JSON.stringify({
+                                        action: 'uploadFiles',
+                                        phone: formattedPhone,
+                                        files: [{
+                                            name: `${qual}_${fieldId}_${fieldData.file.name}`,
+                                            type: fieldData.file.type,
+                                            size: fieldData.file.size,
+                                            data: fileBase64
+                                        }],
+                                        folder: 'verification'
+                                    })
+                                });
+                                const uploadResult = await uploadRes.json();
+                                if (uploadResult.success && uploadResult.files && uploadResult.files[0]) {
+                                    fieldDataJson[qual].fields[fieldId] = { type: 'file', url: uploadResult.files[0].url, name: fieldData.file.name };
+                                }
+                            } catch (uploadError) {
+                                console.error(`파일 업로드 오류 (${qual}/${fieldId}):`, uploadError);
+                            }
+                        }
+                    }
+                }
+                
+                // fileLinks에 항목별 데이터 JSON 문자열로 저장
+                const fileLinks = JSON.stringify(fieldDataJson);
+                
+                // authType 결정 (복합일 경우 mixed)
+                let authType = 'upload';
+                if (selectedQualifications.length === 1 && selectedQualifications[0] === '추천') {
+                    authType = 'coupon';
+                } else if (hasUpload && hasOnsite) {
+                    authType = 'mixed';  // 일부는 지금 첨부, 일부는 현장
+                } else if (hasOnsite && !hasUpload) {
+                    authType = 'onsite';
+                }
+
+                // 승인상태 결정
+                let approvalStatus = '인증대기';
+                if (authType === 'coupon') approvalStatus = '쿠폰승인';
+                else if (authType === 'host_referral') approvalStatus = '승인완료';
+                else if (authType === 'mixed') approvalStatus = '서류제출완료(일부현장)';
+                else if (hasUpload) approvalStatus = '서류제출완료';
+                else if (authType === 'onsite') approvalStatus = '현장인증예정';
+
+                // RESTful API로 초대장 신청 저장
+                const invitationId = 'INV-' + Date.now();
+                const invitationData = {
+                    id: invitationId,
+                    phone: formattedPhone,
+                    qualifications: selectedQualifications.join(', '),
+                    groups: selectedGroups.join(', '),
+                    wineBonus: wineBonus,
+                    authType: authType || '',
+                    snsLink: snsLink,
+                    fileLinks: fileLinks,
+                    couponCode: couponCode,
+                    hostName: hostName,
+                    referralReason: referralReason,
+                    distributor: localStorage.getItem('invitation_source') || '',
+                    approvalStatus: approvalStatus
+                };
+
+                // Edge Function으로 저장 (보안 강화)
+                const EDGE_FUNCTION_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co/functions/v1/submit-invitation';
+                
+                const edgeResponse = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify(invitationData)
+                });
+                
+                if (!edgeResponse.ok) {
+                    const errData = await edgeResponse.json();
+                    console.error('Edge Function 오류:', errData);
+                }
+                
+                // GAS 스프레드시트에 백업
+                try {
+                    await fetch(BACKUP_GAS_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        body: JSON.stringify({
+                            action: 'backupInvitation',
+                            invitation: invitationData
+                        })
+                    });
+                } catch (backupError) {
+                    console.error('초대장 백업 오류:', backupError);
+                }
+
+                // 초대장 신청 완료 문자 발송
+                try {
+                    await fetch(BACKUP_GAS_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        body: JSON.stringify({
+                            action: 'sendInvitationCompleteSms',
+                            to: formattedPhone
+                        })
+                    });
+                } catch (smsError) {
+                    console.error('문자 발송 오류:', smsError);
+                }
+
+                // Redirect to success page
+                const successParams = new URLSearchParams({
+                    qualifications: selectedQualifications.join(','),
+                    authType: authType,
+                    phone: formattedPhone,
+                    wineBonus: wineBonus ? 'true' : 'false'
+                });
+                window.location.href = `success.html?${successParams.toString()}`;
+
+            } catch (error) {
+                console.error('Submit error:', error);
+                showError('제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // ========================================
+        // File to Base64 (순수 base64만 반환)
+        // ========================================
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // data:image/png;base64,XXXX 에서 base64 부분만 추출
+                    const result = reader.result;
+                    const base64 = result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ========================================
+        // Loading State
+        // ========================================
+        function setLoading(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('loadingSpinner');
+            const submitText = document.getElementById('submitText');
+            const submitIcon = document.getElementById('submitIcon');
+
+            if (loading) {
+                submitBtn.disabled = true;
+                spinner.style.display = 'inline-block';
+                submitText.textContent = '처리 중...';
+                submitIcon.style.display = 'none';
+            } else {
+                validateForm();
+                spinner.style.display = 'none';
+                submitText.textContent = '신청 완료하기';
+                submitIcon.style.display = 'inline';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="뭘 좀 아는 사람들 - 파티 라인업">
+    <title>뭘 좀 아는 사람들 - 파티 라인업</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg: #0a0a0a;
+            --color-card: #151515;
+            --color-border: #2a2a2a;
+            --color-text: #ffffff;
+            --color-text-muted: #888888;
+            --color-gold: #FFD700;
+            --color-male: #4a9eff;
+            --color-female: #ff6b9d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-gold);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--color-text-muted);
+            font-size: 14px;
+        }
+        
+        /* 파티 선택 */
+        .party-selector {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .party-selector select {
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .party-selector select:focus {
+            outline: none;
+            border-color: var(--color-gold);
+        }
+        
+        /* 파티 정보 카드 */
+        .party-info {
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .party-info h2 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .party-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-gold);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            margin-top: 4px;
+        }
+        
+        /* 라인업 그리드 */
+        .lineup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .lineup-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .lineup-section {
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .lineup-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .lineup-header.male {
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.1), transparent);
+        }
+        
+        .lineup-header.female {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), transparent);
+        }
+        
+        .lineup-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .lineup-count {
+            font-size: 14px;
+            color: var(--color-text-muted);
+        }
+        
+        /* 참여자 리스트 */
+        .participant-list {
+            padding: 16px;
+        }
+        
+        .participant-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        
+        .participant-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .participant-item.pending {
+            opacity: 0.7;
+        }
+        
+        .participant-rank {
+            width: 30px;
+            height: 30px;
+            background: var(--color-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+        
+        .participant-info {
+            flex: 1;
+        }
+        
+        .participant-job {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .participant-details {
+            font-size: 12px;
+            color: var(--color-text-muted);
+        }
+        
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--color-text-muted);
+        }
+        
+        /* 로딩 */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--color-text-muted);
+        }
+        
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 16px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 푸터 */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--color-text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--color-border);
+            margin-top: 40px;
+        }
+        
+        /* 복사 버튼 */
+        .copy-btn {
+            background: var(--color-gold);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 20px auto;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #e6c200;
+            transform: translateY(-2px);
+        }
+        
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .toast.success {
+            background: #2e7d32;
+        }
+        
+        .toast.error {
+            background: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">뭘 좀 아는 사람들</div>
+            <div class="subtitle">프리미엄 소셜 이벤트 라인업</div>
+        </header>
+        
+        <div class="party-selector">
+            <select id="partyDateSelect">
+                <option value="">날짜를 선택하세요</option>
+            </select>
+            <select id="partySessionSelect">
+                <option value="">세션을 선택하세요</option>
+            </select>
+        </div>
+        
+        <div id="partyInfo" class="party-info" style="display: none;">
+            <h2 id="partyTitle">
+                <span id="partyIcon">☕</span>
+                <span id="partyName">파티 정보</span>
+            </h2>
+            <div class="party-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="statTotal">-</div>
+                    <div class="stat-label">총 인원</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statMale" style="color: var(--color-male);">-</div>
+                    <div class="stat-label">남자</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statFemale" style="color: var(--color-female);">-</div>
+                    <div class="stat-label">여자</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="copy-btn" id="copyBtn" style="display: none;" onclick="copyLineupText()">
+            <i class="fas fa-copy"></i> 라인업 텍스트 복사
+        </button>
+        
+        <div id="loadingState" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>데이터 로딩 중...</p>
+        </div>
+        
+        <div id="lineupContent" class="lineup-grid" style="display: none;">
+            <div class="lineup-section">
+                <div class="lineup-header male">
+                    <span class="lineup-title">👨 남자 라인업</span>
+                    <span class="lineup-count" id="maleCount">0명</span>
+                </div>
+                <div class="participant-list" id="maleList">
+                    <div class="empty-state">참여자가 없습니다</div>
+                </div>
+            </div>
+            
+            <div class="lineup-section">
+                <div class="lineup-header female">
+                    <span class="lineup-title">👩 여자 라인업</span>
+                    <span class="lineup-count" id="femaleCount">0명</span>
+                </div>
+                <div class="participant-list" id="femaleList">
+                    <div class="empty-state">참여자가 없습니다</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2026 뭘 좀 아는 사람들. All rights reserved.</p>
+            <p style="margin-top: 8px;">라인업 정보는 실시간으로 업데이트됩니다.</p>
+        </footer>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        // ============================================
+        // Supabase 설정 (공개 키만 사용 - 민감정보 접근 불가)
+        // ============================================
+        const SUPABASE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcHhkeHNneG9hcGd1a254d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjUyNDAsImV4cCI6MjA4MzEwMTI0MH0.v_r3wIIIe024k-H-9dyHH-LJj73kP9iU_eYgHZX7CGA';
+        const API_BASE = `${SUPABASE_URL}/rest/v1`;
+        const PUBLIC_LINEUP_TABLE = 'public_lineup';
+        
+        // Supabase 헤더 (공개 키 - 읽기만 가능)
+        const SUPABASE_HEADERS = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        };
+        
+        // 데이터 저장소
+        let data = {
+            publicLineup: [],
+            partyTypes: [],
+            schedules: []
+        };
+        
+        // 현재 선택된 라인업 데이터 (복사용)
+        let currentLineup = {
+            date: '',
+            part: '',
+            males: [],
+            females: []
+        };
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllData();
+            setupEventListeners();
+        });
+        
+        // 데이터 로드 (공개 테이블만)
+        async function loadAllData() {
+            try {
+                const [publicLineup, schedules, partyTypes] = await Promise.all([
+                    fetchTable(PUBLIC_LINEUP_TABLE),
+                    fetchTable('party_schedules'),
+                    fetchTable('party_types')
+                ]);
+                
+                data.publicLineup = publicLineup;
+                data.schedules = schedules;
+                data.partyTypes = partyTypes;
+                
+                populateDateSelect();
+                document.getElementById('loadingState').style.display = 'none';
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                document.getElementById('loadingState').innerHTML = '<p>데이터 로드에 실패했습니다.</p>';
+            }
+        }
+        
+        async function fetchTable(tableName) {
+            try {
+                const response = await fetch(`${API_BASE}/${tableName}?select=*`, {
+                    headers: SUPABASE_HEADERS
+                });
+                if (!response.ok) return [];
+                const result = await response.json();
+                // Supabase는 배열 직접 반환, snake_case → camelCase 변환
+                return (result || []).map(row => {
+                    const newRow = {};
+                    for (const key in row) {
+                        const camelKey = key.replace(/_([a-z])/g, (_, l) => l.toUpperCase());
+                        newRow[camelKey] = row[key];
+                    }
+                    return newRow;
+                });
+            } catch {
+                return [];
+            }
+        }
+        
+        // 날짜 선택 목록 생성
+        function populateDateSelect() {
+            const select = document.getElementById('partyDateSelect');
+            
+            // public_lineup에서 사용 가능한 날짜 추출 (스키마: scheduleDate)
+            const uniqueDates = [...new Set(data.publicLineup.map(p => p.scheduleDate))];
+            
+            // 미래 날짜만 필터링
+            const futureDates = uniqueDates.filter(date => getDaysUntil(date) >= 0);
+            
+            futureDates.sort((a, b) => {
+                return parseDateForComparison(a).localeCompare(parseDateForComparison(b));
+            });
+            
+            select.innerHTML = '<option value="">날짜를 선택하세요</option>';
+            futureDates.forEach(date => {
+                const dayName = getDayOfWeek(date);
+                select.innerHTML += `<option value="${date}">${date} (${dayName})</option>`;
+            });
+            
+            // 데이터가 없는 경우
+            if (futureDates.length === 0) {
+                select.innerHTML = '<option value="">공개된 라인업이 없습니다</option>';
+            }
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            document.getElementById('partyDateSelect').addEventListener('change', updateSessionSelect);
+            document.getElementById('partySessionSelect').addEventListener('change', renderLineup);
+        }
+        
+        // 세션 선택 목록 업데이트
+        function updateSessionSelect() {
+            const dateValue = document.getElementById('partyDateSelect').value;
+            const sessionSelect = document.getElementById('partySessionSelect');
+            
+            if (!dateValue) {
+                sessionSelect.innerHTML = '<option value="">세션을 선택하세요</option>';
+                document.getElementById('partyInfo').style.display = 'none';
+                document.getElementById('lineupContent').style.display = 'none';
+                document.getElementById('copyBtn').style.display = 'none';
+                return;
+            }
+            
+            // public_lineup에서 해당 날짜의 세션 추출 (스키마: scheduleDate, schedulePart)
+            const sessionsForDate = [...new Set(
+                data.publicLineup
+                    .filter(p => normalizeDateStr(p.scheduleDate) === normalizeDateStr(dateValue))
+                    .map(p => p.schedulePart)
+            )];
+            
+            // 1부, 2부, 3부 순으로 정렬
+            const partOrder = { '1부': 1, '2부': 2, '3부': 3 };
+            sessionsForDate.sort((a, b) => (partOrder[a] || 99) - (partOrder[b] || 99));
+            
+            sessionSelect.innerHTML = '<option value="">세션을 선택하세요</option>';
+            sessionsForDate.forEach(part => {
+                // 일정에서 시간 정보 가져오기
+                const schedule = data.schedules.find(s => 
+                    normalizeDateStr(s.date) === normalizeDateStr(dateValue) && s.part === part
+                );
+                const time = schedule?.time || '';
+                const partyType = data.partyTypes.find(t => t.id === schedule?.partyType);
+                const icon = partyType?.icon || '☕';
+                sessionSelect.innerHTML += `<option value="${part}">${part} ${time ? '(' + time + ')' : ''} ${icon}</option>`;
+            });
+        }
+        
+        // 라인업 렌더링
+        function renderLineup() {
+            const dateValue = document.getElementById('partyDateSelect').value;
+            const sessionValue = document.getElementById('partySessionSelect').value;
+            
+            if (!dateValue || !sessionValue) {
+                document.getElementById('partyInfo').style.display = 'none';
+                document.getElementById('lineupContent').style.display = 'none';
+                document.getElementById('copyBtn').style.display = 'none';
+                return;
+            }
+            
+            // public_lineup에서 해당 날짜/세션의 참여자 필터링 (스키마: scheduleDate, schedulePart)
+            const normalizedDate = normalizeDateStr(dateValue);
+            const participants = data.publicLineup.filter(p => 
+                normalizeDateStr(p.scheduleDate) === normalizedDate && p.schedulePart === sessionValue
+            );
+            
+            // 성별 분류
+            const males = participants.filter(p => p.gender === '남자');
+            const females = participants.filter(p => p.gender === '여자');
+            
+            // displayOrder로 정렬
+            males.sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999));
+            females.sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999));
+            
+            // 현재 라인업 저장 (복사용)
+            currentLineup = {
+                date: dateValue,
+                part: sessionValue,
+                males: males,
+                females: females
+            };
+            
+            // 일정 정보 가져오기 (파티 유형 표시용)
+            const schedule = data.schedules.find(s => 
+                normalizeDateStr(s.date) === normalizedDate && s.part === sessionValue
+            );
+            const partyType = schedule ? data.partyTypes.find(t => t.id === schedule.partyType) : null;
+            
+            // 파티 정보 업데이트
+            document.getElementById('partyInfo').style.display = 'block';
+            document.getElementById('lineupContent').style.display = 'grid';
+            document.getElementById('copyBtn').style.display = 'flex';
+            
+            const icon = partyType?.icon || '☕';
+            document.getElementById('partyIcon').textContent = icon;
+            document.getElementById('partyName').textContent = `${partyType?.name || '파티'} - ${sessionValue}`;
+            
+            document.getElementById('statTotal').textContent = males.length + females.length;
+            document.getElementById('statMale').textContent = males.length;
+            document.getElementById('statFemale').textContent = females.length;
+            
+            // 라인업 렌더링
+            document.getElementById('maleCount').textContent = `${males.length}명`;
+            document.getElementById('femaleCount').textContent = `${females.length}명`;
+            
+            renderParticipantList('maleList', males);
+            renderParticipantList('femaleList', females);
+        }
+        
+        // 참여자 리스트 렌더링
+        function renderParticipantList(containerId, participants) {
+            const container = document.getElementById(containerId);
+            
+            if (participants.length === 0) {
+                container.innerHTML = '<div class="empty-state">참여자가 없습니다</div>';
+                return;
+            }
+            
+            container.innerHTML = participants.map((p, idx) => {
+                // public_lineup에는 ageRange, height, job만 있음 (tier, type 없음)
+                const ageRange = p.ageRange || '-';
+                const height = p.height ? `${p.height}cm` : '-';
+                const job = p.job || '-';
+                
+                return `
+                    <div class="participant-item">
+                        <div class="participant-rank">${idx + 1}</div>
+                        <div class="participant-info">
+                            <div class="participant-job">${job}</div>
+                            <div class="participant-details">${ageRange} · ${height}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 라인업 텍스트 복사 (프립 상세페이지용)
+        function copyLineupText() {
+            if (currentLineup.males.length === 0 && currentLineup.females.length === 0) {
+                showToast('복사할 라인업이 없습니다.', 'error');
+                return;
+            }
+            
+            let text = `[${currentLineup.date} ${currentLineup.part}]\n\n`;
+            
+            // 남자 라인업
+            if (currentLineup.males.length > 0) {
+                text += `👨 남자 (${currentLineup.males.length}명)\n`;
+                currentLineup.males.forEach((p, idx) => {
+                    const height = p.height ? `${p.height}cm` : '';
+                    const ageRange = p.ageRange || '';
+                    const job = p.job || '';
+                    text += `${idx + 1}. ${job} / ${ageRange}${height ? ' / ' + height : ''}\n`;
+                });
+                text += '\n';
+            }
+            
+            // 여자 라인업
+            if (currentLineup.females.length > 0) {
+                text += `👩 여자 (${currentLineup.females.length}명)\n`;
+                currentLineup.females.forEach((p, idx) => {
+                    const height = p.height ? `${p.height}cm` : '';
+                    const ageRange = p.ageRange || '';
+                    const job = p.job || '';
+                    text += `${idx + 1}. ${job} / ${ageRange}${height ? ' / ' + height : ''}\n`;
+                });
+            }
+            
+            // 클립보드에 복사
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('라인업이 클립보드에 복사되었습니다!', 'success');
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                showToast('복사에 실패했습니다.', 'error');
+            });
+        }
+        
+        // 토스트 메시지
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // ============================================
+        // 유틸리티 함수들
+        // ============================================
+        
+        // 날짜 정규화 ("2026년 1월 11일", "2026년  1월  11일" 등을 통일)
+        function normalizeDateStr(d) {
+            if (!d) return '';
+            const match = d.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+            if (match) {
+                return `${match[1]}년 ${parseInt(match[2])}월 ${parseInt(match[3])}일`;
+            }
+            return d;
+        }
+        
+        function getDaysUntil(dateStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const match = dateStr?.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+            if (!match) return -999;
+            const targetDate = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+            return Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+        }
+        
+        function parseDateForComparison(dateStr) {
+            const match = dateStr?.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+            if (!match) return dateStr || '';
+            return `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+        }
+        
+        function getDayOfWeek(dateStr) {
+            const match = dateStr?.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+            if (!match) return '';
+            const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+            return ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+        }
+    </script>
+</body>
+</html>

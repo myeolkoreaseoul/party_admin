@@ -1,0 +1,3210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="뭘 좀 아는 사람들 - 프리미엄 소셜 이벤트 초대장">
+    <title>뭘 좀 아는 사람들 - 초대장 신청</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- 스타일시트 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/popups.css">
+    
+    <style>
+        /* CSS Variables */
+        :root {
+            --color-primary: #000000;
+            --color-secondary: #000000;
+            --color-dark: #000000;
+            --color-grey-10: #000000;
+            --color-grey-13: #222222;
+            --color-grey-20: #333333;
+            --color-black: #000000;
+            --color-white: #FFFFFF;
+            --color-gold: #FFD700;
+            --color-gold-light: #FFE55C;
+            --color-neon-green: #39FF14;
+            --color-accent: #FFD700;
+            --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-size-14: 14px;
+            --font-size-16: 16px;
+            --font-size-18: 18px;
+            --font-size-20: 20px;
+            --font-size-24: 24px;
+            --font-size-28: 28px;
+            --font-size-32: 32px;
+            --font-size-40: 40px;
+            --font-size-48: 48px;
+            --font-weight-light: 300;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+            --font-weight-bold: 700;
+            --font-weight-black: 900;
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+            --spacing-3xl: 64px;
+            --radius-sm: 5px;
+            --radius-md: 10px;
+            --radius-lg: 15px;
+            --radius-xl: 20px;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size-16);
+            line-height: 1.6;
+            color: var(--color-white);
+            background-color: #000000;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        a {
+            color: var(--color-white);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        a:hover {
+            color: var(--color-gold);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        /* Header */
+        /* Event Banner */
+        .event-banner {
+            position: relative;
+            background: #000000;
+            padding: var(--spacing-2xl) 0;
+            padding-top: 100px;
+            overflow: hidden;
+        }
+
+        .event-banner::before {
+            display: none;
+        }
+
+        .event-banner::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .event-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .event-badge {
+            display: none;
+        }
+
+        .event-title {
+            font-size: 28px;
+            font-weight: var(--font-weight-black);
+            color: var(--color-white);
+            margin-bottom: var(--spacing-sm);
+            line-height: 1.3;
+        }
+
+        .event-subtitle {
+            font-size: 36px;
+            font-weight: var(--font-weight-black);
+            background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-sm);
+            line-height: 1.2;
+        }
+
+        .event-subtitle-small {
+            font-size: 18px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            margin-bottom: var(--spacing-lg);
+            opacity: 0.9;
+        }
+
+        .event-ticket-container {
+            position: relative;
+            max-width: 400px;
+            margin: var(--spacing-xl) auto 0;
+            perspective: 1000px;
+        }
+
+        .event-ticket {
+            position: relative;
+            background: linear-gradient(135deg, 
+                rgba(255, 215, 0, 0.98) 0%, 
+                rgba(255, 235, 120, 0.98) 50%,
+                rgba(255, 215, 0, 0.98) 100%);
+            padding: var(--spacing-xl) var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            box-shadow: 
+                0 25px 70px rgba(255, 215, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.2),
+                inset 0 2px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -2px 10px rgba(0, 0, 0, 0.1);
+            transform: rotateX(5deg) rotateY(-5deg);
+            transition: transform var(--transition-normal);
+        }
+
+        .event-ticket:hover {
+            transform: rotateX(0deg) rotateY(0deg) scale(1.02);
+        }
+
+        .event-ticket::before {
+            display: none;
+        }
+
+        .event-ticket::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 255, 255, 0.03) 10px,
+                    rgba(255, 255, 255, 0.03) 20px
+                );
+            border-radius: var(--radius-lg);
+            pointer-events: none;
+        }
+
+        .ticket-notch {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .ticket-notch.left {
+            left: -15px;
+        }
+
+        .ticket-notch.right {
+            right: -15px;
+        }
+
+        .ticket-content {
+            position: relative;
+            text-align: center;
+        }
+
+        .ticket-label {
+            font-size: 12px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-black);
+            margin-bottom: var(--spacing-xs);
+            opacity: 0.6;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .ticket-text {
+            font-size: 36px;
+            font-weight: var(--font-weight-black);
+            color: var(--color-black);
+            line-height: 1.1;
+            margin-bottom: var(--spacing-md);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .ticket-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                transparent,
+                rgba(0, 0, 0, 0.2) 20%,
+                rgba(0, 0, 0, 0.2) 80%,
+                transparent
+            );
+            margin: var(--spacing-md) 0;
+        }
+
+        .ticket-info {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .ticket-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .info-label {
+            font-size: 11px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-black);
+            opacity: 0.5;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-black);
+            opacity: 0.8;
+        }
+
+        .ticket-barcode {
+            display: none;
+        }
+
+        .barcode-line {
+            display: none;
+        }
+
+        .barcode-line:nth-child(even) {
+            display: none;
+        }
+
+        .barcode-line:nth-child(3n) {
+            display: none;
+        }
+
+        .event-notice {
+            font-size: 14px;
+            color: var(--color-white);
+            opacity: 0.8;
+            margin-top: var(--spacing-lg);
+            line-height: 1.6;
+        }
+
+        .event-notice strong {
+            color: var(--color-gold);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: var(--font-size-20);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+        }
+
+        .nav {
+            display: flex;
+            gap: var(--spacing-lg);
+        }
+
+        .nav a {
+            font-size: var(--font-size-14);
+            font-weight: var(--font-weight-medium);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .nav a:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+
+        /* Invitation Criteria Section */
+        .invitation-criteria {
+            padding: var(--spacing-3xl) 0;
+            background-color: #000000;
+            margin-top: var(--spacing-3xl);
+        }
+
+        .criteria-title {
+            font-size: 28px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .criteria-subtitle {
+            font-size: 15px;
+            font-weight: var(--font-weight-regular);
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .criteria-form {
+            max-width: 750px;
+            margin: 0 auto;
+        }
+
+        /* 인센티브 배너 */
+        .incentive-banner {
+            background: linear-gradient(135deg, rgba(128, 0, 128, 0.3), rgba(255, 215, 0, 0.2));
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(255, 215, 0, 0.5); }
+            50% { border-color: rgba(255, 215, 0, 0.9); }
+        }
+
+        .incentive-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--color-white);
+            font-size: 16px;
+        }
+
+        .incentive-content i {
+            font-size: 24px;
+            color: #9b59b6;
+        }
+
+        /* 그룹 스타일 */
+        .criteria-group {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .criteria-group-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .group-icon {
+            font-size: 28px;
+        }
+
+        .group-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-white);
+            flex: 1;
+            letter-spacing: 0.5px;
+        }
+
+        .group-check {
+            display: none;
+            color: #39FF14;
+            font-size: 20px;
+            animation: check-pop 0.3s ease;
+        }
+
+        .group-check.active {
+            display: block;
+        }
+
+        @keyframes check-pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: 0;
+        }
+
+        .criteria-item-selectable {
+            cursor: pointer;
+            display: block;
+        }
+
+        .criteria-item-selectable input[type="checkbox"] {
+            display: none;
+        }
+
+        .criteria-item-content {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            background: #000000;
+            border: 3px solid #333333;
+            border-radius: 12px;
+            padding: 18px 20px;
+            transition: all var(--transition-normal);
+            min-height: 85px;
+        }
+
+        .criteria-item-selectable:hover .criteria-item-content {
+            background: #111111;
+            border-color: #444444;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .criteria-item-selectable input[type="checkbox"]:checked + .criteria-item-content {
+            background: #141414;
+            border-color: var(--color-gold);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+        }
+
+        .criteria-item-content i {
+            font-size: 24px;
+            color: var(--color-gold);
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .criteria-item-content span {
+            font-size: 15px;
+            color: var(--color-white);
+            line-height: 1.5;
+            font-weight: var(--font-weight-regular);
+        }
+
+        .criteria-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            background: rgba(34, 34, 34, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            transition: all var(--transition-normal);
+        }
+
+        .criteria-item:hover {
+            transform: translateX(5px);
+            border-color: var(--color-gold);
+            background: rgba(34, 34, 34, 0.8);
+        }
+
+        .criteria-item i {
+            font-size: 20px;
+            color: var(--color-gold);
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .criteria-item span {
+            font-size: var(--font-size-16);
+            color: var(--color-white);
+            line-height: 1.6;
+        }
+
+        .criteria-note {
+            text-align: left;
+            font-size: 11px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.35);
+            line-height: 1.5;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            border: none;
+            margin: var(--spacing-sm) 0 var(--spacing-lg) 0;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .btn-invitation {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: 18px var(--spacing-xl);
+            font-size: 17px;
+            font-weight: var(--font-weight-bold);
+            font-family: var(--font-family);
+            color: #000000;
+            background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-invitation:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #FFE55C 0%, #FFD700 100%);
+        }
+
+        .btn-invitation:active {
+            transform: translateY(0);
+        }
+
+        .btn-general {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: 18px var(--spacing-xl);
+            font-size: 17px;
+            font-weight: var(--font-weight-bold);
+            font-family: var(--font-family);
+            color: #FFFFFF !important;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3) !important;
+        }
+
+        .btn-general:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.5) !important;
+            background: linear-gradient(135deg, #3ce27a 0%, #2ecc71 100%) !important;
+        }
+
+        .btn-general:active {
+            transform: translateY(0);
+        }
+
+        .btn-text {
+            flex: 1;
+            text-align: center;
+        }
+
+        .divider-or {
+            text-align: center;
+            margin: var(--spacing-md) 0;
+            position: relative;
+        }
+
+        .divider-or span {
+            display: inline-block;
+            padding: 0 var(--spacing-md);
+            font-size: 14px;
+            font-weight: var(--font-weight-medium);
+            color: rgba(255, 255, 255, 0.5);
+            background-color: #000000;
+        }
+
+        .divider-or::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 0;
+        }
+
+        .divider-or span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .general-note {
+            text-align: left;
+            font-size: 13px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: var(--spacing-sm);
+            padding-left: var(--spacing-xs);
+        }
+
+        .integrated-form-wrapper {
+            max-width: 700px;
+            margin: var(--spacing-3xl) auto 0;
+        }
+
+        .form-section-title {
+            font-size: var(--font-size-24);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .hero {
+            padding-top: 120px;
+            padding-bottom: var(--spacing-3xl);
+            background-color: #000000;
+            margin-top: var(--spacing-3xl);
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .hero-title {
+            font-size: 32px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+            line-height: 1.3;
+            margin-bottom: var(--spacing-lg);
+            white-space: nowrap;
+        }
+
+        .hero-subtitle {
+            font-size: var(--font-size-16);
+            font-weight: var(--font-weight-light);
+            color: var(--color-white);
+            line-height: 1.8;
+            margin-bottom: var(--spacing-2xl);
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-image-container {
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .hero-main-image {
+            width: 100%;
+            display: block;
+        }
+
+        .hero-image-overlay {
+            position: absolute;
+            top: 50%;
+            right: 40px;
+            transform: translateY(-50%);
+            text-align: right;
+        }
+
+        .hero-overlay-text {
+            font-size: 64px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            line-height: 1.2;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            letter-spacing: -2px;
+        }
+
+        /* Intro Section */
+        .intro {
+            padding: var(--spacing-3xl) 0;
+            background-color: #000000;
+        }
+
+        .intro-content {
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--color-white);
+            opacity: 0.8;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .intro-text {
+            font-size: var(--font-size-18);
+            line-height: 1.8;
+            color: var(--color-white);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .intro-image {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        /* Lineup Section */
+        .lineup-section {
+            padding: var(--spacing-lg) 0;
+            background-color: #000000;
+        }
+        
+        .lineup-loading, .lineup-error, .lineup-empty {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+        
+        .lineup-error {
+            color: #ff6b6b;
+        }
+
+        .lineup-header-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 0, 0, 0.15);
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: pulse-live 1.5s infinite;
+        }
+
+        @keyframes pulse-live {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .live-text {
+            font-size: 9px;
+            font-weight: var(--font-weight-bold);
+            color: #ff0000;
+            letter-spacing: 0.5px;
+        }
+
+        .lineup-title {
+            font-size: 16px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+        }
+
+        .lineup-date-main {
+            text-align: center;
+            font-size: 13px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .lineup-party-block {
+            max-width: 420px;
+            margin: 0 auto var(--spacing-sm);
+        }
+
+        .lineup-party-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 6px 6px 0 0;
+            font-size: 11px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-bottom: none;
+        }
+
+        .party-name {
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+        }
+
+        .party-time {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+        }
+
+        .party-status {
+            margin-left: auto;
+            font-size: 9px;
+            font-weight: var(--font-weight-bold);
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .lineup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #333;
+            border: 1px solid #333;
+            border-radius: 0 0 6px 6px;
+            overflow: hidden;
+        }
+
+        .lineup-column {
+            background: #111;
+        }
+
+        .lineup-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: var(--font-weight-bold);
+        }
+
+        .lineup-header.male {
+            background: #1a1a1a;
+            color: #6a9fd4;
+        }
+
+        .lineup-header.female {
+            background: #1a1a1a;
+            color: #d46a8a;
+        }
+
+        .lineup-list {
+            padding: 4px;
+        }
+
+        .lineup-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 3px;
+            margin-bottom: 2px;
+            border-left: 2px solid transparent;
+            position: relative;
+            font-size: 11px;
+        }
+
+        .lineup-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .lineup-item.new-entry {
+            border-left: 2px solid #39FF14;
+            background: rgba(57, 255, 20, 0.05);
+        }
+
+        .new-badge {
+            position: absolute;
+            right: 4px;
+            font-size: 8px;
+            font-weight: var(--font-weight-bold);
+            color: #39FF14;
+            background: rgba(57, 255, 20, 0.15);
+            padding: 1px 3px;
+            border-radius: 2px;
+        }
+
+        .lineup-year {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: var(--font-weight-regular);
+            min-width: 18px;
+        }
+
+        .lineup-job {
+            font-size: 10px;
+            color: var(--color-white);
+            font-weight: var(--font-weight-medium);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lineup-footer {
+            max-width: 420px;
+            margin: var(--spacing-sm) auto 0;
+            text-align: center;
+        }
+
+        .lineup-update-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 2px;
+        }
+
+        .lineup-update-time i {
+            margin-right: 3px;
+        }
+
+        .update-cycle {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .lineup-more-info {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.4;
+        }
+
+        .lineup-more-info i {
+            margin-right: 3px;
+            color: rgba(255, 215, 0, 0.6);
+        }
+
+        .lineup-more-info a {
+            color: rgba(255, 215, 0, 0.8);
+            text-decoration: underline;
+        }
+
+        .lineup-more-info a:hover {
+            color: var(--color-gold);
+        }
+
+        /* New Party Block Styles */
+        .lineup-party-block {
+            max-width: 480px;
+            margin: 0 auto var(--spacing-lg);
+        }
+
+        .lineup-party-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            font-size: 12px;
+        }
+
+        .lineup-party-header.coffee {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+        }
+
+        .lineup-party-header.wine {
+            background: linear-gradient(135deg, #722F37 0%, #9B2335 100%);
+        }
+
+        .party-icon {
+            font-size: 16px;
+        }
+
+        .party-name {
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            font-size: 14px;
+        }
+
+        .party-time {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+        }
+
+        .party-age-limit {
+            color: var(--color-gold);
+            font-size: 10px;
+            font-weight: var(--font-weight-bold);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .party-status {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: var(--font-weight-bold);
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: rgba(57, 255, 20, 0.2);
+            color: #39FF14;
+        }
+
+        .lineup-grid-new {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #333;
+            border: 1px solid #333;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+
+        .lineup-column {
+            background: #111;
+        }
+
+        .lineup-list-new {
+            padding: 8px;
+        }
+
+        .lineup-item-new {
+            display: grid;
+            grid-template-columns: 58px 30px 1fr;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            margin-bottom: 4px;
+            border-left: 3px solid transparent;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .lineup-item-new:last-child {
+            margin-bottom: 0;
+        }
+
+        .lineup-item-new:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .lineup-item-new.new-entry {
+            border-left-color: #39FF14;
+            background: rgba(57, 255, 20, 0.08);
+        }
+
+        .lineup-item-new .lineup-age {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: var(--font-weight-medium);
+            white-space: nowrap;
+        }
+
+        .lineup-item-new .lineup-height {
+            font-size: 11px;
+            color: var(--color-gold);
+            font-weight: var(--font-weight-bold);
+            text-align: center;
+        }
+
+        .lineup-item-new .lineup-job {
+            font-size: 11px;
+            color: var(--color-white);
+            font-weight: var(--font-weight-medium);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lineup-item-new .new-badge {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8px;
+            font-weight: var(--font-weight-bold);
+            color: #39FF14;
+            background: rgba(57, 255, 20, 0.2);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .lineup-item-new.empty-slot {
+            background: rgba(255, 255, 255, 0.01);
+            border-left-color: transparent;
+            opacity: 0.4;
+        }
+
+        .lineup-item-new.empty-slot .lineup-age,
+        .lineup-item-new.empty-slot .lineup-height {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .lineup-item-new.empty-slot .lineup-job {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+        }
+
+        /* Grid Wrapper with Fade */
+        .lineup-grid-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lineup-fade-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(to bottom, transparent, #111 80%);
+            pointer-events: none;
+        }
+
+        /* More Button */
+        .lineup-more-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: var(--font-weight-medium);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .lineup-more-btn:hover {
+            background: #222;
+            color: var(--color-gold);
+        }
+
+        .lineup-more-btn i {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .lineup-more-btn:hover i {
+            transform: translateX(3px);
+        }
+
+        @media (max-width: 480px) {
+            .lineup-section {
+                padding: var(--spacing-md) 0;
+            }
+
+            .lineup-header-wrapper {
+                gap: 6px;
+            }
+
+            .live-indicator {
+                padding: 2px 5px;
+            }
+
+            .live-dot {
+                width: 5px;
+                height: 5px;
+            }
+
+            .live-text {
+                font-size: 8px;
+            }
+
+            .lineup-title {
+                font-size: 14px;
+            }
+
+            .lineup-date-main {
+                font-size: 12px;
+            }
+
+            .lineup-party-block {
+                margin-bottom: 16px;
+            }
+
+            .lineup-party-header {
+                padding: 10px 12px;
+                gap: 6px;
+            }
+
+            .party-icon {
+                font-size: 14px;
+            }
+
+            .party-name {
+                font-size: 12px;
+            }
+
+            .party-time {
+                font-size: 10px;
+            }
+
+            .party-age-limit {
+                font-size: 9px;
+                padding: 2px 6px;
+            }
+
+            .party-status {
+                font-size: 9px;
+                padding: 2px 6px;
+            }
+
+            .age-group-label {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .lineup-header {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+
+            .lineup-header i {
+                font-size: 9px;
+            }
+
+            .lineup-list-new {
+                padding: 6px;
+            }
+
+            .lineup-item-new {
+                grid-template-columns: 52px 26px 1fr;
+                gap: 4px;
+                padding: 5px 6px;
+                margin-bottom: 3px;
+            }
+
+            .lineup-item-new .lineup-age {
+                font-size: 9px;
+            }
+
+            .lineup-item-new .lineup-height {
+                font-size: 10px;
+            }
+
+            .lineup-item-new .lineup-job {
+                font-size: 10px;
+            }
+
+            .lineup-item-new .new-badge {
+                font-size: 7px;
+                padding: 1px 3px;
+                right: 4px;
+            }
+
+            .lineup-footer {
+                margin-top: 12px;
+            }
+
+            .lineup-update-time {
+                font-size: 9px;
+            }
+
+            .lineup-more-info {
+                font-size: 9px;
+            }
+
+            .lineup-fade-overlay {
+                height: 40px;
+            }
+
+            .lineup-more-btn {
+                padding: 10px 16px;
+                font-size: 11px;
+            }
+        }
+
+        /* Program Section */
+        .program {
+            padding: var(--spacing-3xl) 0;
+            background-color: #000000;
+            margin-top: var(--spacing-3xl);
+        }
+
+        .program .section-title {
+            text-align: center;
+            color: var(--color-gold);
+            font-size: 28px;
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .program .section-subtitle {
+            text-align: center;
+            color: var(--color-white);
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .program-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-2xl);
+            max-width: 400px;
+            margin: var(--spacing-xl) auto 0;
+        }
+
+        .program-card-new {
+            background: #141414;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .program-card-new:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .program-image-new {
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .program-image-new img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--transition-slow);
+        }
+
+        .program-card-new:hover .program-image-new img {
+            transform: scale(1.05);
+        }
+
+        .program-content-new {
+            padding: var(--spacing-lg) var(--spacing-xl);
+        }
+
+        .program-badges-new {
+            display: flex;
+            gap: var(--spacing-xs);
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .badge-tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: var(--font-weight-bold);
+            padding: 5px 12px;
+            border-radius: 15px;
+            color: var(--color-black);
+        }
+
+        .badge-tag.green {
+            background-color: #9FE870;
+        }
+
+        .badge-tag.wine {
+            background-color: #C75B7A;
+        }
+
+        .program-title-new {
+            font-size: 20px;
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            margin-bottom: var(--spacing-md);
+            line-height: 1.3;
+        }
+
+        .program-description-new {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        /* Host Section */
+        .host {
+            padding: var(--spacing-3xl) 0;
+            background-color: #000000;
+        }
+
+        .host .section-title {
+            text-align: center;
+        }
+
+        .host .section-subtitle {
+            text-align: center;
+        }
+
+        .host-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-2xl);
+        }
+
+        .host-card {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .host-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .host-image {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .host-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--transition-slow);
+        }
+
+        .host-card:hover .host-image img {
+            transform: scale(1.1);
+        }
+
+        .host-info {
+            padding: var(--spacing-xl);
+        }
+
+        .host-name {
+            font-size: var(--font-size-24);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .host-title {
+            font-size: var(--font-size-18);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-white);
+            opacity: 0.8;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .host-description {
+            font-size: var(--font-size-16);
+            line-height: 1.8;
+            color: var(--color-white);
+            opacity: 0.9;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .host-expertise {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+
+        .expertise-tag {
+            display: inline-block;
+            background-color: rgba(255, 215, 0, 0.1);
+            color: var(--color-gold);
+            font-size: var(--font-size-14);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Differentiators Section */
+        .differentiators {
+            padding: var(--spacing-3xl) 0;
+            background-color: #000000;
+        }
+
+        .differentiators .section-title {
+            text-align: center;
+        }
+
+        .differentiators .section-subtitle {
+            text-align: center;
+        }
+
+        .diff-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-xl);
+            margin: var(--spacing-2xl) 0;
+        }
+
+        .diff-card {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            text-align: center;
+            transition: all var(--transition-normal);
+        }
+
+        .diff-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .diff-icon {
+            font-size: var(--font-size-48);
+            color: var(--color-gold);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .diff-title {
+            font-size: var(--font-size-24);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .diff-description {
+            font-size: var(--font-size-16);
+            line-height: 1.8;
+            color: var(--color-white);
+            opacity: 0.9;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-2xl);
+        }
+
+        .gallery-item {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            transition: transform var(--transition-slow);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Application Form Section */
+        .application {
+            padding: var(--spacing-3xl) 0;
+            background: #000000;
+        }
+
+        .form-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-wrapper .section-title {
+            text-align: center;
+        }
+
+        .form-wrapper .section-subtitle {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .application-form {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-group label {
+            display: block;
+            font-size: var(--font-size-14);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-white);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .form-group input[type="tel"],
+        .form-group input[type="text"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-16);
+            font-family: var(--font-family);
+            color: var(--color-white);
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input[type="tel"]:focus,
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus {
+            outline: none;
+            border-color: var(--color-gold);
+            background-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        .form-divider {
+            text-align: center;
+            margin: var(--spacing-lg) 0;
+            position: relative;
+        }
+
+        .form-divider::before,
+        .form-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-divider::before {
+            left: 0;
+        }
+
+        .form-divider::after {
+            right: 0;
+        }
+
+        .form-divider span {
+            display: inline-block;
+            padding: 0 var(--spacing-md);
+            font-size: var(--font-size-14);
+            font-weight: var(--font-weight-medium);
+            color: rgba(255, 255, 255, 0.5);
+            background-color: #000000;
+        }
+
+        select {
+            width: 100%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-16);
+            font-family: var(--font-family);
+            color: var(--color-white);
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--color-gold);
+            background-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        select option {
+            background-color: #141414;
+            color: var(--color-white);
+        }
+
+        .form-help {
+            display: block;
+            font-size: var(--font-size-14);
+            color: var(--color-white);
+            opacity: 0.7;
+            margin-top: var(--spacing-xs);
+        }
+
+        .qualifications-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+        }
+
+        .qualification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .qualification-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .qualification-item input[type="checkbox"] {
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--color-gold);
+            flex-shrink: 0;
+        }
+
+        .qualification-item span {
+            font-size: var(--font-size-14);
+            color: var(--color-white);
+            line-height: 1.5;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            cursor: pointer;
+            font-weight: var(--font-weight-regular);
+            font-size: var(--font-size-14);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--color-gold);
+        }
+
+        .btn-submit {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-size: var(--font-size-16);
+            font-weight: var(--font-weight-bold);
+            font-family: var(--font-family);
+            color: var(--color-black);
+            background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-light) 100%);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-message {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-16);
+            text-align: center;
+            display: none;
+        }
+
+        .form-message.success {
+            display: block;
+            background-color: rgba(57, 255, 20, 0.1);
+            border: 1px solid var(--color-neon-green);
+            color: var(--color-neon-green);
+        }
+
+        .form-message.error {
+            display: block;
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+
+        .form-info {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            margin-top: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-info h3 {
+            font-size: var(--font-size-18);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-gold);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-info ul {
+            list-style: none;
+        }
+
+        .form-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+            font-size: var(--font-size-14);
+            line-height: 1.7;
+            color: var(--color-white);
+            opacity: 0.9;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-info li i {
+            color: var(--color-gold);
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+
+        .form-info li strong {
+            color: var(--color-gold);
+            font-weight: var(--font-weight-bold);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .highlight-text {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--color-gold);
+            border-radius: 4px;
+            color: var(--color-gold);
+            font-weight: var(--font-weight-bold);
+            white-space: nowrap;
+        }
+
+        .form-info li i.fa-exclamation-triangle {
+            color: #ff9800;
+        }
+
+        @media (max-width: 480px) {
+            .form-info {
+                padding: var(--spacing-md);
+            }
+
+            .form-info h3 {
+                font-size: var(--font-size-18);
+            }
+
+            .form-info li {
+                font-size: var(--font-size-14);
+                line-height: 1.7;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .highlight-text {
+                padding: 2px 6px;
+                font-size: var(--font-size-14);
+            }
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--spacing-2xl) 0 var(--spacing-lg);
+            background-color: #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            text-align: left;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .footer-section h4 {
+            font-size: var(--font-size-16);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .footer-section a {
+            font-size: var(--font-size-14);
+            color: var(--color-white);
+            opacity: 0.8;
+            transition: all var(--transition-fast);
+        }
+
+        .footer-section a:hover {
+            opacity: 1;
+            color: var(--color-gold);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: var(--spacing-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-bottom p {
+            font-size: var(--font-size-14);
+            color: var(--color-white);
+            opacity: 0.6;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .container {
+                padding: 0 var(--spacing-xl);
+            }
+            
+            .hero {
+                padding-top: 100px;
+            }
+            
+            .hero-title {
+                font-size: 52px;
+            }
+            
+            .hero-subtitle {
+                font-size: 18px;
+            }
+            
+            .hero-overlay-text {
+                font-size: 80px;
+            }
+            
+            .section-title {
+                font-size: var(--font-size-40);
+            }
+            
+            .host-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .diff-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .qualifications-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--spacing-md);
+            }
+            
+            .footer-content {
+                grid-template-columns: 2fr 3fr;
+            }
+            
+            .footer-links {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 var(--spacing-md);
+            }
+
+            .header {
+                padding: var(--spacing-sm) 0;
+            }
+
+            .nav {
+                gap: 8px;
+            }
+            
+            .nav a {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+            
+            .logo {
+                font-size: 15px;
+            }
+            
+            .event-banner {
+                padding: var(--spacing-xl) 0;
+                padding-top: 80px;
+            }
+
+            .event-badge {
+                display: none;
+            }
+
+            .event-title {
+                font-size: 18px;
+                margin-bottom: 4px;
+            }
+
+            .event-subtitle {
+                font-size: 22px;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .event-subtitle-small {
+                font-size: 14px;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .event-ticket-container {
+                max-width: 320px;
+                margin: var(--spacing-md) auto 0;
+            }
+
+            .event-ticket {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+
+            .ticket-label {
+                font-size: 10px;
+            }
+
+            .ticket-text {
+                font-size: 24px;
+                letter-spacing: 2px;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .ticket-info-row {
+                margin-bottom: 4px;
+            }
+
+            .info-label {
+                font-size: 9px;
+            }
+
+            .info-value {
+                font-size: 11px;
+            }
+
+            .ticket-barcode {
+                display: none;
+            }
+
+            .barcode-line {
+                display: none;
+            }
+
+            .barcode-line:nth-child(even) {
+                display: none;
+            }
+
+            .barcode-line:nth-child(3n) {
+                display: none;
+            }
+
+            .event-notice {
+                font-size: 12px;
+                margin-top: var(--spacing-md);
+                padding: 0 var(--spacing-sm);
+            }
+
+            .hero {
+                padding-top: 100px;
+                padding-bottom: var(--spacing-xl);
+            }
+            
+            .hero-content {
+                padding: 0;
+            }
+            
+            .hero-title {
+                font-size: 24px;
+                white-space: normal;
+                line-height: 1.4;
+                margin-bottom: var(--spacing-xs);
+            }
+            
+            .hero-subtitle {
+                font-size: 13px;
+                line-height: 1.6;
+                padding: 0;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .hero-image-container {
+                margin-top: var(--spacing-md);
+            }
+            
+            .hero-overlay-text {
+                display: none;
+            }
+            
+            .section-title {
+                font-size: 24px;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .section-subtitle {
+                font-size: 13px;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .program {
+                padding: var(--spacing-2xl) 0;
+                margin-top: var(--spacing-2xl);
+            }
+
+            .program-grid {
+                gap: var(--spacing-xl);
+                max-width: 100%;
+                margin-top: var(--spacing-lg);
+            }
+
+            .program-card-new {
+                border-radius: 16px;
+            }
+
+            .program-image-new {
+                height: 220px;
+            }
+
+            .program-content-new {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+
+            .badge-tag {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+
+            .program-title-new {
+                font-size: 17px;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .program-description-new {
+                font-size: 13px;
+                line-height: 1.6;
+            }
+
+            .differentiators {
+                padding: var(--spacing-xl) 0;
+            }
+
+            .diff-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-xs);
+                margin: var(--spacing-md) 0;
+            }
+
+            .diff-card {
+                padding: var(--spacing-sm);
+                margin-bottom: 0;
+            }
+
+            .diff-icon {
+                font-size: 28px;
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .diff-title {
+                font-size: 14px;
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .diff-description {
+                font-size: 11px;
+                line-height: 1.5;
+            }
+
+            .application {
+                padding: var(--spacing-xl) 0;
+            }
+
+            .application-form {
+                padding: var(--spacing-md);
+                margin-bottom: var(--spacing-md);
+            }
+
+            .form-group {
+                margin-bottom: var(--spacing-md);
+            }
+
+            .form-group label {
+                font-size: 14px;
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .form-group input {
+                padding: var(--spacing-md);
+                font-size: 16px;
+            }
+
+            .qualification-item {
+                padding: var(--spacing-xs) var(--spacing-sm);
+            }
+
+            .qualification-item input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+            }
+
+            .qualification-item span {
+                font-size: 13px;
+            }
+
+            .form-divider {
+                margin: var(--spacing-md) 0;
+            }
+
+            .form-divider span {
+                font-size: 13px;
+            }
+
+            .btn-submit {
+                padding: 14px var(--spacing-md);
+                font-size: 16px;
+            }
+
+            .checkbox-label {
+                font-size: 12px;
+            }
+
+            .checkbox-label input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+            }
+
+            .form-info {
+                padding: var(--spacing-md);
+            }
+
+            .form-info h3 {
+                font-size: 15px;
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .form-info li {
+                font-size: 12px;
+                line-height: 1.6;
+                margin-bottom: var(--spacing-xs);
+                gap: 6px;
+            }
+
+            .form-info li i {
+                font-size: 11px;
+                margin-top: 2px;
+            }
+
+            .form-info li strong {
+                font-size: 12px;
+            }
+
+            .highlight-text {
+                padding: 1px 4px;
+                font-size: 11px;
+            }
+
+            .criteria-title {
+                font-size: 24px;
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .criteria-note {
+                font-size: 10px;
+                padding: var(--spacing-xs) 0;
+            }
+
+            .criteria-grid {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
+            }
+
+            .criteria-title {
+                font-size: 22px;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .criteria-subtitle {
+                font-size: 13px;
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .criteria-item-content {
+                padding: 14px 16px;
+                min-height: 70px;
+            }
+
+            .criteria-item-content i {
+                font-size: 20px;
+                width: 24px;
+            }
+
+            .criteria-item-content span {
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .btn-invitation,
+            .btn-general {
+                padding: 16px var(--spacing-lg);
+                font-size: 15px;
+            }
+
+            .footer {
+                padding: var(--spacing-xl) 0 var(--spacing-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Event Banner -->
+    <section class="event-banner">
+        <div class="container">
+            <div class="event-content">
+                <div class="event-badge">EXCLUSIVE OPEN</div>
+                <h2 class="event-title">다시없을 혜택 오직 1월만!</h2>
+                <h3 class="event-subtitle">참가비 전액 지원</h3>
+                <p class="event-subtitle-small"></p>
+                
+                <div class="event-ticket-container">
+                    <div class="event-ticket">
+                        <div class="ticket-notch left"></div>
+                        <div class="ticket-notch right"></div>
+                        <div class="ticket-content">
+                            <div class="ticket-label">EXCLUSIVE ACCESS</div>
+                            <div class="ticket-text">INVITATION<br>PASS</div>
+                            <div class="ticket-divider"></div>
+                            <div class="ticket-info">
+                                <div class="ticket-info-row">
+                                    <span class="info-label">EVENT</span>
+                                    <span class="info-value">Coffee & Wine</span>
+                                </div>
+                                <div class="ticket-info-row">
+                                    <span class="info-label">VENUE</span>
+                                    <span class="info-value">Private Lounge</span>
+                                </div>
+                            </div>
+                            <div class="ticket-barcode">
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                                <div class="barcode-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="event-notice">
+                    · 지금 신청하고 <strong>특별한 만남</strong>을 시작하세요
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 실시간 참여리스트 Section -->
+    <section class="lineup-section">
+        <div class="container">
+            <div class="lineup-header-wrapper">
+                <div class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span class="live-text">LIVE</span>
+                </div>
+                <h2 class="lineup-title">실시간 참여리스트</h2>
+            </div>
+            
+            <!-- 동적 라인업 컨테이너 -->
+            <div id="lineup-container">
+                <p class="lineup-loading">라인업 불러오는 중...</p>
+            </div>
+
+            <div class="lineup-footer">
+                <p class="lineup-update-time">
+                    <i class="fas fa-sync-alt"></i>
+                    마지막 업데이트: <span id="lastUpdate">방금 전</span> <span class="update-cycle">(갱신주기: 1시간)</span>
+                </p>
+                <p class="lineup-more-info">
+                    <i class="fas fa-info-circle"></i>
+                    다른 파티 일정 및 상세 참여자 정보는 <a href="https://www.frip.co.kr/products/188435" target="_blank">프립 상세페이지</a>에서 확인하세요
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo" style="color: white;">뭘 좀 아는 사람들</div>
+                <nav class="nav">
+                    <a href="#program">프로그램</a>
+                    <a href="#apply">신청하기</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title" style="color: white;">세련된 만남, 의미 있는 연결</h1>
+                <p class="hero-subtitle">
+                    커피 한 잔의 여유부터 와인 한 잔의 우아함까지<br>
+                    당신에게 맞는 프리미엄 소셜 경험을 선택하세요
+                </p>
+                <div class="hero-image-container">
+                    <img src="https://www.genspark.ai/api/files/s/auFmhUNI" alt="뭘 좀 아는 사람들" class="hero-main-image">
+                    <div class="hero-image-overlay">
+                        <h2 class="hero-overlay-text"></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Program Section -->
+    <section id="program" class="program">
+        <div class="container">
+            <h2 class="section-title" style="color: white;">프로그램</h2>
+            <p class="section-subtitle"></p>
+            
+            <div class="program-grid">
+                <!-- Program 1 -->
+                <div class="program-card-new">
+                    <div class="program-image-new">
+                        <img src="https://www.genspark.ai/api/files/s/HAVhrDBN" alt="Coffee Rotation 1부">
+                    </div>
+                    <div class="program-content-new">
+                        <div class="program-badges-new">
+                            <span class="badge-tag green">1부</span>
+                            <span class="badge-tag green">토, 일 12:00~14:00</span>
+                            <span class="badge-tag green">최대 12:12</span>
+                        </div>
+                        <h3 class="program-title-new">로테이션 1대1 커피소개팅</h3>
+                        <p class="program-description-new">
+                            커피 한 잔과 함께하는 편안한 대화<br>
+                            20대 중반부터 30대 중반까지<br>
+                            비슷한 또래와의 자연스러운 만남
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Program 2 -->
+                <div class="program-card-new">
+                    <div class="program-image-new">
+                        <img src="https://www.genspark.ai/api/files/s/rmWEUMce" alt="Coffee Rotation 2부">
+                    </div>
+                    <div class="program-content-new">
+                        <div class="program-badges-new">
+                            <span class="badge-tag green">2부</span>
+                            <span class="badge-tag green">토, 일 15:00~17:00</span>
+                            <span class="badge-tag green">최대 12:12</span>
+                        </div>
+                        <h3 class="program-title-new">로테이션 1대1 커피소개팅</h3>
+                        <p class="program-description-new">
+                            30대만을 위한 특별한 시간<br>
+                            깊이 있는 대화와 진정한 인연<br>
+                            커리어와 인생을 나누는 성숙한 만남
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Program 3 -->
+                <div class="program-card-new">
+                    <div class="program-image-new">
+                        <img src="https://www.genspark.ai/api/files/s/b2ZlhiIh" alt="Wine Party 3부">
+                    </div>
+                    <div class="program-content-new">
+                        <div class="program-badges-new">
+                            <span class="badge-tag wine">3부</span>
+                            <span class="badge-tag wine">토, 일 19:00~21:00</span>
+                            <span class="badge-tag wine">최대 24:24</span>
+                        </div>
+                        <h3 class="program-title-new">프라이빗 와인 파티</h3>
+                        <p class="program-description-new">
+                            프리미엄 와인과 함께하는 우아한 저녁<br>
+                            세련된 분위기 속 특별한 만남<br>
+                            품격 있는 대화와 로맨틱한 순간
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Differentiators Section (Hidden) -->
+    <section class="differentiators" style="display: none;">
+        <div class="container">
+            <h2 class="section-title">차별점</h2>
+            <p class="section-subtitle"></p>
+            
+            <div class="diff-grid">
+                <div class="diff-card">
+                    <div class="diff-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="diff-title">매너 관리</h3>
+                    <p class="diff-description">철저한 사전 검증과</p>
+                    <p class="diff-description">행사 중 모니터링</p>
+                    <p class="diff-description">불쾌한 경험 제로를<br>목표로 합니다</p>
+                </div>
+
+                <div class="diff-card">
+                    <div class="diff-icon">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <h3 class="diff-title">프라이빗 공간</h3>
+                    <p class="diff-description">
+                        엄선된 프리미엄 장소<br><br>
+                        편안하고 세련된<br>
+                        분위기<br><br>
+                        특별한 순간 위한<br>
+                        완벽한 공간
+                    </p>
+                </div>
+
+                <div class="diff-card">
+                    <div class="diff-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 class="diff-title">진정성</h3>
+                    <p class="diff-description">
+                        비슷한 관심사와<br>
+                        가치관<br><br>
+                        의미있는 대화가<br>
+                        가능한 사람들<br><br>
+                        진정한 연결을<br>
+                        만들어갑니다
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Invitation Criteria Section -->
+    <section class="invitation-criteria">
+        <div class="container">
+            <h2 class="criteria-title">참가비 지원 대상</h2>
+            <p class="criteria-subtitle">해당되는 자격 요건을 모두 선택해주세요</p>
+            
+            <!-- 인센티브 안내 배너 -->
+            <div class="incentive-banner" id="incentiveBanner" style="display: none;">
+                <div class="incentive-content">
+                    <i class="fas fa-wine-bottle"></i>
+                    <span><strong>2개 영역 이상 선택 시</strong> 와인 1병 선물! 🍷</span>
+                </div>
+            </div>
+            
+            <form id="applicationForm" class="criteria-form">
+                <!-- Group 1: Career & Wealth -->
+                <div class="criteria-group">
+                    <div class="criteria-group-header">
+                        <span class="group-icon">💼</span>
+                        <h3 class="group-title">Career & Wealth</h3>
+                        <span class="group-check" id="group1Check"><i class="fas fa-check-circle"></i></span>
+                    </div>
+                    <div class="criteria-grid">
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="직업" data-group="career">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-briefcase"></i>
+                                <span>전문직, 대기업, 공기업, 공무원 (7급 이상)</span>
+                            </div>
+                        </label>
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="학력" data-group="career">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>SKY 및 해외대학 (QS 인증 200위 이내) 졸업자</span>
+                            </div>
+                        </label>
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="연봉자산" data-group="career">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-chart-line"></i>
+                                <span>연봉 8천만원, 연매출 2억원 또는 자산 5억원 이상</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Group 2: Appearance & Fitness -->
+                <div class="criteria-group">
+                    <div class="criteria-group-header">
+                        <span class="group-icon">✨</span>
+                        <h3 class="group-title">Appearance & Fitness</h3>
+                        <span class="group-check" id="group2Check"><i class="fas fa-check-circle"></i></span>
+                    </div>
+                    <div class="criteria-grid">
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="외모" data-group="appearance">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-gem"></i>
+                                <span>승무원, 아나운서, 미인대회, 필라테스/피트니스 자격/대회 입상, 또는 외모에 자신 있는 분</span>
+                            </div>
+                        </label>
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="운동" data-group="appearance">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-running"></i>
+                                <span>크로스핏/하이록스/마라톤 등 완주 또는 체지방 남15%/여23% 미만</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Group 3: Influence & Network -->
+                <div class="criteria-group">
+                    <div class="criteria-group-header">
+                        <span class="group-icon">🌟</span>
+                        <h3 class="group-title">Influence & Network</h3>
+                        <span class="group-check" id="group3Check"><i class="fas fa-check-circle"></i></span>
+                    </div>
+                    <div class="criteria-grid">
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="SNS" data-group="influence">
+                            <div class="criteria-item-content">
+                                <i class="fab fa-instagram"></i>
+                                <span>소셜미디어 팔로워 5천명 이상</span>
+                            </div>
+                        </label>
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="득표3표" data-group="influence">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-trophy"></i>
+                                <span>기존 파티에서 동시 득표 3표 이상</span>
+                            </div>
+                        </label>
+                        <label class="criteria-item-selectable">
+                            <input type="checkbox" name="qualification" value="추천" data-group="influence">
+                            <div class="criteria-item-content">
+                                <i class="fas fa-user-check"></i>
+                                <span>호스트 추천 (내부심사)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-submit btn-invitation" id="invitationBtn" onclick="handleInvitationButtonClick()">
+                        <span class="btn-text">인비테이션 패스 신청</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <div class="form-info" style="margin-top: 20px; margin-bottom: 24px;">
+                        <h3>패스 신청 프로세스</h3>
+                        <ul>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span><strong>1단계:</strong> 연락처 입력 및 인증 방법 선택</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span><strong>2단계:</strong> 프립 예약 (초대장 옵션, 커피 5천원 / 와인 1만원)</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span><strong>3단계:</strong> 현장 참석 → <span class="highlight-text">참가비 전액 환급</span></span>
+                            </li>
+                            <li style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <i class="fas fa-info-circle"></i>
+                                <span style="color: #ffa726;">인증 미흡 혹은 허위신청 시 환급/환불불가합니다.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="divider-or">
+                        <span>또는</span>
+                    </div>
+
+                    <button type="button" class="btn-submit btn-general" id="generalParticipantBtn" onclick="handleGeneralButtonClick()">
+                        <span class="btn-text">일반 참가로 신청하기</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <p class="general-note">
+                        * 일반 참가: 자격 요건 불필요, 정가 결제 (환급 없음)
+                    </p>
+                </div>
+
+                <div class="form-message" id="formMessage"></div>
+            </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 연락처 입력 팝업 (신규) -->
+    <div id="contactPopup" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>📱 연락처 입력</h2>
+            <p class="modal-subtitle">초대장 발송을 위해 연락처를 입력해주세요</p>
+            
+            <div class="contact-form">
+                <div class="form-group">
+                    <label for="popupEmail">이메일 주소</label>
+                    <input 
+                        type="email" 
+                        id="popupEmail" 
+                        placeholder="example@email.com"
+                        class="popup-input"
+                    >
+                </div>
+
+                <div class="form-divider">
+                    <span>또는</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="popupPhone">전화번호</label>
+                    <input 
+                        type="tel" 
+                        id="popupPhone" 
+                        placeholder="010-0000-0000"
+                        maxlength="13"
+                        class="popup-input"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="popupPrivacy">
+                        <span>개인정보 수집 및 이용에 동의합니다 (필수)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" id="contactCancelBtn">취소</button>
+                <button class="btn-primary" id="contactSubmitBtn">다음</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 인증 방법 선택 팝업 -->
+    <div id="authPopup" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>🎉 신청 완료!</h2>
+            <p class="modal-subtitle">인증 방법을 선택해주세요</p>
+            
+            <div class="auth-options">
+                <button class="auth-option-btn" data-type="now">
+                    <i class="fas fa-upload"></i>
+                    <strong>지금 바로 인증하기</strong>
+                    <p>명함, 학생증 등 파일 업로드</p>
+                    <span class="badge-success">환급 확정</span>
+                </button>
+                
+                <button class="auth-option-btn" data-type="later">
+                    <i class="fas fa-clock"></i>
+                    <strong>나중에 인증하기</strong>
+                    <p>프립 예약 후 별도 안내</p>
+                </button>
+                
+                <button class="auth-option-btn" data-type="onsite">
+                    <i class="fas fa-building"></i>
+                    <strong>현장에서 인증하기</strong>
+                    <p>행사 당일 신분증, 명함 지참</p>
+                    <span class="badge-warning">현장 확인 필수</span>
+                </button>
+            </div>
+            
+            <p class="modal-note">
+                ⚠️ 인증 미흡 시 환급이 불가능합니다
+            </p>
+        </div>
+    </div>
+
+    <!-- 파일 업로드 팝업 -->
+    <div id="uploadPopup" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" id="uploadCloseBtn">&times;</button>
+            <h2>📎 인증 자료 업로드</h2>
+            <p class="modal-subtitle">선택하신 자격에 맞는 자료를 업로드해주세요</p>
+            
+            <div id="uploadGuide" class="upload-guide"></div>
+            
+            <div class="file-upload-area">
+                <input type="file" id="fileInput" multiple accept="image/*,application/pdf" style="display: none;">
+                <button class="btn-upload" id="selectFileBtn">
+                    <i class="fas fa-folder-open"></i>
+                    파일 선택하기
+                </button>
+                <p class="file-note">이미지 (JPG, PNG) 또는 PDF 파일 (최대 10MB)</p>
+            </div>
+            
+            <div id="fileList" class="file-list"></div>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" id="skipUploadBtn">나중에 하기</button>
+                <button class="btn-primary" id="submitFilesBtn" disabled>업로드 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일반 참가 안내 팝업 -->
+    <div id="generalPopup" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>💰 일반 참가 안내</h2>
+            <p class="modal-subtitle">초대 대상 자격에 해당하지 않으시지만<br>누구나 참여 가능합니다!</p>
+            
+            <div class="general-info">
+                <div class="info-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <strong>정가로 예약</strong>
+                    <p>커피: 15,000원 / 와인: 25,000원</p>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-times-circle"></i>
+                    <strong>환급 없음</strong>
+                    <p>일반 참가는 환급이 제공되지 않습니다</p>
+                </div>
+            </div>
+            
+            <p class="modal-note">
+                지금 프립 상세페이지로 이동합니다
+            </p>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" id="generalCancelBtn">취소</button>
+                <button class="btn-primary" id="generalConfirmBtn">프립으로 이동</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>문의</h4>
+                    <ul>
+                        <li>
+                            <a href="https://www.instagram.com/svvy.s" target="_blank" rel="noopener">
+                                <i class="fab fa-instagram"></i> Instagram
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 뭘 좀 아는 사람들. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- External JavaScript -->
+    <script src="js/app.js"></script>
+    
+    <!-- 인라인 백업 스크립트 (버튼 클릭 확실히 처리) -->
+    <script>
+    // 전역 상수 (인라인에서 직접 사용)
+    var INLINE_FRIP_URL = 'https://www.frip.co.kr/products/188435';
+    var INLINE_QUALIFICATION_GROUPS = {
+        career: ['직업', '학력', '연봉자산'],
+        appearance: ['외모', '운동'],
+        influence: ['SNS', '득표3표', '추천']
+    };
+    
+    // 인비테이션 패스 버튼 핸들러 (백업)
+    function handleInvitationButtonClick() {
+        console.log('인비테이션 버튼 클릭됨');
+        
+        // 자격 요건 수집
+        var qualificationInputs = document.querySelectorAll('input[name="qualification"]:checked');
+        var selectedQualifications = [];
+        qualificationInputs.forEach(function(input) {
+            selectedQualifications.push(input.value);
+        });
+        
+        console.log('선택된 항목:', selectedQualifications);
+        
+        // 아무것도 선택 안함
+        if (selectedQualifications.length === 0) {
+            alert('참가비 지원대상 항목 중 하나 이상을 선택해주세요');
+            return;
+        }
+        
+        // 선택된 그룹 계산
+        var selectedGroups = [];
+        var groups = INLINE_QUALIFICATION_GROUPS;
+        selectedQualifications.forEach(function(qual) {
+            for (var group in groups) {
+                if (groups[group].indexOf(qual) !== -1) {
+                    if (selectedGroups.indexOf(group) === -1) {
+                        selectedGroups.push(group);
+                    }
+                    break;
+                }
+            }
+        });
+        
+        // 와인 인센티브 여부
+        var wineBonus = selectedGroups.length >= 2;
+        
+        // verification.html로 이동
+        var params = 'qualifications=' + encodeURIComponent(selectedQualifications.join(',')) +
+                    '&groups=' + encodeURIComponent(selectedGroups.join(',')) +
+                    '&wineBonus=' + (wineBonus ? 'true' : 'false');
+        
+        console.log('이동:', 'verification.html?' + params);
+        window.location.href = 'verification.html?' + params;
+    }
+    
+    // 일반 참가 버튼 핸들러 (백업)
+    function handleGeneralButtonClick() {
+        console.log('일반 참가 버튼 클릭됨');
+        window.open(INLINE_FRIP_URL, '_blank');
+    }
+    
+    // 페이지 로드 후 버튼에 이벤트 연결 (이중 안전장치)
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('인라인 스크립트 DOMContentLoaded');
+        
+        var invBtn = document.getElementById('invitationBtn');
+        var genBtn = document.getElementById('generalParticipantBtn');
+        
+        if (invBtn) {
+            invBtn.onclick = handleInvitationButtonClick;
+            console.log('인비테이션 버튼 onclick 설정됨');
+        }
+        
+        if (genBtn) {
+            genBtn.onclick = handleGeneralButtonClick;
+            console.log('일반참가 버튼 onclick 설정됨');
+        }
+    });
+    
+    // ========== 라인업 동적 로딩 ==========
+    const LINEUP_API_URL = 'https://script.google.com/macros/s/AKfycbywCJUjEovNaeU8vH3nIzamDg1Ijbchh4sLsK7JYnL0qBhaPgF0V3m7gfJCYvW4zY0h/exec';
+    
+    async function loadLineup() {
+        const container = document.getElementById('lineup-container');
+        if (!container) return;
+        
+        try {
+            const response = await fetch(LINEUP_API_URL);
+            const data = await response.json();
+            
+            // 가장 가까운 파티 날짜 찾기 (오늘 이후)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // 최소 시작일: 2026년 1월 11일 (이전 날짜는 표시 안 함)
+            const minStartDate = new Date(2026, 0, 11); // 월은 0부터 시작
+            minStartDate.setHours(0, 0, 0, 0);
+            
+            // 날짜별로 그룹화 (1/11 이전 날짜 필터링)
+            const dateGroups = {};
+            data.forEach(party => {
+                // 날짜 파싱 (예: "1/11 토" -> Date 객체)
+                const dateMatch = party.date.match(/(\d+)\/(\d+)/);
+                if (dateMatch) {
+                    const month = parseInt(dateMatch[1]);
+                    const day = parseInt(dateMatch[2]);
+                    const partyDate = new Date(2026, month - 1, day);
+                    
+                    // 1/11 이전이면 스킵
+                    if (partyDate < minStartDate) return;
+                }
+                
+                if (!dateGroups[party.date]) {
+                    dateGroups[party.date] = [];
+                }
+                dateGroups[party.date].push(party);
+            });
+            
+            // 첫 번째 유효한 날짜 (참여자가 있는 날짜 우선)
+            let targetDate = null;
+            for (const date in dateGroups) {
+                const hasParticipants = dateGroups[date].some(p => p.male.filled > 0 || p.female.filled > 0);
+                if (hasParticipants) {
+                    targetDate = date;
+                    break;
+                }
+            }
+            
+            // 참여자 있는 날짜가 없으면 첫 번째 날짜
+            if (!targetDate) {
+                targetDate = Object.keys(dateGroups)[0];
+            }
+            
+            if (!targetDate) {
+                container.innerHTML = '<p class="lineup-empty">현재 예정된 파티가 없습니다.</p>';
+                return;
+            }
+            
+            const parties = dateGroups[targetDate];
+            
+            let html = `<p class="lineup-date-main">${targetDate}</p>`;
+            
+            parties.forEach(party => {
+                const icon = party.party.includes('와인') ? '🍷' : '☕';
+                const headerClass = party.party.includes('와인') ? 'wine' : 'coffee';
+                const partyName = party.party.includes('1부') ? '1부 커피 로테이션' : 
+                                  party.party.includes('2부') ? '2부 커피 로테이션' : '3부 와인 파티';
+                
+                html += `
+                <div class="lineup-party-block">
+                    <div class="lineup-party-header ${headerClass}">
+                        <span class="party-icon">${icon}</span>
+                        <span class="party-name">${partyName}</span>
+                        <span class="party-time">${party.time}</span>
+                        <span class="party-status">모집중</span>
+                    </div>
+                    <div class="lineup-grid-wrapper">
+                        <div class="lineup-grid-new">
+                            <div class="lineup-column">
+                                <div class="lineup-header male">
+                                    <i class="fas fa-mars"></i>
+                                    <span>남 ${party.male.filled}/${party.male.total}</span>
+                                </div>
+                                <div class="lineup-list-new">
+                                    ${renderMembers(party.male.members, party.male.total)}
+                                </div>
+                            </div>
+                            <div class="lineup-column">
+                                <div class="lineup-header female">
+                                    <i class="fas fa-venus"></i>
+                                    <span>여 ${party.female.filled}/${party.female.total}</span>
+                                </div>
+                                <div class="lineup-list-new">
+                                    ${renderMembers(party.female.members, party.female.total)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lineup-fade-overlay"></div>
+                    </div>
+                    <a href="https://www.frip.co.kr/products/188435" target="_blank" class="lineup-more-btn">
+                        <span>전체 참여자 보기</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            
+            // 업데이트 시간 표시
+            const lastUpdate = document.getElementById('lastUpdate');
+            if (lastUpdate) {
+                lastUpdate.textContent = '방금 전';
+            }
+            
+        } catch (error) {
+            console.error('라인업 로드 실패:', error);
+            container.innerHTML = '<p class="lineup-error">라인업을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.</p>';
+        }
+    }
+    
+    function renderMembers(members, total) {
+        let html = '';
+        const maxDisplay = Math.min(5, total); // 최대 5명까지 표시
+        
+        // 실제 참여자 표시
+        for (let i = 0; i < Math.min(members.length, maxDisplay); i++) {
+            const m = members[i];
+            html += `
+                <div class="lineup-item-new">
+                    <span class="lineup-age">${m.ageGroup}</span>
+                    <span class="lineup-height">${m.height}</span>
+                    <span class="lineup-job">${m.job}</span>
+                </div>`;
+        }
+        
+        // 빈 슬롯 표시 (모집중)
+        const emptySlots = maxDisplay - members.length;
+        for (let i = 0; i < emptySlots; i++) {
+            html += `
+                <div class="lineup-item-new empty-slot">
+                    <span class="lineup-age">모집중</span>
+                    <span class="lineup-height">-</span>
+                    <span class="lineup-job">-</span>
+                </div>`;
+        }
+        
+        return html;
+    }
+    
+    // 페이지 로드 시 라인업 불러오기
+    document.addEventListener('DOMContentLoaded', loadLineup);
+    </script>
+</body>
+</html>

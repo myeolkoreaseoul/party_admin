@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 마이그레이션 도구</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #ffd700; margin-bottom: 30px; }
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #4a9eff; margin-bottom: 16px; font-size: 18px; }
+        .btn {
+            background: #4a9eff;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 4px;
+        }
+        .btn:hover { background: #3a8eef; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .btn.success { background: #2e7d32; }
+        .btn.danger { background: #c62828; }
+        .log {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+        .log .success { color: #4caf50; }
+        .log .error { color: #f44336; }
+        .log .info { color: #2196f3; }
+        .log .warn { color: #ff9800; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value { font-size: 28px; font-weight: bold; color: #ffd700; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff, #00c853);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Supabase 마이그레이션 도구</h1>
+        
+        <div class="card">
+            <h2>📊 현재 데이터 현황 (기존 DB)</h2>
+            <div class="stats" id="oldStats">
+                <div class="stat"><div class="stat-value" id="oldCustomers">-</div><div class="stat-label">고객</div></div>
+                <div class="stat"><div class="stat-value" id="oldInvitations">-</div><div class="stat-label">초대장</div></div>
+                <div class="stat"><div class="stat-value" id="oldReservations">-</div><div class="stat-label">예약</div></div>
+                <div class="stat"><div class="stat-value" id="oldSurveys">-</div><div class="stat-label">사전조사</div></div>
+                <div class="stat"><div class="stat-value" id="oldSchedules">-</div><div class="stat-label">파티일정</div></div>
+                <div class="stat"><div class="stat-value" id="oldJobTiers">-</div><div class="stat-label">직업티어</div></div>
+                <div class="stat"><div class="stat-value" id="oldVirtualPool">-</div><div class="stat-label">가상풀</div></div>
+                <div class="stat"><div class="stat-value" id="oldAssignments">-</div><div class="stat-label">배정</div></div>
+            </div>
+            <button class="btn" onclick="loadOldData()">🔄 기존 데이터 불러오기</button>
+        </div>
+        
+        <div class="card">
+            <h2>📥 Supabase 현황</h2>
+            <div class="stats" id="newStats">
+                <div class="stat"><div class="stat-value" id="newCustomers">-</div><div class="stat-label">고객</div></div>
+                <div class="stat"><div class="stat-value" id="newInvitations">-</div><div class="stat-label">초대장</div></div>
+                <div class="stat"><div class="stat-value" id="newReservations">-</div><div class="stat-label">예약</div></div>
+                <div class="stat"><div class="stat-value" id="newSurveys">-</div><div class="stat-label">사전조사</div></div>
+                <div class="stat"><div class="stat-value" id="newSchedules">-</div><div class="stat-label">파티일정</div></div>
+                <div class="stat"><div class="stat-value" id="newJobTiers">-</div><div class="stat-label">직업티어</div></div>
+                <div class="stat"><div class="stat-value" id="newVirtualPool">-</div><div class="stat-label">가상풀</div></div>
+                <div class="stat"><div class="stat-value" id="newAssignments">-</div><div class="stat-label">배정</div></div>
+            </div>
+            <button class="btn" onclick="loadNewData()">🔄 Supabase 데이터 확인</button>
+        </div>
+        
+        <div class="card">
+            <h2>⚡ 마이그레이션 실행</h2>
+            <p style="color: #888; margin-bottom: 16px;">기존 데이터를 Supabase로 복사합니다. 기존 데이터는 유지됩니다.</p>
+            
+            <button class="btn" onclick="migrateAll()">🚀 전체 마이그레이션 시작</button>
+            <button class="btn success" onclick="migrateTable('party_types')">파티유형</button>
+            <button class="btn success" onclick="migrateTable('session_templates')">세션템플릿</button>
+            <button class="btn success" onclick="migrateTable('job_tiers')">직업티어</button>
+            <button class="btn success" onclick="migrateTable('virtual_participants')">가상규칙</button>
+            <button class="btn success" onclick="migrateTable('party_schedules')">파티일정</button>
+            <button class="btn success" onclick="migrateTable('virtual_pool')">가상풀</button>
+            <button class="btn success" onclick="migrateTable('party_virtual_assignments')">배정</button>
+            
+            <div class="progress"><div class="progress-bar" id="progressBar" style="width: 0%"></div></div>
+            <div class="log" id="log"></div>
+        </div>
+        
+        <div class="card">
+            <h2>🔧 기본 데이터 초기화</h2>
+            <p style="color: #888; margin-bottom: 16px;">Supabase에 기본 데이터가 없으면 초기화합니다.</p>
+            <button class="btn" onclick="initializeDefaults()">📋 기본 데이터 생성 (파티유형, 세션템플릿)</button>
+        </div>
+    </div>
+    
+    <script>
+        // ========================================
+        // 설정
+        // ========================================
+        const OLD_API = 'tables';  // 기존 RESTful API
+        
+        const SUPABASE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co';
+        // Legacy anon public key - 브라우저에서 사용 가능
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcHhkeHNneG9hcGd1a254d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjUyNDAsImV4cCI6MjA4MzEwMTI0MH0.v_r3wIIIe024k-H-9dyHH-LJj73kP9iU_eYgHZX7CGA';
+        const NEW_API = `${SUPABASE_URL}/rest/v1`;
+        
+        const SUPABASE_HEADERS = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+        
+        // 테이블 매핑 (기존 → Supabase)
+        const TABLE_MAP = {
+            'cst_m4n7p2': 'customers',
+            'invitations': 'invitations',
+            'reservations': 'reservations',
+            'surveys': 'surveys',
+            'coupons': 'coupons',
+            'party_schedules': 'party_schedules',
+            'session_templates': 'session_templates',
+            'party_types': 'party_types',
+            'job_tiers': 'job_tiers',
+            'virtual_participants': 'virtual_participants',
+            'vp_a3b8c1w': 'virtual_pool',
+            'pva_x7k9m2q': 'party_virtual_assignments',
+            'public_lineup': 'public_lineup'
+        };
+        
+        // 필드 매핑 (camelCase → snake_case)
+        function toSnakeCase(obj) {
+            if (!obj || typeof obj !== 'object') return obj;
+            const newObj = {};
+            for (const key in obj) {
+                // 특수 케이스 처리
+                let snakeKey = key
+                    .replace(/birthYear/g, 'birth_year')
+                    .replace(/jobCategory/g, 'job_category')
+                    .replace(/jobDetail/g, 'job_detail')
+                    .replace(/jobCertFile/g, 'job_cert_file')
+                    .replace(/marketingAgree/g, 'marketing_agree')
+                    .replace(/createdAt/g, 'created_at')
+                    .replace(/updatedAt/g, 'updated_at')
+                    .replace(/appliedAt/g, 'applied_at')
+                    .replace(/wineBonus/g, 'wine_bonus')
+                    .replace(/authType/g, 'auth_type')
+                    .replace(/snsLink/g, 'sns_link')
+                    .replace(/fileLinks/g, 'file_links')
+                    .replace(/couponCode/g, 'coupon_code')
+                    .replace(/hostName/g, 'host_name')
+                    .replace(/referralReason/g, 'referral_reason')
+                    .replace(/approvalStatus/g, 'approval_status')
+                    .replace(/crewName/g, 'crew_name')
+                    .replace(/eventDate/g, 'event_date')
+                    .replace(/eventPart/g, 'event_part')
+                    .replace(/isInvitation/g, 'is_invitation')
+                    .replace(/surveyDone/g, 'survey_done')
+                    .replace(/surveyReminderSent/g, 'survey_reminder_sent')
+                    .replace(/confirmationSent/g, 'confirmation_sent')
+                    .replace(/registeredAt/g, 'registered_at')
+                    .replace(/termsAgreed/g, 'terms_agreed')
+                    .replace(/marketingAgreed/g, 'marketing_agreed')
+                    .replace(/submittedAt/g, 'submitted_at')
+                    .replace(/isActive/g, 'is_active')
+                    .replace(/partyType/g, 'party_type')
+                    .replace(/maleCapacity/g, 'male_capacity')
+                    .replace(/femaleCapacity/g, 'female_capacity')
+                    .replace(/minVacancy/g, 'min_vacancy')
+                    .replace(/minBirthYear/g, 'min_birth_year')
+                    .replace(/maxBirthYear/g, 'max_birth_year')
+                    .replace(/minHeight/g, 'min_height')
+                    .replace(/maxHeight/g, 'max_height')
+                    .replace(/sortOrder/g, 'sort_order')
+                    .replace(/usageCount/g, 'usage_count')
+                    .replace(/scheduleDate/g, 'schedule_date')
+                    .replace(/schedulePart/g, 'schedule_part')
+                    .replace(/virtualId/g, 'virtual_id')
+                    .replace(/isRevealed/g, 'is_revealed')
+                    .replace(/revealedAt/g, 'revealed_at')
+                    .replace(/assignedAt/g, 'assigned_at')
+                    .replace(/displayOrder/g, 'display_order')
+                    .replace(/ageRange/g, 'age_range')
+                    .replace(/reservationId/g, 'reservation_id')
+                    .replace(/refundEligible/g, 'refund_eligible')
+                    .replace(/refundCompleted/g, 'refund_completed')
+                    .replace(/refundAmount/g, 'refund_amount')
+                    .replace(/refundCompletedAt/g, 'refund_completed_at')
+                    .replace(/verificationMethod/g, 'verification_method')
+                    .replace(/attendedAt/g, 'attended_at');
+                
+                // 일반 camelCase → snake_case
+                if (snakeKey === key) {
+                    snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+                }
+                
+                newObj[snakeKey] = obj[key];
+            }
+            return newObj;
+        }
+        
+        // 저장된 기존 데이터
+        let oldData = {};
+        
+        // 로그 출력
+        function log(msg, type = 'info') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `<span class="${type}">[${time}] ${msg}</span>\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function setProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+        
+        // ========================================
+        // 기존 데이터 로드
+        // ========================================
+        async function loadOldData() {
+            log('기존 데이터 로딩 중...', 'info');
+            
+            const tables = [
+                { key: 'customers', old: 'cst_m4n7p2', el: 'oldCustomers' },
+                { key: 'invitations', old: 'invitations', el: 'oldInvitations' },
+                { key: 'reservations', old: 'reservations', el: 'oldReservations' },
+                { key: 'surveys', old: 'surveys', el: 'oldSurveys' },
+                { key: 'schedules', old: 'party_schedules', el: 'oldSchedules' },
+                { key: 'jobTiers', old: 'job_tiers', el: 'oldJobTiers' },
+                { key: 'virtualPool', old: 'vp_a3b8c1w', el: 'oldVirtualPool' },
+                { key: 'assignments', old: 'pva_x7k9m2q', el: 'oldAssignments' }
+            ];
+            
+            for (const t of tables) {
+                try {
+                    const res = await fetch(`${OLD_API}/${t.old}?limit=2000`);
+                    const json = await res.json();
+                    oldData[t.key] = json.data || [];
+                    document.getElementById(t.el).textContent = oldData[t.key].length;
+                    log(`${t.key}: ${oldData[t.key].length}개 로드`, 'success');
+                } catch (e) {
+                    document.getElementById(t.el).textContent = '0';
+                    oldData[t.key] = [];
+                    log(`${t.key} 로드 실패: ${e.message}`, 'error');
+                }
+            }
+            
+            // 추가 테이블
+            const extraTables = ['party_types', 'session_templates', 'virtual_participants', 'coupons'];
+            for (const t of extraTables) {
+                try {
+                    const res = await fetch(`${OLD_API}/${t}?limit=1000`);
+                    const json = await res.json();
+                    oldData[t] = json.data || [];
+                    log(`${t}: ${oldData[t].length}개 로드`, 'success');
+                } catch (e) {
+                    oldData[t] = [];
+                }
+            }
+            
+            log('기존 데이터 로딩 완료!', 'success');
+        }
+        
+        // ========================================
+        // Supabase 데이터 로드
+        // ========================================
+        async function loadNewData() {
+            log('Supabase 데이터 확인 중...', 'info');
+            
+            const tables = [
+                { key: 'customers', el: 'newCustomers' },
+                { key: 'invitations', el: 'newInvitations' },
+                { key: 'reservations', el: 'newReservations' },
+                { key: 'surveys', el: 'newSurveys' },
+                { key: 'party_schedules', el: 'newSchedules' },
+                { key: 'job_tiers', el: 'newJobTiers' },
+                { key: 'virtual_pool', el: 'newVirtualPool' },
+                { key: 'party_virtual_assignments', el: 'newAssignments' }
+            ];
+            
+            for (const t of tables) {
+                try {
+                    const res = await fetch(`${NEW_API}/${t.key}?select=*`, { headers: SUPABASE_HEADERS });
+                    const data = await res.json();
+                    const count = Array.isArray(data) ? data.length : 0;
+                    document.getElementById(t.el).textContent = count;
+                    log(`${t.key}: ${count}개`, 'success');
+                } catch (e) {
+                    document.getElementById(t.el).textContent = 'ERR';
+                    log(`${t.key} 확인 실패: ${e.message}`, 'error');
+                }
+            }
+            
+            log('Supabase 데이터 확인 완료!', 'success');
+        }
+        
+        // ========================================
+        // 마이그레이션
+        // ========================================
+        async function migrateTable(tableName) {
+            const oldTableMap = {
+                'customers': 'customers',
+                'invitations': 'invitations',
+                'reservations': 'reservations',
+                'surveys': 'surveys',
+                'party_types': 'party_types',
+                'session_templates': 'session_templates',
+                'job_tiers': 'jobTiers',
+                'virtual_participants': 'virtual_participants',
+                'party_schedules': 'schedules',
+                'virtual_pool': 'virtualPool',
+                'party_virtual_assignments': 'assignments'
+            };
+            
+            const dataKey = oldTableMap[tableName];
+            const sourceData = oldData[dataKey] || oldData[tableName] || [];
+            
+            if (sourceData.length === 0) {
+                log(`${tableName}: 마이그레이션할 데이터가 없습니다. 먼저 기존 데이터를 불러오세요.`, 'warn');
+                return;
+            }
+            
+            log(`${tableName}: ${sourceData.length}개 마이그레이션 시작...`, 'info');
+            
+            let success = 0, failed = 0;
+            
+            for (let i = 0; i < sourceData.length; i++) {
+                try {
+                    const item = toSnakeCase(sourceData[i]);
+                    
+                    // 시스템 필드 및 불필요한 필드 제거
+                    delete item.gs_project_id;
+                    delete item.gs_table_name;
+                    delete item.deleted;
+                    
+                    // _로 시작하는 모든 시스템 필드 제거
+                    Object.keys(item).forEach(key => {
+                        if (key.startsWith('_')) {
+                            delete item[key];
+                        }
+                    });
+                    
+                    // created_at, updated_at이 숫자면 ISO 문자열로 변환
+                    if (item.created_at && typeof item.created_at === 'number') {
+                        item.created_at = new Date(item.created_at).toISOString();
+                    }
+                    if (item.updated_at && typeof item.updated_at === 'number') {
+                        item.updated_at = new Date(item.updated_at).toISOString();
+                    }
+                    
+                    const res = await fetch(`${NEW_API}/${tableName}`, {
+                        method: 'POST',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify(item)
+                    });
+                    
+                    if (res.ok) {
+                        success++;
+                    } else {
+                        const err = await res.text();
+                        // 중복 키 에러는 무시
+                        if (!err.includes('duplicate key')) {
+                            log(`${tableName}[${i}] 실패: ${err}`, 'error');
+                        }
+                        failed++;
+                    }
+                    
+                    // 진행률 업데이트
+                    if (i % 10 === 0) {
+                        setProgress(Math.round((i / sourceData.length) * 100));
+                    }
+                } catch (e) {
+                    failed++;
+                    log(`${tableName}[${i}] 오류: ${e.message}`, 'error');
+                }
+            }
+            
+            setProgress(100);
+            log(`${tableName}: 완료! (성공: ${success}, 실패/중복: ${failed})`, success > 0 ? 'success' : 'warn');
+        }
+        
+        async function migrateAll() {
+            if (Object.keys(oldData).length === 0) {
+                log('먼저 "기존 데이터 불러오기"를 클릭하세요!', 'error');
+                return;
+            }
+            
+            log('====== 전체 마이그레이션 시작 ======', 'info');
+            
+            const tables = [
+                'party_types',
+                'session_templates',
+                'job_tiers',
+                'virtual_participants',
+                'party_schedules',
+                'virtual_pool',
+                'party_virtual_assignments'
+            ];
+            
+            for (const table of tables) {
+                await migrateTable(table);
+            }
+            
+            log('====== 전체 마이그레이션 완료 ======', 'success');
+            loadNewData();
+        }
+        
+        // ========================================
+        // 기본 데이터 초기화
+        // ========================================
+        async function initializeDefaults() {
+            log('기본 데이터 초기화 중...', 'info');
+            
+            // 파티 유형
+            const partyTypes = [
+                { id: 'coffee', icon: '☕', name: '커피파티', male_capacity: 12, female_capacity: 12, min_vacancy: 2, is_active: true, sort_order: 1 },
+                { id: 'wine', icon: '🍷', name: '와인파티', male_capacity: 24, female_capacity: 24, min_vacancy: 4, is_active: true, sort_order: 2 }
+            ];
+            
+            for (const pt of partyTypes) {
+                try {
+                    await fetch(`${NEW_API}/party_types`, {
+                        method: 'POST',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify(pt)
+                    });
+                    log(`파티유형 추가: ${pt.name}`, 'success');
+                } catch (e) {
+                    log(`파티유형 추가 실패: ${e.message}`, 'warn');
+                }
+            }
+            
+            // 세션 템플릿
+            const sessions = [
+                { id: '1부', time: '12:00', type: 'coffee', min_birth_year: 1990, max_birth_year: 2002, is_active: true, sort_order: 1 },
+                { id: '2부', time: '15:00', type: 'wine', min_birth_year: 1987, max_birth_year: 1997, is_active: true, sort_order: 2 },
+                { id: '3부', time: '19:00', type: 'wine', min_birth_year: 1987, max_birth_year: 2002, is_active: true, sort_order: 3 }
+            ];
+            
+            for (const s of sessions) {
+                try {
+                    await fetch(`${NEW_API}/session_templates`, {
+                        method: 'POST',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify(s)
+                    });
+                    log(`세션템플릿 추가: ${s.id}`, 'success');
+                } catch (e) {
+                    log(`세션템플릿 추가 실패: ${e.message}`, 'warn');
+                }
+            }
+            
+            log('기본 데이터 초기화 완료!', 'success');
+            loadNewData();
+        }
+    </script>
+</body>
+</html>

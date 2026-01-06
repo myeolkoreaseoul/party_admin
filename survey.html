@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>참가자 사전조사 | 뭘 좀 아는 사람들</title>
+    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #00E676;
+            --primary-dark: #00C853;
+            --bg: #0a0a0a;
+            --card-bg: #141414;
+            --border: #2a2a2a;
+            --text: #fff;
+            --text-muted: #888;
+            --danger: #ff4757;
+            --gold: #FFD700;
+        }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        /* 헤더 - 호스트 인사말 */
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-top: 20px;
+        }
+        
+        .header-logo {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        
+        .header h1 span {
+            color: var(--primary);
+        }
+        
+        .host-intro {
+            background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px solid rgba(0, 230, 118, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            margin-bottom: 8px;
+        }
+        
+        .host-intro p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+        
+        .host-intro .host-name {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .host-intro .emoji {
+            font-size: 16px;
+        }
+        
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-group label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+        
+        .form-group label .optional {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+        
+        .form-group select option {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+        
+        .gender-options {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .gender-option {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .gender-option:hover {
+            border-color: var(--primary);
+        }
+        
+        .gender-option.selected {
+            border-color: var(--primary);
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--primary);
+        }
+        
+        .gender-option input {
+            display: none;
+        }
+        
+        /* 파일 업로드 */
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg);
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(0, 230, 118, 0.05);
+        }
+        
+        .file-upload-area.has-file {
+            border-color: var(--primary);
+            border-style: solid;
+        }
+        
+        .file-upload-area input {
+            display: none;
+        }
+        
+        .file-upload-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .file-upload-text {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        .file-upload-text strong {
+            color: var(--primary);
+        }
+        
+        .file-name {
+            font-size: 13px;
+            color: var(--primary);
+            margin-top: 8px;
+            word-break: break-all;
+        }
+        
+        .file-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        
+        /* 이용약관 - 작고 드라이하게 */
+        .terms-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .terms-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .terms-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .terms-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .terms-box::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        
+        .terms-box::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .checkbox-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            line-height: 1.5;
+        }
+        
+        .checkbox-group label .required-text {
+            color: var(--danger);
+        }
+        
+        /* VIP 마케팅 동의 - 특별 스타일 */
+        .marketing-box {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.02));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 16px;
+        }
+        
+        .marketing-box .marketing-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .marketing-box .marketing-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .marketing-box .checkbox-group label {
+            color: var(--text);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.2s;
+        }
+        
+        .submit-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .submit-btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        
+        .error-msg {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .error-msg.show {
+            display: block;
+        }
+        
+        /* 이미 제출 완료 화면 */
+        .already-submitted {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .already-submitted .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .already-submitted h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .already-submitted p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* 제출 완료 화면 */
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .success-screen.show {
+            display: block;
+        }
+        
+        .success-screen .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .success-screen h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .success-screen p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* 로딩 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 전화번호 입력 */
+        .phone-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .phone-inputs input {
+            text-align: center;
+        }
+        
+        .phone-inputs .separator {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+        
+        .phone-inputs input:first-child {
+            width: 70px;
+            background: var(--border);
+            color: var(--text-muted);
+        }
+        
+        .phone-inputs input:not(:first-child) {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-logo">뭘 좀 아는 사람들</div>
+            <h1><span>참가자 사전조사</span></h1>
+            
+            <div class="host-intro">
+                <p>
+                    안녕하세요! <span class="host-name">뭘 좀 아는 사람들</span> 호스트 은비까비입니다 <span class="emoji">☕🍷</span><br>
+                    모임에 앞서 참가자분들의 간단한 정보를 수집하고 있습니다.
+                </p>
+            </div>
+        </div>
+        
+        <!-- 로딩 화면 -->
+        <div class="loading" id="loadingScreen">
+            <div class="spinner"></div>
+            <p>확인 중...</p>
+        </div>
+        
+        <!-- 이미 제출 완료 화면 -->
+        <div class="form-card already-submitted" id="alreadySubmitted" style="display: none;">
+            <div class="icon">✅</div>
+            <h2>이미 제출하셨습니다</h2>
+            <p>최근 1개월 내 사전조사를 완료하셨습니다.<br>추가 작성이 필요하지 않습니다.</p>
+        </div>
+        
+        <!-- 제출 완료 화면 -->
+        <div class="form-card success-screen" id="successScreen">
+            <div class="icon">🎉</div>
+            <h2>제출 완료!</h2>
+            <p>사전조사가 완료되었습니다.<br>파티에서 뵙겠습니다!</p>
+        </div>
+        
+        <!-- 사전조사 폼 -->
+        <div class="form-card" id="surveyForm">
+            <form id="survey" onsubmit="return handleSubmit(event)">
+                <!-- 성별 -->
+                <div class="form-group">
+                    <label>성별 <span class="required">*</span></label>
+                    <div class="gender-options">
+                        <div class="gender-option" onclick="selectGender(this, '남자')">
+                            <input type="radio" name="gender" value="남자" required>
+                            남자
+                        </div>
+                        <div class="gender-option" onclick="selectGender(this, '여자')">
+                            <input type="radio" name="gender" value="여자" required>
+                            여자
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 이름 -->
+                <div class="form-group">
+                    <label>이름 <span class="required">*</span></label>
+                    <input type="text" name="name" placeholder="실명을 입력해주세요" required maxlength="10">
+                </div>
+                
+                <!-- 출생연도 -->
+                <div class="form-group">
+                    <label>출생연도 <span class="required">*</span></label>
+                    <select name="birthYear" required>
+                        <option value="">선택해주세요</option>
+                    </select>
+                </div>
+                
+                <!-- 신장 -->
+                <div class="form-group">
+                    <label>신장(cm) <span class="required">*</span></label>
+                    <input type="number" name="height" placeholder="예: 175" required min="140" max="210">
+                </div>
+                
+                <!-- 연락처 -->
+                <div class="form-group">
+                    <label>연락처 <span class="required">*</span></label>
+                    <div class="phone-inputs">
+                        <input type="text" value="010" readonly>
+                        <span class="separator">-</span>
+                        <input type="text" name="phone1" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" required>
+                        <span class="separator">-</span>
+                        <input type="text" name="phone2" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" required>
+                    </div>
+                    <div class="error-msg" id="phoneError">올바른 전화번호를 입력해주세요</div>
+                </div>
+                
+                <!-- 직업(분류) -->
+                <div class="form-group">
+                    <label>직업(분류) <span class="required">*</span></label>
+                    <select name="jobCategory" required>
+                        <option value="">선택해주세요</option>
+                        <option value="대기업">대기업</option>
+                        <option value="회사원">회사원</option>
+                        <option value="외국계">외국계</option>
+                        <option value="전문직(문과계열)">전문직(문과계열 - 변호사,회계사,노무사 등)</option>
+                        <option value="전문직(이과계열)">전문직(이과계열 - 의사,약사,한의사 등)</option>
+                        <option value="연예인/인플루언서">연예인/인플루언서</option>
+                        <option value="피트니스(필라테스/요가 강사 등)">피트니스(필라테스/요가 강사 등)</option>
+                        <option value="공기업">공기업</option>
+                        <option value="공무원">공무원</option>
+                        <option value="예체능">예체능</option>
+                        <option value="금융권">금융권</option>
+                        <option value="교육직">교육직</option>
+                        <option value="연구직">연구직</option>
+                        <option value="IT/개발자">IT/개발자</option>
+                        <option value="디자이너">디자이너</option>
+                        <option value="마케팅/광고/미디어">마케팅/광고/미디어</option>
+                        <option value="간호사">간호사</option>
+                        <option value="프리랜서">프리랜서</option>
+                        <option value="자영업/사업가">자영업/사업가</option>
+                        <option value="대학원생">대학원생</option>
+                        <option value="의료직">의료직</option>
+                        <option value="항공업(승무원 등)">항공업(승무원 등)</option>
+                        <option value="사무직">사무직</option>
+                        <option value="서비스/호텔">서비스/호텔</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                
+                <!-- 직업(상세) -->
+                <div class="form-group">
+                    <label>직업(상세) <span class="optional">선택</span></label>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">대분류에 없거나(기타) 직업 상세 기재가 필요할 경우</p>
+                    <input type="text" name="jobDetail" placeholder="(예) 전문직 → 변리사, 기타 → 파일럿">
+                </div>
+                
+                <!-- 직업인증서류 첨부 -->
+                <div class="form-group">
+                    <label>직업인증서류 <span class="required">*</span></label>
+                    <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('jobCertFile').click()">
+                        <input type="file" id="jobCertFile" name="jobCertFile" accept="image/*,.pdf" onchange="handleFileSelect(event)">
+                        <div class="file-upload-icon">📎</div>
+                        <div class="file-upload-text">
+                            <strong>클릭</strong>하여 파일 선택<br>
+                            명함, 사원증, 기타 인증서류
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+                    <div class="file-hint">* 명함, 사원증, 재직증명서 등 (이미지 또는 PDF, 최대 10MB)</div>
+                </div>
+                
+                <!-- 이용약관 -->
+                <div class="terms-section">
+                    <div class="terms-title">이용약관</div>
+                    <div class="terms-box">
+                        <strong>이용약관</strong><br>
+                        필독: 본 약관은 모임의 안전하고 쾌적한 운영을 위한 필수 규정입니다. 참가 신청 시 본 약관에 동의한 것으로 간주됩니다.<br><br>
+                        
+                        <strong>제1조 (참가 자격 및 입장 제한)</strong><br>
+                        1. 만 19세 이상 성인 본인만 입장 가능합니다.<br>
+                        2. 입장 시 신분증을 필수로 제시하여야 합니다(운전면허증, 주민등록증, 모바일 신분증).<br>
+                        3. 명함 제시를 요청할 수 있습니다.<br>
+                        4. 신원 확인 거부 시 귀가 조치되며 환불 불가합니다.<br>
+                        5. 다음의 경우 현장 입장 거부 또는 강제 퇴장되며 환불 불가합니다: 만취 상태, 트레이닝복 또는 슬리퍼 착용, 신분증 미지참, 드레스코드 미준수(과도한 노출, 지나치게 캐주얼한 복장), 타 소셜 업체 관계자, 모니터링 목적 참가<br><br>
+                        
+                        <strong>제2조 (정보 책임 및 면책)</strong><br>
+                        참가자가 제공한 직업, 나이 등 모든 정보의 진실성에 대해 주최 측은 보증하지 않으며, 허위 정보로 인한 분쟁 책임은 전적으로 당사자에게 있습니다.<br><br>
+                        
+                        <strong>제3조 (원스트라이크 아웃 제도)</strong><br>
+                        1. 다음 행위 적발 시 경고 없이 즉시 퇴장하며 환불 불가하며, 영구 입장 불가 처리됩니다: 동의 없는 신체 접촉, 성적 발언, 외모 비하, 연락처 강요, 종교/다단계/영업/투자 권유, 무단 촬영 또는 녹음, 욕설, 기타 불쾌감 유발 행위<br>
+                        2. 모임 종료 후 온라인에서 타 참가자 또는 주최 측을 특정하여 비방 또는 모욕하는 행위는 명예훼손죄에 해당하며 법적 책임을 물을 수 있습니다.<br><br>
+                        
+                        <strong>제4조 (지각 및 노쇼)</strong><br>
+                        1. 1부 시작 후 20분 경과 시 입장 제한되며 환불 불가합니다.<br>
+                        2. 연락 없는 노쇼는 향후 모임 참여가 제한됩니다.<br><br>
+                        
+                        <strong>제5조 (안전사고 및 분쟁 면책)</strong><br>
+                        1. 모임 참여와 관련하여 발생하는 모든 사고에 대해 주최 측은 책임을 지지 않습니다.<br>
+                        2. 면책 사고의 범위: 음주/폭행/성범죄, 금전 분쟁, 낙상/화상, 기물 파손, 귀중품 분실 또는 도난, 참가자 간 사적 만남, 연락처 교환 후 발생한 스토킹/데이트 폭력/사기 등<br>
+                        3. 범죄 발생 시 경찰에 신고하시기 바랍니다.<br>
+                        4. 기물 파손 시 전액 배상 의무가 있습니다.<br><br>
+                        
+                        <strong>제6조 (매칭 불보장 및 성비)</strong><br>
+                        1. 본 모임은 만남의 기회를 제공하는 자리일 뿐, 이성 간 매칭이나 만남 성사를 보장하지 않습니다.<br>
+                        2. 성비는 1대1을 목표로 하나 노쇼 등 변수로 차이가 발생할 수 있습니다.<br>
+                        3. 성비 불균형에 대한 불만족은 환불 사유가 아닙니다.<br><br>
+                        
+                        <strong>제7조 (환불 규정)</strong><br>
+                        1. 일반 취소는 프립(예매처) 규정을 준수합니다.<br>
+                        2. 다음의 경우 환불 불가합니다: 노쇼 또는 당일 취소, 부분 참여 또는 조기 퇴장, 강제 퇴장<br><br>
+                        
+                        <strong>제8조 (기타)</strong><br>
+                        1. 참가권 양도 불가하며 본인만 입장 가능합니다.<br>
+                        2. 본 약관은 사전 고지 후 변경될 수 있습니다.<br><br>
+                        
+                        <strong>제9조 (개인정보 수집 및 이용) - 필수</strong><br>
+                        1. 수집 주체: 뭘 좀 아는 사람들 (은비까비)<br>
+                        2. 수집 항목: 성별, 이름, 출생연도, 신장, 연락처, 직업<br>
+                        3. 이용 목적: 본인 확인, 테이블 배치, 행사 안내<br>
+                        4. 보관 기간: 행사 종료 후 1개월<br><br>
+                        
+                        <strong>제10조 (마케팅 정보 수신) - 선택</strong><br>
+                        1. 수집 항목: 성별, 이름, 출생연도, 신장, 연락처, 직업<br>
+                        2. 이용 목적: 할인, 이벤트, 프로그램 안내<br>
+                        3. 보관 기간: 수집일로부터 5년 또는 동의 철회 시
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="termsRequired" name="termsRequired" required>
+                        <label for="termsRequired"><span class="required-text">(필수)</span> 이용약관 및 개인정보 수집에 동의합니다.</label>
+                    </div>
+                    
+                    <!-- VIP 마케팅 동의 -->
+                    <div class="marketing-box">
+                        <div class="marketing-title">📬 가끔 연락해도 돼요? VIP 소식 받기</div>
+                        <div class="marketing-desc">
+                            할인 쿠폰이랑 프라이빗 소개팅 혜택 보내드릴게요.<br>
+                            귀찮게 자주 안 해요, 진짜로!
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="termsMarketing" name="termsMarketing">
+                            <label for="termsMarketing">(선택) 네, 좋아요! 소식 받을게요</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">제출하기</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // ========================================
+        // Supabase 설정 (공개 키 - 제출만 가능)
+        // ========================================
+        const SUPABASE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcHhkeHNneG9hcGd1a254d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjUyNDAsImV4cCI6MjA4MzEwMTI0MH0.v_r3wIIIe024k-H-9dyHH-LJj73kP9iU_eYgHZX7CGA';
+        const API_BASE = `${SUPABASE_URL}/rest/v1`;
+        
+        const SUPABASE_HEADERS = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+        // 파일 업로드와 백업 모두 같은 GAS 사용
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzW9ts1S4krUi1FKW9mYCGbksIHv1MaqMlYNRa07dPy2887DLjOfcbmjZAsrARXj3X-/exec';
+        const FILE_UPLOAD_GAS_URL = GAS_URL;
+        const BACKUP_GAS_URL = GAS_URL;
+        
+        // 예약 조회용 API (Supabase)
+        const RESERVATIONS_API = `${API_BASE}/reservations`;
+        
+        let selectedFile = null;
+        
+        // ========================================
+        // 초기화
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            generateBirthYearOptions();
+            setupPhoneInputs();
+        });
+        
+        // 출생연도 옵션 생성 (2026년 한국나이 기준 20세~45세)
+        function generateBirthYearOptions() {
+            const select = document.querySelector('select[name="birthYear"]');
+            // 2026년 한국나이 기준: 20세 = 2007년생, 45세 = 1982년생
+            const minYear = 1982; // 45세
+            const maxYear = 2007; // 20세
+            
+            for (let year = maxYear; year >= minYear; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '년';
+                select.appendChild(option);
+            }
+        }
+        
+        // 전화번호 입력 설정
+        function setupPhoneInputs() {
+            const phone1 = document.querySelector('input[name="phone1"]');
+            const phone2 = document.querySelector('input[name="phone2"]');
+            
+            // 숫자만 입력
+            [phone1, phone2].forEach(input => {
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    // 4자리 입력되면 다음 칸으로
+                    if (e.target.value.length === 4 && e.target === phone1) {
+                        phone2.focus();
+                    }
+                });
+            });
+        }
+        
+        // 성별 선택
+        function selectGender(element, value) {
+            document.querySelectorAll('.gender-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+        }
+        
+        // 파일 선택 처리
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const fileNameEl = document.getElementById('fileName');
+            const uploadArea = document.getElementById('fileUploadArea');
+            
+            if (file) {
+                // 파일 크기 체크 (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('파일 크기는 10MB 이하여야 합니다.');
+                    event.target.value = '';
+                    return;
+                }
+                
+                selectedFile = file;
+                fileNameEl.textContent = '✓ ' + file.name;
+                uploadArea.classList.add('has-file');
+            } else {
+                selectedFile = null;
+                fileNameEl.textContent = '';
+                uploadArea.classList.remove('has-file');
+            }
+        }
+        
+        // 파일을 Base64로 변환
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    // data:image/jpeg;base64,XXXX 에서 XXXX 부분만 추출
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        // 전화번호 유효성 검사
+        function validatePhone() {
+            const phone1 = document.querySelector('input[name="phone1"]').value;
+            const phone2 = document.querySelector('input[name="phone2"]').value;
+            
+            if (phone1.length !== 4 || phone2.length !== 4) {
+                document.getElementById('phoneError').classList.add('show');
+                return false;
+            }
+            
+            document.getElementById('phoneError').classList.remove('show');
+            return true;
+        }
+        
+        // 전화번호 조합
+        function getPhoneNumber() {
+            const phone1 = document.querySelector('input[name="phone1"]').value;
+            const phone2 = document.querySelector('input[name="phone2"]').value;
+            return `010-${phone1}-${phone2}`;
+        }
+        
+        // 예약 체크 (프립 구매 여부 확인)
+        async function checkReservation(phone) {
+            try {
+                // Edge Function으로 예약 확인 (anon SELECT 차단되어 있으므로)
+                const EDGE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co/functions/v1/dynamic-processor';
+                const response = await fetch(EDGE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({
+                        action: 'checkReservation',
+                        phone: phone
+                    })
+                });
+                const result = await response.json();
+                return result.hasReservation || false;
+            } catch (error) {
+                console.error('예약 체크 오류:', error);
+                // 오류 시 일단 통과 (false positive 방지)
+                return true;
+            }
+        }
+        
+        // 중복 제출 체크 (Supabase surveys 테이블)
+        async function checkDuplicate(phone) {
+            try {
+                const response = await fetch(`${API_BASE}/surveys?phone=eq.${encodeURIComponent(phone)}&select=*`, {
+                    headers: SUPABASE_HEADERS
+                });
+                const result = await response.json();
+                // 1달 내 제출 기록 확인
+                const oneMonthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+                const recentSubmit = (result || []).find(s => {
+                    return s.phone === phone && new Date(s.submitted_at || s.created_at).getTime() > oneMonthAgo;
+                });
+                return !!recentSubmit;
+            } catch (error) {
+                console.error('중복 체크 오류:', error);
+                return false;
+            }
+        }
+        
+        // 폼 제출
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            // 전화번호 유효성 검사
+            if (!validatePhone()) {
+                return false;
+            }
+            
+            // 직업인증서류 필수 검사
+            if (!selectedFile) {
+                alert('직업인증서류를 첨부해주세요.');
+                return false;
+            }
+            
+            const phone = getPhoneNumber();
+            const submitBtn = document.getElementById('submitBtn');
+            const form = document.getElementById('survey');
+            
+            // 버튼 비활성화
+            submitBtn.disabled = true;
+            submitBtn.textContent = '제출 중...';
+            
+            try {
+                // 예약 체크 (프립 구매 여부)
+                const hasReservation = await checkReservation(phone);
+                if (!hasReservation) {
+                    alert('예약 내역이 없습니다.\n\n프립에서 파티 예약 후 진행해주세요.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '제출하기';
+                    return false;
+                }
+                
+                // 중복 체크
+                const isDuplicate = await checkDuplicate(phone);
+                if (isDuplicate) {
+                    document.getElementById('surveyForm').style.display = 'none';
+                    document.getElementById('alreadySubmitted').style.display = 'block';
+                    return false;
+                }
+                
+                // 파일 업로드 (Google Drive로)
+                let jobCertFileUrl = '';
+                if (selectedFile) {
+                    const base64 = await fileToBase64(selectedFile);
+                    const fileData = {
+                        name: selectedFile.name,
+                        type: selectedFile.type,
+                        data: base64
+                    };
+                    
+                    try {
+                        const uploadRes = await fetch(FILE_UPLOAD_GAS_URL, {
+                            method: 'POST',
+                            redirect: 'follow',
+                            body: JSON.stringify({
+                                action: 'uploadFiles',
+                                phone: phone,
+                                files: [fileData],
+                                folder: 'survey'
+                            })
+                        });
+                        const uploadResult = await uploadRes.json();
+                        if (uploadResult.success && uploadResult.files && uploadResult.files[0]) {
+                            jobCertFileUrl = uploadResult.files[0].url;
+                        }
+                    } catch (uploadError) {
+                        console.error('파일 업로드 오류:', uploadError);
+                    }
+                }
+                
+                const gender = form.querySelector('input[name="gender"]:checked')?.value;
+                const name = form.querySelector('input[name="name"]').value;
+                const birthYear = parseInt(form.querySelector('select[name="birthYear"]').value);
+                const height = parseInt(form.querySelector('input[name="height"]').value);
+                const jobCategory = form.querySelector('select[name="jobCategory"]').value;
+                const jobDetail = form.querySelector('input[name="jobDetail"]').value || '';
+                const termsAgreed = form.querySelector('input[name="termsRequired"]').checked;
+                const marketingAgreed = form.querySelector('input[name="termsMarketing"]').checked;
+                
+                // 1. surveys 테이블에 저장
+                const surveyId = 'SRV-' + Date.now();
+                const surveyData = {
+                    id: surveyId,
+                    phone: phone,
+                    name: name,
+                    gender: gender,
+                    birthYear: birthYear,
+                    height: height,
+                    jobCategory: jobCategory,
+                    jobDetail: jobDetail,
+                    jobCertFile: jobCertFileUrl,
+                    termsAgreed: termsAgreed,
+                    marketingAgreed: marketingAgreed
+                };
+                
+                // Edge Function으로 저장 (보안 강화)
+                const EDGE_FUNCTION_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co/functions/v1/dynamic-processor';
+                
+                const edgeResponse = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify(surveyData)
+                });
+                
+                if (!edgeResponse.ok) {
+                    const errData = await edgeResponse.json();
+                    throw new Error(errData.error || '저장 실패');
+                }
+                
+                // GAS 스프레드시트에 백업
+                try {
+                    await fetch(BACKUP_GAS_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        body: JSON.stringify({
+                            action: 'backupSurvey',
+                            survey: surveyData
+                        })
+                    });
+                } catch (backupError) {
+                    console.error('설문조사 백업 오류:', backupError);
+                }
+                
+                // 3. 설문 완료 확인 문자 발송 (예약 정보 조회 후)
+                try {
+                    // 예약 정보 조회 (Supabase)
+                    const resResponse = await fetch(`${RESERVATIONS_API}?phone=eq.${encodeURIComponent(phone)}&select=*`, {
+                        headers: SUPABASE_HEADERS
+                    });
+                    const reservations = await resResponse.json();
+                    
+                    if (reservations && reservations.length > 0) {
+                        // 가장 최근 예약 사용
+                        const reservation = reservations[0];
+                        
+                        // GAS로 문자 발송 요청
+                        await fetch(BACKUP_GAS_URL, {
+                            method: 'POST',
+                            redirect: 'follow',
+                            body: JSON.stringify({
+                                action: 'sendSurveyConfirmSms',
+                                to: phone,
+                                eventDate: reservation.event_date || reservation.eventDate,
+                                eventPart: reservation.event_part || reservation.eventPart,
+                                isInvitation: reservation.is_invitation || reservation.isInvitation
+                            })
+                        });
+                    }
+                } catch (smsError) {
+                    console.error('문자 발송 오류:', smsError);
+                    // 문자 실패해도 설문 제출은 성공으로 처리
+                }
+                
+                // 성공 화면 표시
+                document.getElementById('surveyForm').style.display = 'none';
+                document.getElementById('successScreen').classList.add('show');
+                
+            } catch (error) {
+                console.error('제출 오류:', error);
+                alert('제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '제출하기';
+            }
+            
+            return false;
+        }
+    </script>
+</body>
+</html>

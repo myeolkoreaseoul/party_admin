@@ -4458,19 +4458,38 @@
             // 관련 데이터 조인 (customers, surveys, invitations, schedules)
             const lineupData = filtered.map((res, idx) => {
                 const phone = normalizePhone(res.phone);
-                // 전화번호로 먼저 찾고, 없으면 이름으로 찾기 (fallback)
-                let customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
-                const survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
-                const invitation = (data.invitations || []).find(i => normalizePhone(i.phone) === phone);
 
-                // 전화번호로 못 찾으면 이름으로 찾기
-                if (!customer && (invitation?.name || res.crewName)) {
-                    const nameToFind = invitation?.name || res.crewName;
-                    customer = (data.customers || []).find(c => c.name === nameToFind);
+                // 1. 전화번호로 먼저 찾기
+                let customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
+                let survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
+                let invitation = (data.invitations || []).find(i => normalizePhone(i.phone) === phone);
+
+                // 2. 전화번호로 못 찾으면 이름으로 찾기 (crewName 사용)
+                const crewName = res.crewName?.trim();
+                if (!customer && crewName) {
+                    customer = (data.customers || []).find(c =>
+                        c.name?.trim() === crewName ||
+                        c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
                     if (customer) {
-                        console.warn(`[예약관리] 이름으로 매칭: ${nameToFind} (전화번호 불일치 - 예약:${phone}, 고객:${normalizePhone(customer.id)})`);
+                        console.warn(`[예약관리] 이름으로 고객 매칭: ${crewName}`);
                     }
                 }
+                if (!invitation && crewName) {
+                    invitation = (data.invitations || []).find(i =>
+                        i.name?.trim() === crewName ||
+                        i.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
+                }
+                if (!survey && crewName) {
+                    survey = (data.surveys || []).find(s =>
+                        s.name?.trim() === crewName ||
+                        s.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
+                }
+
+                // 디버그: 매칭 결과
+                console.log(`[예약관리] ${crewName}: customer=${!!customer}, survey=${!!survey}, invitation=${!!invitation}`);
 
                 // 파티 일정에서 시간 조회 (연동)
                 const schedule = (data.schedules || []).find(s =>
@@ -7132,18 +7151,31 @@
             // 실제 예약자 데이터 가공
             const realPeople = realReservations.map(r => {
                 const phone = normalizePhone(r.phone);
-                // 전화번호로 먼저 찾고, 없으면 이름으로 찾기 (fallback)
-                let customer = data.customers.find(c => normalizePhone(c.id) === phone);
-                const survey = data.surveys.find(s => normalizePhone(s.phone) === phone);
-                const invitation = data.invitations.find(i => normalizePhone(i.phone) === phone);
+                const crewName = r.crewName?.trim();
 
-                // 전화번호로 못 찾으면 이름으로 찾기
-                if (!customer && (invitation?.name || r.crewName)) {
-                    const nameToFind = invitation?.name || r.crewName;
-                    customer = data.customers.find(c => c.name === nameToFind);
-                    if (customer) {
-                        console.warn(`[라인업] 이름으로 매칭: ${nameToFind} (전화번호 불일치)`);
-                    }
+                // 1. 전화번호로 먼저 찾기
+                let customer = data.customers.find(c => normalizePhone(c.id) === phone);
+                let survey = data.surveys.find(s => normalizePhone(s.phone) === phone);
+                let invitation = data.invitations.find(i => normalizePhone(i.phone) === phone);
+
+                // 2. 전화번호로 못 찾으면 이름으로 찾기
+                if (!customer && crewName) {
+                    customer = data.customers.find(c =>
+                        c.name?.trim() === crewName ||
+                        c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
+                }
+                if (!invitation && crewName) {
+                    invitation = data.invitations.find(i =>
+                        i.name?.trim() === crewName ||
+                        i.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
+                }
+                if (!survey && crewName) {
+                    survey = data.surveys.find(s =>
+                        s.name?.trim() === crewName ||
+                        s.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
                 }
 
                 const hasSurvey = !!survey;

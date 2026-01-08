@@ -2254,8 +2254,42 @@
                             <textarea id="cf_memo" placeholder="특이사항, 메모 등" rows="3"
                                       style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); resize: vertical;"></textarea>
                         </div>
+
+                        <!-- 예약 함께 생성 옵션 -->
+                        <div style="padding: 16px; background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); border-radius: 8px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 12px;">
+                                <input type="checkbox" id="cf_createReservation" onchange="toggleReservationFields()">
+                                <span style="font-weight: 600; color: var(--primary);">📅 예약도 함께 생성 (예약 현황에 표시됨)</span>
+                            </label>
+                            <div id="cf_reservationFields" style="display: none; margin-top: 12px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">파티 날짜</label>
+                                        <select id="cf_resDate" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">파트</label>
+                                        <select id="cf_resPart" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
+                                            <option value="1부">1부</option>
+                                            <option value="2부">2부</option>
+                                            <option value="3부">3부</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px;">
+                                    <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">결제 유형</label>
+                                    <select id="cf_resPaymentType" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
+                                        <option value="waived">🎫 면제 (직접 등록)</option>
+                                        <option value="cash">💵 현금</option>
+                                        <option value="comp">🎁 보상</option>
+                                        <option value="frip">🅿️ 프립</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
+
                     <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
                         <button type="button" class="btn btn-secondary" onclick="closeModal('customerFormModal')">취소</button>
                         <button type="submit" class="btn btn-primary">저장</button>
@@ -3793,8 +3827,31 @@
                 document.getElementById('cf_phone').disabled = false;
                 document.getElementById('cf_source').value = 'direct';
             }
-            
+
+            // 예약 생성 옵션 초기화
+            document.getElementById('cf_createReservation').checked = false;
+            document.getElementById('cf_reservationFields').style.display = 'none';
+
+            // 파티 날짜 옵션 채우기
+            const dateSelect = document.getElementById('cf_resDate');
+            dateSelect.innerHTML = '';
+            const schedules = data.schedules || [];
+            const uniqueDates = [...new Set(schedules.map(s => s.date))].sort();
+            uniqueDates.forEach(date => {
+                const opt = document.createElement('option');
+                opt.value = date;
+                opt.textContent = date;
+                dateSelect.appendChild(opt);
+            });
+
             openModal('customerFormModal');
+        }
+
+        // 예약 필드 토글
+        function toggleReservationFields() {
+            const checkbox = document.getElementById('cf_createReservation');
+            const fields = document.getElementById('cf_reservationFields');
+            fields.style.display = checkbox.checked ? 'block' : 'none';
         }
         
         // 고객 저장 (UPSERT 방식 - 있으면 수정, 없으면 추가)
@@ -3853,7 +3910,41 @@
                 }
 
                 if (response.ok) {
-                    showToast('고객 정보가 저장되었습니다', 'success');
+                    // 예약도 함께 생성 옵션 체크
+                    const createReservation = document.getElementById('cf_createReservation').checked;
+                    if (createReservation) {
+                        const resDate = document.getElementById('cf_resDate').value;
+                        const resPart = document.getElementById('cf_resPart').value;
+                        const resPaymentType = document.getElementById('cf_resPaymentType').value;
+
+                        if (resDate) {
+                            const reservationData = {
+                                phone: normalizedPhone,
+                                crewName: customerData.nickname || customerData.name || '',
+                                eventDate: resDate,
+                                eventPart: resPart,
+                                option: '직접등록',
+                                isInvitation: false,
+                                status: 'confirmed',
+                                paymentType: resPaymentType,
+                                paymentNote: '직접 등록'
+                            };
+
+                            const resResponse = await fetch(`${API_BASE}/${TB.RESERVATIONS}`, {
+                                method: 'POST',
+                                headers: SUPABASE_HEADERS,
+                                body: JSON.stringify(reservationData)
+                            });
+
+                            if (resResponse.ok) {
+                                showToast('고객 + 예약이 생성되었습니다', 'success');
+                            } else {
+                                showToast('고객 저장됨, 예약 생성 실패', 'warning');
+                            }
+                        }
+                    } else {
+                        showToast('고객 정보가 저장되었습니다', 'success');
+                    }
                     closeModal('customerFormModal');
                     await refreshAllData();
                 } else {

@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS customers (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 기존 테이블에 블랙리스트 필드 추가 (이미 테이블이 있는 경우)
+-- 기존 테이블에 누락된 필드 추가 (이미 테이블이 있는 경우)
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS nickname TEXT;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS is_blacklisted BOOLEAN DEFAULT FALSE;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklist_reason TEXT;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklisted_at TIMESTAMPTZ;

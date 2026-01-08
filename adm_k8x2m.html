@@ -4510,7 +4510,17 @@
 
                 // 디버그: 고객 데이터 매칭 확인
                 if (!customer && !survey) {
-                    console.log(`[예약관리] 고객/조사 미매칭: phone=${phone}, crewName=${res.crewName}, invitation=${invitation?.name || 'N'}`);
+                    // 이름으로 고객 찾기 시도
+                    const nameToFind = invitation?.name || res.crewName;
+                    const customerByName = data.customers.find(c => c.name === nameToFind);
+                    if (customerByName) {
+                        console.error(`[예약관리] ⚠️ 전화번호 불일치! ${nameToFind}`);
+                        console.error(`  예약 전화번호: ${phone}`);
+                        console.error(`  고객관리 전화번호: ${normalizePhone(customerByName.id)}`);
+                        console.error(`  → 고객관리에서 전화번호를 ${phone}로 수정하세요`);
+                    } else {
+                        console.log(`[예약관리] 고객 미등록: ${res.crewName} (${phone})`);
+                    }
                 }
 
                 return {

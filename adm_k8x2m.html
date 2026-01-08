@@ -2934,10 +2934,16 @@
                 const hasNoShow = activeReservations.some(r => (r.attended === false || r.attended === 0) && (r.noShow == true || r.noShow === 1));
                 if (hasAttended) stage = '4.참여완료';
                 if (hasNoShow) stage = '5.행사불참';
-                
+
+                // manual_stage가 있으면 우선 사용
+                const stageLabels = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
+                if (customer.manual_stage && stageLabels[customer.manual_stage]) {
+                    stage = stageLabels[customer.manual_stage];
+                }
+
                 // 닉네임은 예약의 crewName에서 가져옴 (프립에서 오는 이름)
                 const nickname = reservations.length > 0 ? reservations[0].crewName : (customer.nickname || '');
-                
+
                 result.push({
                     인증단계: stage,
                     유입경로: inv.phone ? 'invitation' : (customer.source || 'organic'),
@@ -2982,8 +2988,15 @@
                 const survey = surveyMap[normalizedPhone];
                 const hasSurvey = survey || (customer.gender && (customer.birth_year || customer.birthYear));
 
+                // manual_stage가 있으면 우선 사용
+                const stageLabels2 = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
+                let stage2 = '1.초대장신청';
+                if (customer.manual_stage && stageLabels2[customer.manual_stage]) {
+                    stage2 = stageLabels2[customer.manual_stage];
+                }
+
                 result.push({
-                    인증단계: '1.초대장신청',
+                    인증단계: stage2,
                     유입경로: 'invitation',
                     크루명: customer.name || survey?.name || '',
                     닉네임: customer.nickname || '',
@@ -3025,8 +3038,15 @@
                 const survey = surveyMap[normalizedPhone];
                 const hasSurvey = survey || (c.gender && (c.birth_year || c.birthYear));
 
+                // manual_stage가 있으면 우선 사용
+                const stageLabels3 = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
+                let stage3 = hasSurvey ? '3.사전조사완료' : '0.미분류';
+                if (c.manual_stage && stageLabels3[c.manual_stage]) {
+                    stage3 = stageLabels3[c.manual_stage];
+                }
+
                 result.push({
-                    인증단계: hasSurvey ? '3.사전조사완료' : '0.미분류',
+                    인증단계: stage3,
                     유입경로: c.source || 'organic',
                     크루명: c.name || survey?.name || '',
                     닉네임: c.nickname || '',
@@ -4162,13 +4182,13 @@
                     }
                 }
 
-                // customers 테이블에 stage 업데이트 (없으면 생성)
+                // customers 테이블에 manual_stage 업데이트 (없으면 생성)
                 const existingCustomer = (data.customers || []).find(c => c.id === normalizedPhone);
                 if (existingCustomer) {
                     await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
                         method: 'PATCH',
                         headers: SUPABASE_HEADERS,
-                        body: JSON.stringify({ stage: newStage })
+                        body: JSON.stringify({ manual_stage: newStage })
                     });
                 } else {
                     await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
@@ -4182,7 +4202,7 @@
                             height: customer?.신장 || null,
                             job_category: customer?.직업분류 || null,
                             job_detail: customer?.직업상세 || null,
-                            stage: newStage,
+                            manual_stage: newStage,
                             source: 'manual'
                         })
                     });
@@ -4315,20 +4335,32 @@
             const summaryContainer = document.getElementById('reservationSummary');
             const reservations = data.reservations || [];
             
-            // 날짜 필터 옵션 업데이트 (중복 제거)
+            // 날짜 필터 옵션 업데이트 (정규화 후 중복 제거)
             const dateSelect = document.getElementById('reservationDateFilter');
-            const allDates = [...new Set(reservations.map(r => r.eventDate).filter(Boolean))];
-            const sortedDates = allDates.sort((a, b) => parsePartyDate(a) - parsePartyDate(b));
-            
+            const dateMap = new Map(); // 정규화된 날짜 -> 원본 날짜
+            reservations.forEach(r => {
+                if (r.eventDate) {
+                    const normalized = normalizeDateStr(r.eventDate);
+                    if (!dateMap.has(normalized)) {
+                        dateMap.set(normalized, r.eventDate);
+                    }
+                }
+            });
+            const sortedDates = [...dateMap.entries()].sort((a, b) => {
+                const dateA = parsePartyDate(a[1]);
+                const dateB = parsePartyDate(b[1]);
+                return dateA - dateB;
+            });
+
             // 미래 날짜만 (1/11 이후)
             const minDate = new Date(2026, 0, 11);
-            const futureDates = sortedDates.filter(d => parsePartyDate(d) >= minDate);
-            
-            // 날짜 옵션 업데이트 (정규화된 형식으로 표시)
+            const futureDates = sortedDates.filter(([norm, orig]) => parsePartyDate(orig) >= minDate);
+
+            // 날짜 옵션 업데이트
             const currentValue = dateSelect?.value || '';
             if (dateSelect) {
-                dateSelect.innerHTML = '<option value="">📅 전체 날짜</option>' + 
-                    futureDates.map(d => `<option value="${d}">${normalizeDateStr(d)}</option>`).join('');
+                dateSelect.innerHTML = '<option value="">📅 전체 날짜</option>' +
+                    futureDates.map(([norm, orig]) => `<option value="${orig}">${norm}</option>`).join('');
                 if (currentValue) dateSelect.value = currentValue;
             }
             

@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS customers (
 
 -- 기존 테이블에 누락된 필드 추가 (이미 테이블이 있는 경우)
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS manual_stage TEXT;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS is_blacklisted BOOLEAN DEFAULT FALSE;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklist_reason TEXT;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklisted_at TIMESTAMPTZ;
@@ -57,11 +58,17 @@ CREATE TABLE IF NOT EXISTS reservations (
     option TEXT,
     is_invitation BOOLEAN DEFAULT FALSE,
     status TEXT DEFAULT '예약완료',
+    payment_type TEXT,
+    payment_note TEXT,
     survey_done BOOLEAN DEFAULT FALSE,
     survey_reminder_sent BOOLEAN DEFAULT FALSE,
     confirmation_sent BOOLEAN DEFAULT FALSE,
     registered_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 기존 reservations 테이블에 누락된 필드 추가
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS payment_type TEXT;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS payment_note TEXT;
 
 -- 4. surveys (사전조사)
 CREATE TABLE IF NOT EXISTS surveys (

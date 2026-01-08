@@ -4,9 +4,42 @@
 
 ---
 
+## 🌐 배포 정보
+
+| 항목 | 내용 |
+|------|------|
+| **프로덕션 URL** | https://svvys.com |
+| **관리자 페이지** | https://svvys.com/adm_k8x2m.html |
+| **호스팅** | Cloudflare Pages |
+| **배포 방법** | `git push origin master` → **자동 배포** |
+| **GitHub 저장소** | https://github.com/myeolkoreaseoul/svvys.git |
+
+### 배포 프로세스
+```bash
+# 1. 코드 수정 후 커밋
+git add .
+git commit -m "설명"
+
+# 2. push하면 Cloudflare가 자동 배포
+git push origin master
+
+# 3. 1-2분 후 프로덕션 반영 확인
+```
+
+---
+
 ## 🚀 최신 업데이트 (2026-01-09)
 
 ### ✅ 2026-01-09 완료된 작업
+
+**0. 정원 연동 및 고객 매칭 개선 (최신)**
+- 최종 라인업 정원: 스케줄 개별 정원 우선 적용 (예: 1/11 1부 7:7)
+  - `schedule.maleCapacity` → `partyTypeInfo.maleCapacity` → 12 순으로 fallback
+- 라인업/예약관리: 초대장(invitations) 데이터도 이름 fallback에 추가
+- 성별 '미상' 처리:
+  - 라인업에 경고 표시 ("⚠️ 성별미상 N명")
+  - 여자 테이블 하단에 미상 고객 목록 표시
+  - 콘솔 로그로 디버깅 가능: `[라인업] 고객/조사 미매칭: phone=...`
 
 **1. 고객 추가 시 예약 함께 생성 기능**
 - 고객 추가/수정 폼에 "예약도 함께 생성" 체크박스 추가
@@ -189,18 +222,25 @@ const camelData = {
 
 | 잘못된 방식 (하드코딩) | 올바른 방식 (DB 연동) |
 |----------------------|---------------------|
-| `maleCapacity = 12` | `partyTypeInfo?.maleCapacity` |
-| `schedule.maleCapacity \|\| 12` | `partyTypeInfo?.maleCapacity \|\| 12` |
+| `maleCapacity = 12` | `schedule?.maleCapacity ?? partyTypeInfo?.maleCapacity ?? 12` |
+| 파티유형만 사용 | 스케줄 개별값 → 파티유형 기본값 → 하드코딩 순 |
+
+**정원/시간 연동 우선순위:**
+```javascript
+// 정원: 스케줄 개별값 우선, 없으면 파티유형 기본값
+const maleCapacity = schedule?.maleCapacity ?? schedule?.male_capacity ?? partyTypeInfo?.maleCapacity ?? 12;
+const femaleCapacity = schedule?.femaleCapacity ?? schedule?.female_capacity ?? partyTypeInfo?.femaleCapacity ?? 12;
+const minVacancy = schedule?.minVacancy ?? schedule?.min_vacancy ?? partyTypeInfo?.minVacancy ?? 2;
+```
 
 **원칙:**
-- 정원(capacity), 최소공석(minVacancy) 등은 **party_types 테이블에서 직접** 가져올 것
-- party_schedules에 저장된 값이 아니라, **party_types의 최신 값**을 항상 사용
-- 파티유형(party_types)에서 값 변경하면 **모든 곳에 자동 반영**되어야 함
+1. **스케줄 개별 정원 우선**: 예약일정에서 특정 날짜/세션의 정원을 개별 설정 가능
+2. **파티유형 기본값 fallback**: 개별 설정 없으면 파티유형(party_types) 기본값 사용
+3. **모든 페이지 연동**: 스케줄 개별 정원 변경 시 라인업, 예약관리 등 모든 곳에 반영
 
-**이유:**
-- party_schedules에 저장된 값은 **생성 당시의 스냅샷**
-- party_types 값 변경해도 기존 schedules에 반영 안 됨
-- 따라서 항상 party_types에서 직접 가져와야 일관성 유지
+**예시:**
+- 1월 11일 1부: 스케줄에 7:7 설정 → 라인업에 7:7 표시
+- 1월 11일 2부, 3부: 개별 설정 없음 → 파티유형 기본값(12:12) 사용
 
 ### 4. 테이블 헤더 소팅 기능
 - **모든 테이블 헤더에 소팅(정렬) 기능 추가**

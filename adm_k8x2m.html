@@ -2935,10 +2935,11 @@
                 if (hasAttended) stage = '4.참여완료';
                 if (hasNoShow) stage = '5.행사불참';
 
-                // manual_stage가 있으면 우선 사용
+                // manual_stage가 있으면 우선 사용 (camelCase로 변환됨)
                 const stageLabels = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
-                if (customer.manual_stage && stageLabels[customer.manual_stage]) {
-                    stage = stageLabels[customer.manual_stage];
+                const manualStage = customer.manualStage || customer.manual_stage;
+                if (manualStage && stageLabels[manualStage]) {
+                    stage = stageLabels[manualStage];
                 }
 
                 // 닉네임은 예약의 crewName에서 가져옴 (프립에서 오는 이름)
@@ -2988,11 +2989,12 @@
                 const survey = surveyMap[normalizedPhone];
                 const hasSurvey = survey || (customer.gender && (customer.birth_year || customer.birthYear));
 
-                // manual_stage가 있으면 우선 사용
+                // manual_stage가 있으면 우선 사용 (camelCase로 변환됨)
                 const stageLabels2 = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
                 let stage2 = '1.초대장신청';
-                if (customer.manual_stage && stageLabels2[customer.manual_stage]) {
-                    stage2 = stageLabels2[customer.manual_stage];
+                const manualStage2 = customer.manualStage || customer.manual_stage;
+                if (manualStage2 && stageLabels2[manualStage2]) {
+                    stage2 = stageLabels2[manualStage2];
                 }
 
                 result.push({
@@ -3038,11 +3040,12 @@
                 const survey = surveyMap[normalizedPhone];
                 const hasSurvey = survey || (c.gender && (c.birth_year || c.birthYear));
 
-                // manual_stage가 있으면 우선 사용
+                // manual_stage가 있으면 우선 사용 (camelCase로 변환됨)
                 const stageLabels3 = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
                 let stage3 = hasSurvey ? '3.사전조사완료' : '0.미분류';
-                if (c.manual_stage && stageLabels3[c.manual_stage]) {
-                    stage3 = stageLabels3[c.manual_stage];
+                const manualStage3 = c.manualStage || c.manual_stage;
+                if (manualStage3 && stageLabels3[manualStage3]) {
+                    stage3 = stageLabels3[manualStage3];
                 }
 
                 result.push({

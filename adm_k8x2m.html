@@ -583,6 +583,7 @@
         <div class="tab" data-tab="virtual">가상참여자</div>
         <div class="tab" data-tab="schedules">파티일정</div>
         <div class="tab" data-tab="tiers">직업티어표</div>
+        <div class="tab" data-tab="blacklist">🚫 블랙리스트</div>
         <div class="tab" data-tab="settings">설정</div>
     </nav>
     
@@ -1604,7 +1605,31 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- ==================== 블랙리스트 탭 ==================== -->
+        <div class="tab-content" id="tab-blacklist">
+            <div class="section-header">
+                <h2>🚫 블랙리스트 관리</h2>
+            </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>연락처</th>
+                            <th>성별</th>
+                            <th>블랙리스트 사유</th>
+                            <th>등록일</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blacklistBody">
+                        <tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- ==================== 설정 탭 ==================== -->
         <div class="tab-content" id="tab-settings">
             <!-- 데이터 관리 -->
@@ -2848,6 +2873,7 @@
                 safeCall(renderVirtualRules);
                 safeCall(renderGeneratedVirtuals);
                 safeCall(renderTiers);
+                safeCall(renderBlacklist);
                 safeCall(renderSchedules);
                 safeCall(renderSessions);
                 safeCall(renderPartyTypes);
@@ -4374,7 +4400,14 @@
             
             // 예약 필터링 (취소 제외)
             let filtered = reservations.filter(r => r.status !== '취소');
-            
+
+            // 블랙리스트 고객 제외
+            filtered = filtered.filter(r => {
+                const phone = normalizePhone(r.phone);
+                const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
+                return !customer?.is_blacklisted && !customer?.isBlacklisted;
+            });
+
             // 검색
             if (search) {
                 filtered = filtered.filter(r => {
@@ -9596,7 +9629,73 @@
         
         document.getElementById('tierGenderFilter')?.addEventListener('change', renderTiers);
         document.getElementById('tierFilter')?.addEventListener('change', renderTiers);
-        
+
+        // ========================================
+        // 블랙리스트 렌더링
+        // ========================================
+        function renderBlacklist() {
+            const tbody = document.getElementById('blacklistBody');
+            if (!tbody) return;
+
+            // 블랙리스트 고객 필터링
+            const blacklisted = (data.customers || []).filter(c =>
+                c.is_blacklisted || c.isBlacklisted
+            );
+
+            if (blacklisted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">블랙리스트가 비어 있습니다</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = blacklisted.map(c => {
+                const phone = c.id;
+                const name = c.name || '-';
+                const gender = c.gender || '-';
+                const reason = c.blacklist_reason || c.blacklistReason || '-';
+                const date = c.blacklisted_at || c.blacklistedAt;
+                const dateStr = date ? new Date(date).toLocaleDateString('ko-KR') : '-';
+
+                return `
+                <tr>
+                    <td><strong>${name}</strong></td>
+                    <td>${formatPhone(phone)}</td>
+                    <td>${gender}</td>
+                    <td>${reason}</td>
+                    <td>${dateStr}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="removeFromBlacklist('${phone}')">
+                            <i class="fas fa-undo"></i> 해제
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        // 블랙리스트 해제
+        async function removeFromBlacklist(phone) {
+            if (!confirm('블랙리스트에서 해제하시겠습니까?')) return;
+
+            try {
+                await fetch(`${API_BASE}/customers?id=eq.${encodeURIComponent(phone)}`, {
+                    method: 'PATCH',
+                    headers: SUPABASE_HEADERS,
+                    body: JSON.stringify({
+                        is_blacklisted: false,
+                        blacklist_reason: null,
+                        blacklisted_at: null
+                    })
+                });
+                showToast('블랙리스트에서 해제되었습니다', 'success');
+                await refreshAllData();
+                renderBlacklist();
+                renderCustomers();
+                renderReservations();
+            } catch (error) {
+                console.error('블랙리스트 해제 오류:', error);
+                showToast('해제 실패: ' + error.message, 'error');
+            }
+        }
+
         // ========================================
         // 모달 관리
         // ========================================

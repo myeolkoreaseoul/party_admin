@@ -16,9 +16,17 @@ CREATE TABLE IF NOT EXISTS customers (
     source TEXT,
     marketing_agree BOOLEAN DEFAULT FALSE,
     memo TEXT,
+    is_blacklisted BOOLEAN DEFAULT FALSE,
+    blacklist_reason TEXT,
+    blacklisted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 기존 테이블에 블랙리스트 필드 추가 (이미 테이블이 있는 경우)
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS is_blacklisted BOOLEAN DEFAULT FALSE;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklist_reason TEXT;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklisted_at TIMESTAMPTZ;
 
 -- 2. invitations (초대장 신청)
 CREATE TABLE IF NOT EXISTS invitations (

@@ -634,6 +634,11 @@
                     <option value="invitation">초대장</option>
                     <option value="organic">일반</option>
                 </select>
+                <select class="filter-select" id="customerBlacklistFilter" style="border-color: var(--danger);">
+                    <option value="">전체 고객</option>
+                    <option value="blacklist">⛔ 블랙리스트만</option>
+                    <option value="normal">정상 고객만</option>
+                </select>
                 <button class="btn btn-secondary" onclick="refreshIntegratedData()">
                     <i class="fas fa-sync-alt"></i> 새로고침
                 </button>
@@ -2926,10 +2931,12 @@
                     예약건수: reservations.length,
                     예약목록: reservations,
                     메모: customer.memo || '',
+                    블랙리스트: customer.is_blacklisted || false,
+                    블랙리스트사유: customer.blacklist_reason || '',
                     _phone: phone
                 });
             });
-            
+
             // 2. 예약 없이 초대장만 신청한 경우
             data.invitations.forEach(inv => {
                 const phone = inv.phone;
@@ -2968,10 +2975,12 @@
                     예약건수: 0,
                     예약목록: [],
                     메모: customer.memo || '',
+                    블랙리스트: customer.is_blacklisted || false,
+                    블랙리스트사유: customer.blacklist_reason || '',
                     _phone: phone
                 });
             });
-            
+
             // 3. customers에만 있고 예약/초대장 없는 경우 (survey만 제출한 일반고객)
             data.customers.forEach(c => {
                 const phone = c.id;
@@ -3009,10 +3018,12 @@
                     예약건수: 0,
                     예약목록: [],
                     메모: c.memo || '',
+                    블랙리스트: c.is_blacklisted || false,
+                    블랙리스트사유: c.blacklist_reason || '',
                     _phone: phone
                 });
             });
-            
+
             return result;
         }
         
@@ -3223,27 +3234,35 @@
             const search = (document.getElementById('customerSearch')?.value || '').toLowerCase();
             const stageFilter = document.getElementById('customerStageFilter')?.value || '';
             const sourceFilter = document.getElementById('customerSourceFilter')?.value || '';
-            
+            const blacklistFilter = document.getElementById('customerBlacklistFilter')?.value || '';
+
             let filtered = data.integratedCustomers || [];
-            
+
             // 검색 필터
             if (search) {
-                filtered = filtered.filter(c => 
+                filtered = filtered.filter(c =>
                     (c.크루명 || '').toLowerCase().includes(search) ||
                     (c.연락처 || '').includes(search) ||
                     (c.직업분류 || '').toLowerCase().includes(search) ||
                     (c.직업상세 || '').toLowerCase().includes(search)
                 );
             }
-            
+
             // 단계 필터
             if (stageFilter) {
                 filtered = filtered.filter(c => c.인증단계 === stageFilter);
             }
-            
+
             // 유입 필터
             if (sourceFilter) {
                 filtered = filtered.filter(c => c.유입경로 === sourceFilter);
+            }
+
+            // 블랙리스트 필터
+            if (blacklistFilter === 'blacklist') {
+                filtered = filtered.filter(c => c.블랙리스트 === true);
+            } else if (blacklistFilter === 'normal') {
+                filtered = filtered.filter(c => !c.블랙리스트);
             }
             
             // 고객 수 표시
@@ -3306,12 +3325,16 @@
                 
                 // 닉네임 표시
                 const nickname = row.닉네임 || '-';
-                
+
+                // 블랙리스트 여부
+                const isBlacklisted = row.블랙리스트 || false;
+                const blacklistIcon = isBlacklisted ? '<span style="color: var(--danger);" title="블랙리스트: ' + (row.블랙리스트사유 || '').replace(/"/g, '&quot;') + '">⛔</span> ' : '';
+
                 return `
-                    <tr class="clickable-row" onclick="showIntegratedDetail('${row._phone || phone}')">
+                    <tr class="clickable-row ${isBlacklisted ? 'blacklist-row' : ''}" onclick="showIntegratedDetail('${row._phone || phone}')" ${isBlacklisted ? 'style="background: rgba(255,77,77,0.1);"' : ''}>
                         <td><span class="status ${stageClass}">${stageLabel}</span></td>
                         <td><span class="status ${sourceClass}">${sourceLabel}</span></td>
-                        <td>${row.크루명 || '-'}</td>
+                        <td>${blacklistIcon}${row.크루명 || '-'}</td>
                         <td title="${nickname}">${nickname.length > 6 ? nickname.substring(0,6) + '..' : nickname}</td>
                         <td title="${phone}">${displayPhone || '-'}</td>
                         <td class="${genderClass}">${row.성별 || '-'}</td>
@@ -3406,12 +3429,18 @@
         
         // 통합 상세 모달
         function showIntegratedDetail(phone) {
-            const customer = (data.integratedCustomers || []).find(r => 
+            const customer = (data.integratedCustomers || []).find(r =>
                 normalizePhone(r.연락처) === normalizePhone(phone) || r._phone === phone
             );
-            
+
             if (!customer) return;
-            
+
+            // DB의 customers 테이블에서 블랙리스트 정보 가져오기
+            const normalizedPhone = normalizePhone(phone);
+            const customerDB = (data.customers || []).find(c =>
+                normalizePhone(c.id) === normalizedPhone
+            );
+
             const modalBody = document.getElementById('customerModalBody');
             const isInvitation = customer.유입경로 === 'invitation';
             
@@ -3675,6 +3704,23 @@
                 </div>
                 ` : ''}
                 
+                <div style="margin-top: 24px; padding: 16px; border: 1px solid ${customerDB?.is_blacklisted ? 'var(--danger)' : 'var(--border)'}; border-radius: 8px; background: ${customerDB?.is_blacklisted ? 'rgba(255,77,77,0.1)' : 'var(--bg)'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${customerDB?.is_blacklisted ? '12px' : '0'};">
+                        <h4 style="font-size: 14px; color: ${customerDB?.is_blacklisted ? 'var(--danger)' : 'var(--text-muted)'}; margin: 0;">
+                            ${customerDB?.is_blacklisted ? '⛔ 블랙리스트 고객' : '🛡️ 블랙리스트'}
+                        </h4>
+                        <button class="btn ${customerDB?.is_blacklisted ? 'btn-secondary' : 'btn-danger'}" style="font-size: 12px; padding: 6px 12px;" onclick="toggleBlacklist('${phone}', ${!customerDB?.is_blacklisted})">
+                            ${customerDB?.is_blacklisted ? '블랙리스트 해제' : '블랙리스트 등록'}
+                        </button>
+                    </div>
+                    ${customerDB?.is_blacklisted ? `
+                        <div style="font-size: 13px;">
+                            <div style="color: var(--danger); margin-bottom: 8px;"><strong>사유:</strong> ${customerDB?.blacklist_reason || '(사유 미입력)'}</div>
+                            <div style="color: var(--text-muted); font-size: 11px;">등록일: ${customerDB?.blacklisted_at ? new Date(customerDB.blacklisted_at).toLocaleString('ko-KR') : '-'}</div>
+                        </div>
+                    ` : ''}
+                </div>
+
                 <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;">
                     <button class="btn btn-secondary" onclick="openCustomerForm('${phone}')">
                         <i class="fas fa-edit"></i> 수정
@@ -3869,6 +3915,60 @@
             }
         }
 
+        // 블랙리스트 토글 함수
+        async function toggleBlacklist(phone, setBlacklisted) {
+            const normalizedPhone = normalizePhone(phone);
+
+            let reason = '';
+            if (setBlacklisted) {
+                reason = prompt('블랙리스트 등록 사유를 입력하세요:');
+                if (reason === null) return; // 취소
+            } else {
+                if (!confirm('블랙리스트를 해제하시겠습니까?')) return;
+            }
+
+            try {
+                // customers 테이블에 해당 고객이 있는지 확인
+                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                    method: 'GET',
+                    headers: SUPABASE_HEADERS
+                });
+                const existingCustomer = await checkResponse.json();
+
+                const blacklistData = {
+                    is_blacklisted: setBlacklisted,
+                    blacklist_reason: setBlacklisted ? reason : null,
+                    blacklisted_at: setBlacklisted ? new Date().toISOString() : null
+                };
+
+                if (existingCustomer && existingCustomer.length > 0) {
+                    // 기존 고객 업데이트
+                    await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify(blacklistData)
+                    });
+                } else {
+                    // 신규 고객 생성 (블랙리스트 정보만)
+                    await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
+                        method: 'POST',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({
+                            id: normalizedPhone,
+                            ...blacklistData
+                        })
+                    });
+                }
+
+                showToast(setBlacklisted ? '⛔ 블랙리스트에 등록되었습니다' : '블랙리스트가 해제되었습니다', setBlacklisted ? 'error' : 'success');
+                closeModal('customerModal');
+                await refreshAllData();
+            } catch (error) {
+                console.error('블랙리스트 처리 오류:', error);
+                showToast('오류: ' + error.message, 'error');
+            }
+        }
+
         // 단계 수동 변경 함수
         async function handleStageChange(phone, newStage) {
             const normalizedPhone = normalizePhone(phone);
@@ -4013,7 +4113,8 @@
         document.getElementById('customerSearch')?.addEventListener('input', renderCustomers);
         document.getElementById('customerStageFilter')?.addEventListener('change', renderCustomers);
         document.getElementById('customerSourceFilter')?.addEventListener('change', renderCustomers);
-        
+        document.getElementById('customerBlacklistFilter')?.addEventListener('change', renderCustomers);
+
         // ========================================
         // 초대장 렌더링
         // ========================================
@@ -4258,6 +4359,9 @@
                     hasSurvey: !!survey,
                     phone: res.phone || '-',
                     eventPart: res.eventPart || '-',
+                    // 블랙리스트 정보
+                    isBlacklisted: customer?.is_blacklisted || false,
+                    blacklistReason: customer?.blacklist_reason || '',
                     // 관리용 데이터
                     reservationId: res.id,
                     eventDate: res.eventDate,
@@ -4367,6 +4471,10 @@
                 const surveyClass = d.hasSurvey ? 'status-success' : 'status-warning';
                 const surveyLabel = d.hasSurvey ? '완료' : '미완';
 
+                // 블랙리스트 스타일
+                const blacklistStyle = d.isBlacklisted ? 'background: rgba(255,77,77,0.15);' : '';
+                const blacklistIcon = d.isBlacklisted ? `<span style="color: var(--danger);" title="⛔ 블랙리스트: ${(d.blacklistReason || '').replace(/"/g, '&quot;')}">⛔</span> ` : '';
+
                 // 결제 유형 스타일
                 const paymentClass = {
                     'frip': 'status-info',
@@ -4390,12 +4498,12 @@
                 }).replace(/"/g, '&quot;');
 
                 return `
-                    <tr>
+                    <tr style="${blacklistStyle}">
                         <td style="text-align: center; color: var(--text-muted);">${d.index}</td>
                         <td style="font-size: 11px; white-space: nowrap;" title="${d.partyTimeDisplay}">${d.partyTimeDisplay}</td>
                         <td><span class="status ${paymentClass}" style="font-size: 10px;" title="${d.paymentNote || ''}">${d.paymentTypeDisplay}</span></td>
                         <td><span class="status ${sourceClass}" style="font-size: 11px;">${d.source}</span></td>
-                        <td style="font-weight: 500; cursor: pointer;" onclick="openCustomerModal('${d.phone}')">${d.name}</td>
+                        <td style="font-weight: 500; cursor: pointer;" onclick="openCustomerModal('${d.phone}')">${blacklistIcon}${d.name}</td>
                         <td style="color: var(--text-muted);">${d.nickname}</td>
                         <td class="${genderClass}">${d.gender === '남자' ? '♂' : d.gender === '여자' ? '♀' : '-'}</td>
                         <td style="${!d.isAgeValid ? 'color: var(--danger); font-weight: bold;' : ''}">${d.birthYear ? formatBirthYear(d.birthYear) : '-'}${!d.isAgeValid ? ' ⚠️' : ''}</td>

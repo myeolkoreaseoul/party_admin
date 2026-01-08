@@ -2496,6 +2496,9 @@
             // ISO 형식: "2026-01-11T03:00:00.000Z" 또는 "2026-01-11"
             const isoMatch = d.match(/^(\d{4})-(\d{2})-(\d{2})/);
             if (isoMatch) return `${isoMatch[1]}년 ${parseInt(isoMatch[2])}월 ${parseInt(isoMatch[3])}일`;
+            // 연도 없는 한글 형식: "1월 11일" 또는 "1월 11일 토 12:00"
+            const shortKorMatch = d.match(/(\d{1,2})월\s*(\d{1,2})일/);
+            if (shortKorMatch) return `2026년 ${parseInt(shortKorMatch[1])}월 ${parseInt(shortKorMatch[2])}일`;
             return d;
         }
         
@@ -7078,12 +7081,16 @@
             // 나이조건 가져오기
             const ageCondition = getAgeCondition(dateFilter, partFilter);
             
-            // 실제 예약자 (해당 날짜/세션)
+            // 실제 예약자 (해당 날짜/세션, 블랙리스트 제외)
             const realReservations = data.reservations.filter(r => {
                 const matchDate = isSameDate(r.eventDate, dateFilter);
                 const matchPart = r.eventPart === partFilter;
                 const notCancelled = r.status !== '취소';
-                return matchDate && matchPart && notCancelled;
+                // 블랙리스트 제외
+                const phone = normalizePhone(r.phone);
+                const customer = data.customers.find(c => normalizePhone(c.id) === phone);
+                const notBlacklisted = !customer?.is_blacklisted && !customer?.isBlacklisted;
+                return matchDate && matchPart && notCancelled && notBlacklisted;
             });
             
             // 실제 예약자 데이터 가공
@@ -7096,8 +7103,11 @@
                 const gender = customer?.gender || survey?.gender || '미상';
                 const birthYear = customer?.birth_year || customer?.birthYear || survey?.birth_year || survey?.birthYear;
                 const height = customer?.height || survey?.height;
-                const job = customer?.job_category || customer?.jobCategory || survey?.job_category || survey?.jobCategory || '-';
-                const tier = getTier(gender, job);
+                // 직업 상세 우선, 없으면 대분류
+                const jobDetail = customer?.job_detail || customer?.jobDetail || survey?.job_detail || survey?.jobDetail;
+                const jobCategory = customer?.job_category || customer?.jobCategory || survey?.job_category || survey?.jobCategory;
+                const job = jobDetail || jobCategory || '-';
+                const tier = getTier(gender, jobCategory || job);  // 티어는 대분류 기준
                 
                 return {
                     type: 'real',

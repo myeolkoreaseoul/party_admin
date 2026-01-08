@@ -2998,8 +2998,8 @@
                     예약건수: reservations.length,
                     예약목록: reservations,
                     메모: customer.memo || '',
-                    블랙리스트: customer.is_blacklisted || false,
-                    블랙리스트사유: customer.blacklist_reason || '',
+                    블랙리스트: customer.is_blacklisted || customer.isBlacklisted || false,
+                    블랙리스트사유: customer.blacklist_reason || customer.blacklistReason || '',
                     _phone: phone
                 });
             });
@@ -3050,8 +3050,8 @@
                     예약건수: 0,
                     예약목록: [],
                     메모: customer.memo || '',
-                    블랙리스트: customer.is_blacklisted || false,
-                    블랙리스트사유: customer.blacklist_reason || '',
+                    블랙리스트: customer.is_blacklisted || customer.isBlacklisted || false,
+                    블랙리스트사유: customer.blacklist_reason || customer.blacklistReason || '',
                     _phone: phone
                 });
             });
@@ -3101,8 +3101,8 @@
                     예약건수: 0,
                     예약목록: [],
                     메모: c.memo || '',
-                    블랙리스트: c.is_blacklisted || false,
-                    블랙리스트사유: c.blacklist_reason || '',
+                    블랙리스트: c.is_blacklisted || c.isBlacklisted || false,
+                    블랙리스트사유: c.blacklist_reason || c.blacklistReason || '',
                     _phone: phone
                 });
             });
@@ -3149,10 +3149,12 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // 스케줄 기준으로 파티 목록 생성
+            // 스케줄 기준으로 파티 목록 생성 (활성화된 일정만)
             const upcomingSchedules = (data.schedules || [])
                 .filter(s => {
-                    if (!s.isActive && s.isActive !== undefined) return false;
+                    // is_active가 false면 제외 (snake_case, camelCase 둘 다 체크)
+                    const isActive = s.isActive ?? s.is_active ?? true;
+                    if (isActive === false) return false;
                     const partyDate = parsePartyDate(s.date);
                     return partyDate >= today;
                 })

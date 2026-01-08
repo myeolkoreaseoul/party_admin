@@ -4508,6 +4508,11 @@
                 // 초대장 고객인지 확인 (invitations 테이블에 있으면 INV)
                 const isInvitationCustomer = !!invitation || res.isInvitation;
 
+                // 디버그: 고객 데이터 매칭 확인
+                if (!customer && !survey) {
+                    console.log(`[예약관리] 고객/조사 미매칭: phone=${phone}, crewName=${res.crewName}, invitation=${invitation?.name || 'N'}`);
+                }
+
                 return {
                     index: idx + 1,
                     partyTimeDisplay: partyTimeDisplay,
@@ -4517,8 +4522,10 @@
                     paymentTypeDisplay: paymentTypeDisplay,
                     paymentNote: res.paymentNote || '',
                     source: isInvitationCustomer ? 'INV' : 'ORG',
-                    name: customer?.name || survey?.name || '-',
+                    // 이름: 고객 > 사전조사 > 초대장 순 우선
+                    name: customer?.name || survey?.name || invitation?.name || '-',
                     nickname: res.crewName || '-',
+                    // 성별: 고객 > 사전조사 순 우선
                     gender: customer?.gender || survey?.gender || '-',
                     birthYear: birthYear,
                     age: age || '-',
@@ -7098,11 +7105,15 @@
 
             // 실제 예약자 데이터 가공
             const realPeople = realReservations.map(r => {
-                const customer = data.customers.find(c => normalizePhone(c.id) === normalizePhone(r.phone));
-                const survey = data.surveys.find(s => normalizePhone(s.phone) === normalizePhone(r.phone));
-                
+                const phone = normalizePhone(r.phone);
+                const customer = data.customers.find(c => normalizePhone(c.id) === phone);
+                const survey = data.surveys.find(s => normalizePhone(s.phone) === phone);
+                const invitation = data.invitations.find(i => normalizePhone(i.phone) === phone);
+
                 const hasSurvey = !!survey;
-                const name = customer?.name || survey?.name || r.crewName || '이름없음';
+                // 이름: 고객 > 사전조사 > 초대장 > 예약crewName 순으로 우선
+                const name = customer?.name || survey?.name || invitation?.name || r.crewName || '이름없음';
+                // 성별: 고객 > 사전조사 순으로 우선 (초대장에는 성별 없음)
                 const gender = customer?.gender || survey?.gender || '미상';
                 const birthYear = customer?.birth_year || customer?.birthYear || survey?.birth_year || survey?.birthYear;
                 const height = customer?.height || survey?.height;
@@ -7111,11 +7122,17 @@
                 const jobCategory = customer?.job_category || customer?.jobCategory || survey?.job_category || survey?.jobCategory;
                 const job = jobDetail || jobCategory || '-';
                 const tier = getTier(gender, jobCategory || job);  // 티어는 대분류 기준
-                
+
+                // 디버그: 고객 매칭 확인
+                if (!customer && !survey) {
+                    console.log(`[라인업] 고객/조사 미매칭: phone=${phone}, name=${name}, crewName=${r.crewName}`);
+                }
+
                 return {
                     type: 'real',
                     hasSurvey,
                     name,
+                    phone,  // 폰번호 추가 (디버깅용)
                     gender,
                     birthYear,
                     age: birthYear ? currentYear - birthYear : null,
@@ -7149,6 +7166,12 @@
             // 실제 예약자 성별별 분류
             const realMalesPeople = realPeople.filter(p => p.gender === '남자');
             const realFemalesPeople = realPeople.filter(p => p.gender === '여자');
+            const realUnknownGender = realPeople.filter(p => p.gender !== '남자' && p.gender !== '여자');
+
+            // 성별 미상인 사람 경고 로그
+            if (realUnknownGender.length > 0) {
+                console.warn(`[라인업] 성별 미상 ${realUnknownGender.length}명:`, realUnknownGender.map(p => `${p.name}(${p.phone})`));
+            }
             
             // 비율 기반 목표 계산
             const targetMale = Math.round(maleCapacity * ratio / 100);
@@ -7197,26 +7220,28 @@
             // 남녀 분리 후 티어순 정렬
             const males = sortByTier([...realMalesPeople, ...virtualMalesPeople]);
             const females = sortByTier([...realFemalesPeople, ...virtualFemalesPeople]);
-            
-            currentLineupData = { male: males, female: females };
-            
+            const unknowns = sortByTier([...realUnknownGender]);  // 성별 미상
+
+            currentLineupData = { male: males, female: females, unknown: unknowns };
+
             // 통계 업데이트
             const realMales = males.filter(p => p.type === 'real').length;
             const realFemales = females.filter(p => p.type === 'real').length;
             const virtualMales = males.filter(p => p.type === 'virtual').length;
             const virtualFemales = females.filter(p => p.type === 'virtual').length;
+            const unknownCount = unknowns.length;
             const pendingCount = allPeople.filter(p => 
                 (p.type === 'virtual' && !p.isRevealed) || 
                 (p.type === 'real' && !p.hasSurvey)
             ).length;
             
-            document.getElementById('lineupTotalCount').textContent = allPeople.length;
+            document.getElementById('lineupTotalCount').textContent = allPeople.length + (unknownCount > 0 ? ` (+미상 ${unknownCount})` : '');
             document.getElementById('lineupRealCount').textContent = realPeople.length;
             document.getElementById('lineupVirtualCount').textContent = virtualPeople.length;
             document.getElementById('lineupMaleCount').textContent = males.length;
             document.getElementById('lineupFemaleCount').textContent = females.length;
             document.getElementById('lineupMaleSubCount').textContent = `(실제 ${realMales} + 가상 ${virtualMales})`;
-            document.getElementById('lineupFemaleSubCount').textContent = `(실제 ${realFemales} + 가상 ${virtualFemales})`;
+            document.getElementById('lineupFemaleSubCount').textContent = `(실제 ${realFemales} + 가상 ${virtualFemales})` + (unknownCount > 0 ? ` ⚠️ 성별미상 ${unknownCount}명` : '');
             
             // 비율 기반 정보 업데이트
             updateLineupRatioInfo(dateFilter, partFilter, males.length, females.length);
@@ -7297,13 +7322,28 @@
                 `;
             };
             
-            maleBody.innerHTML = males.length > 0 
+            maleBody.innerHTML = males.length > 0
                 ? males.map(renderRow).join('')
                 : '<tr><td colspan="7" class="empty-state">남자 라인업 없음</td></tr>';
-                
-            femaleBody.innerHTML = females.length > 0 
+
+            femaleBody.innerHTML = females.length > 0
                 ? females.map(renderRow).join('')
                 : '<tr><td colspan="7" class="empty-state">여자 라인업 없음</td></tr>';
+
+            // 성별 미상 경고 표시
+            if (unknowns.length > 0) {
+                const unknownWarning = `
+                    <tr style="background: var(--warning-bg, #fff3cd);">
+                        <td colspan="7" style="color: var(--warning, #856404); padding: 12px; text-align: center;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>성별 미상 ${unknowns.length}명:</strong>
+                            ${unknowns.map(p => `${p.name}(${p.phone?.slice(-4)})`).join(', ')}
+                            - 고객관리에서 성별 입력 필요
+                        </td>
+                    </tr>
+                `;
+                femaleBody.innerHTML += unknownWarning;
+            }
         }
         
         document.getElementById('lineupDateFilter')?.addEventListener('change', renderLineup);
@@ -7777,9 +7817,10 @@
             // 파티 유형 정보
             const partyType = schedule.partyType || 'coffee';
             const partyTypeInfo = data.partyTypes?.find(t => t.id === partyType);
-            const maleCapacity = partyTypeInfo?.maleCapacity || 12;  // party_types에서 직접 가져옴
-            const femaleCapacity = partyTypeInfo?.femaleCapacity || 12;  // party_types에서 직접 가져옴
-            const minVacancy = partyTypeInfo?.minVacancy || 2;  // party_types에서 직접 가져옴
+            // 개별 스케줄 정원 우선, 없으면 파티유형 기본값
+            const maleCapacity = schedule?.maleCapacity ?? schedule?.male_capacity ?? partyTypeInfo?.maleCapacity ?? 12;
+            const femaleCapacity = schedule?.femaleCapacity ?? schedule?.female_capacity ?? partyTypeInfo?.femaleCapacity ?? 12;
+            const minVacancy = schedule?.minVacancy ?? schedule?.min_vacancy ?? partyTypeInfo?.minVacancy ?? 2;
             
             // D-day 및 비율 계산
             const daysUntil = getDaysUntil(schedule.date);

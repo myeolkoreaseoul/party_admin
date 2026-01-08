@@ -754,15 +754,17 @@
                         <thead>
                             <tr>
                                 <th style="width: 40px;">#</th>
+                                <th style="width: 120px;" class="sortable" onclick="sortReservations('partyTime')">파티일시 <i class="fas fa-sort"></i></th>
+                                <th style="width: 70px;" class="sortable" onclick="sortReservations('paymentType')">결제 <i class="fas fa-sort"></i></th>
                                 <th style="width: 55px;" class="sortable" onclick="sortReservations('source')">유입 <i class="fas fa-sort"></i></th>
                                 <th style="width: 75px;" class="sortable" onclick="sortReservations('name')">이름 <i class="fas fa-sort"></i></th>
-                                <th style="width: 75px;" class="sortable" onclick="sortReservations('nickname')">닉네임 <i class="fas fa-sort"></i></th>
+                                <th style="width: 70px;" class="sortable" onclick="sortReservations('nickname')">닉네임 <i class="fas fa-sort"></i></th>
                                 <th style="width: 45px;" class="sortable" onclick="sortReservations('gender')">성별 <i class="fas fa-sort"></i></th>
                                 <th style="width: 45px;" class="sortable" onclick="sortReservations('age')">나이 <i class="fas fa-sort"></i></th>
                                 <th style="width: 50px;" class="sortable" onclick="sortReservations('height')">키 <i class="fas fa-sort"></i></th>
-                                <th style="width: 100px;" class="sortable" onclick="sortReservations('job')">직업 <i class="fas fa-sort"></i></th>
-                                <th style="width: 90px;">자격유형</th>
-                                <th style="width: 120px;" class="sortable" onclick="sortReservations('onsite')">현장확인 <i class="fas fa-sort"></i></th>
+                                <th style="width: 90px;" class="sortable" onclick="sortReservations('job')">직업 <i class="fas fa-sort"></i></th>
+                                <th style="width: 80px;">자격유형</th>
+                                <th style="width: 100px;" class="sortable" onclick="sortReservations('onsite')">현장확인 <i class="fas fa-sort"></i></th>
                                 <th style="width: 45px;" class="sortable" onclick="sortReservations('wine')">와인 <i class="fas fa-sort"></i></th>
                                 <th style="width: 55px;" class="sortable" onclick="sortReservations('survey')">조사 <i class="fas fa-sort"></i></th>
                                 <th style="width: 95px;">연락처</th>
@@ -770,7 +772,7 @@
                             </tr>
                         </thead>
                         <tbody id="reservationBody">
-                            <tr><td colspan="14"><div class="loading"><div class="spinner"></div></div></td></tr>
+                            <tr><td colspan="16"><div class="loading"><div class="spinner"></div></div></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -2318,13 +2320,31 @@
                                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
                         </div>
 
-                        <!-- 상태 -->
-                        <div>
-                            <label style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--text-muted);">상태</label>
-                            <select id="rf_status" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
-                                <option value="예약완료">예약완료</option>
-                                <option value="취소">취소</option>
-                            </select>
+                        <!-- 상태 & 결제유형 -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--text-muted);">상태</label>
+                                <select id="rf_status" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
+                                    <option value="예약완료">예약완료</option>
+                                    <option value="취소">취소</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--text-muted);">결제 유형</label>
+                                <select id="rf_paymentType" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);" onchange="togglePaymentNote()">
+                                    <option value="frip">🅿️ 프립 결제</option>
+                                    <option value="cash">💵 현금/계좌이체</option>
+                                    <option value="waived">🎫 결제 면제 (VIP/초청)</option>
+                                    <option value="comp">🎁 보상 무료</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 결제 사유 (면제/보상 선택 시 표시) -->
+                        <div id="paymentNoteWrapper" style="display: none;">
+                            <label style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--text-muted);">결제 면제/보상 사유</label>
+                            <input type="text" id="rf_paymentNote" placeholder="예: VIP 초청, 12월 파티 보상 등"
+                                   style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);">
                         </div>
                     </div>
 
@@ -3617,10 +3637,17 @@
                 
                 <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">인증 단계</h4>
-                    <div style="font-size: 13px;">
-                        <span class="status ${stageClass}" style="font-size: 14px; padding: 6px 12px;">${stageLabel}</span>
-                        <span style="color: var(--text-muted); margin-left: 8px;">
-                            ${stageNum === '3' || stageNum === '4' ? '✅ 인증된 고객' : ''}
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <select id="stageChangeSelect" class="filter-select" style="min-width: 180px; padding: 8px 12px;" onchange="handleStageChange('${phone}', this.value)">
+                            <option value="0" ${stageNum === '0' ? 'selected' : ''}>0 - 미분류</option>
+                            <option value="1" ${stageNum === '1' ? 'selected' : ''}>1 - 초대장 신청</option>
+                            <option value="2" ${stageNum === '2' ? 'selected' : ''}>2 - 프립 결제완료</option>
+                            <option value="3" ${stageNum === '3' ? 'selected' : ''}>3 - 사전조사 완료</option>
+                            <option value="4" ${stageNum === '4' ? 'selected' : ''}>4 - 참여 완료</option>
+                            <option value="5" ${stageNum === '5' ? 'selected' : ''}>5 - 행사 불참</option>
+                        </select>
+                        <span style="color: var(--text-muted); font-size: 12px;">
+                            ${stageNum === '3' || stageNum === '4' ? '✅ 인증된 고객' : '⚠️ 단계 변경 시 관련 데이터가 자동 생성됩니다'}
                         </span>
                     </div>
                 </div>
@@ -3704,10 +3731,10 @@
                     document.getElementById('cf_name').value = customer.name || '';
                     document.getElementById('cf_nickname').value = customer.nickname || '';
                     document.getElementById('cf_gender').value = customer.gender || '';
-                    document.getElementById('cf_birthYear').value = customer.birthYear || '';
+                    document.getElementById('cf_birthYear').value = customer.birth_year || customer.birthYear || '';
                     document.getElementById('cf_height').value = customer.height || '';
-                    document.getElementById('cf_jobCategory').value = customer.jobCategory || '';
-                    document.getElementById('cf_jobDetail').value = customer.jobDetail || '';
+                    document.getElementById('cf_jobCategory').value = customer.job_category || customer.jobCategory || '';
+                    document.getElementById('cf_jobDetail').value = customer.job_detail || customer.jobDetail || '';
                     document.getElementById('cf_source').value = customer.source || 'organic';
                     document.getElementById('cf_memo').value = customer.memo || '';
                 }
@@ -3841,7 +3868,147 @@
                 showToast('삭제 실패: ' + error.message, 'error');
             }
         }
-        
+
+        // 단계 수동 변경 함수
+        async function handleStageChange(phone, newStage) {
+            const normalizedPhone = normalizePhone(phone);
+            const stageLabels = {
+                '0': '미분류',
+                '1': '초대장 신청',
+                '2': '프립 결제완료',
+                '3': '사전조사 완료',
+                '4': '참여 완료',
+                '5': '행사 불참'
+            };
+
+            if (!confirm(`단계를 "${stageLabels[newStage]}"(으)로 변경하시겠습니까?\n\n필요한 데이터가 자동 생성됩니다.`)) {
+                // 취소 시 원래 값으로 복원
+                const customer = (data.integratedCustomers || []).find(c =>
+                    normalizePhone(c.연락처) === normalizedPhone
+                );
+                const originalStage = customer?.인증단계?.charAt(0) || '0';
+                document.getElementById('stageChangeSelect').value = originalStage;
+                return;
+            }
+
+            try {
+                const customer = (data.integratedCustomers || []).find(c =>
+                    normalizePhone(c.연락처) === normalizedPhone
+                );
+                const customerName = customer?.크루명 || '-';
+
+                // 단계별 필요 데이터 생성
+                if (newStage >= '1') {
+                    // 1단계 이상: 초대장 데이터 확인/생성
+                    const existingInvitation = (data.invitations || []).find(i => normalizePhone(i.phone) === normalizedPhone);
+                    if (!existingInvitation) {
+                        await fetch(`${API_BASE}/${TB.INVITATIONS}`, {
+                            method: 'POST',
+                            headers: SUPABASE_HEADERS,
+                            body: JSON.stringify({
+                                id: `INV_MANUAL_${normalizedPhone}_${Date.now()}`,
+                                phone: normalizedPhone,
+                                name: customerName,
+                                qualifications: '수동등록',
+                                status: 'approved',
+                                source: 'manual',
+                                createdAt: new Date().toISOString()
+                            })
+                        });
+                    }
+                }
+
+                if (newStage >= '2') {
+                    // 2단계 이상: 예약 데이터 확인/생성
+                    const existingReservation = (data.reservations || []).find(r => normalizePhone(r.phone) === normalizedPhone);
+                    if (!existingReservation) {
+                        // 가장 가까운 파티 일정 찾기
+                        const today = new Date();
+                        const futureSchedules = (data.schedules || [])
+                            .filter(s => parsePartyDate(s.date) >= today && s.isActive !== false)
+                            .sort((a, b) => parsePartyDate(a.date) - parsePartyDate(b.date));
+                        const nextSchedule = futureSchedules[0];
+
+                        await fetch(`${API_BASE}/${TB.RESERVATIONS}`, {
+                            method: 'POST',
+                            headers: SUPABASE_HEADERS,
+                            body: JSON.stringify({
+                                id: `RES_MANUAL_${normalizedPhone}_${Date.now()}`,
+                                phone: normalizedPhone,
+                                crewName: customerName,
+                                eventDate: nextSchedule?.date || '-',
+                                eventPart: nextSchedule?.part || '1부',
+                                option: '수동등록',
+                                status: '예약완료',
+                                isInvitation: false,
+                                paymentType: 'waived',
+                                paymentNote: '단계 수동 변경으로 생성',
+                                createdAt: new Date().toISOString()
+                            })
+                        });
+                    }
+                }
+
+                if (newStage >= '3') {
+                    // 3단계 이상: 사전조사 데이터 확인/생성
+                    const existingSurvey = (data.surveys || []).find(s => normalizePhone(s.phone) === normalizedPhone);
+                    if (!existingSurvey) {
+                        await fetch(`${API_BASE}/${TB.SURVEYS}`, {
+                            method: 'POST',
+                            headers: SUPABASE_HEADERS,
+                            body: JSON.stringify({
+                                id: `SRV_MANUAL_${normalizedPhone}_${Date.now()}`,
+                                phone: normalizedPhone,
+                                name: customerName,
+                                gender: customer?.성별 || null,
+                                birthYear: customer?.출생연도 || null,
+                                height: customer?.신장 || null,
+                                jobCategory: customer?.직업분류 || null,
+                                jobDetail: customer?.직업상세 || null,
+                                submittedAt: new Date().toISOString()
+                            })
+                        });
+                    }
+                }
+
+                // customers 테이블에 stage 업데이트 (없으면 생성)
+                const existingCustomer = (data.customers || []).find(c => c.id === normalizedPhone);
+                if (existingCustomer) {
+                    await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({ stage: newStage })
+                    });
+                } else {
+                    await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
+                        method: 'POST',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({
+                            id: normalizedPhone,
+                            name: customerName,
+                            gender: customer?.성별 || null,
+                            birth_year: customer?.출생연도 || null,
+                            height: customer?.신장 || null,
+                            job_category: customer?.직업분류 || null,
+                            job_detail: customer?.직업상세 || null,
+                            stage: newStage,
+                            source: 'manual'
+                        })
+                    });
+                }
+
+                showToast(`단계가 "${stageLabels[newStage]}"(으)로 변경되었습니다`, 'success');
+                await refreshAllData();
+
+                // 모달 내용 새로고침
+                showIntegratedDetail(phone);
+
+            } catch (error) {
+                console.error('단계 변경 오류:', error);
+                showToast('단계 변경 실패: ' + error.message, 'error');
+            }
+        }
+
         // 검색/필터 이벤트
         document.getElementById('customerSearch')?.addEventListener('input', renderCustomers);
         document.getElementById('customerStageFilter')?.addEventListener('change', renderCustomers);
@@ -4018,13 +4185,33 @@
                 return partyDate >= minDate;
             });
             
-            // 관련 데이터 조인 (customers, surveys, invitations)
+            // 관련 데이터 조인 (customers, surveys, invitations, schedules)
             const lineupData = filtered.map((res, idx) => {
                 const phone = normalizePhone(res.phone);
                 const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
                 const survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
                 const invitation = (data.invitations || []).find(i => normalizePhone(i.phone) === phone);
-                
+
+                // 파티 일정에서 시간 조회 (연동)
+                const schedule = (data.schedules || []).find(s =>
+                    isSameDate(s.date, res.eventDate) && s.part === res.eventPart
+                );
+                const partyTime = schedule?.time || '-';
+                const partyType = schedule?.partyType || 'coffee';
+
+                // 파티 일시 문자열 생성
+                const partyDateStr = res.eventDate ? normalizeDateStr(res.eventDate) : '-';
+                const partyTimeDisplay = `${partyDateStr} ${partyTime} ${res.eventPart || ''}`;
+
+                // 결제 유형 (기본값: frip)
+                const paymentType = res.paymentType || 'frip';
+                const paymentTypeDisplay = {
+                    'frip': '🅿️ 프립',
+                    'cash': '💵 현금',
+                    'waived': '🎫 면제',
+                    'comp': '🎁 보상'
+                }[paymentType] || '🅿️ 프립';
+
                 // 현장 확인 필요 항목 추출
                 let onsiteItems = [];
                 if (invitation?.fileLinks) {
@@ -4037,19 +4224,25 @@
                         });
                     } catch (e) {}
                 }
-                
+
                 // 나이 계산
-                const birthYear = customer?.birthYear || survey?.birthYear;
+                const birthYear = customer?.birth_year || customer?.birthYear || survey?.birthYear;
                 const age = birthYear ? (2026 - birthYear) : null;
-                
+
                 // 나이조건 체크
                 const ageCondition = getAgeCondition(res.eventDate, res.eventPart);
-                const isAgeValid = ageCondition 
+                const isAgeValid = ageCondition
                     ? checkAgeCondition(birthYear, ageCondition.minBirthYear, ageCondition.maxBirthYear)
                     : true;
-                
+
                 return {
                     index: idx + 1,
+                    partyTimeDisplay: partyTimeDisplay,
+                    partyTime: partyTime,
+                    partyType: partyType,
+                    paymentType: paymentType,
+                    paymentTypeDisplay: paymentTypeDisplay,
+                    paymentNote: res.paymentNote || '',
                     source: res.isInvitation ? 'INV' : 'ORG',
                     name: customer?.name || survey?.name || '-',
                     nickname: res.crewName || '-',
@@ -4058,7 +4251,7 @@
                     age: age || '-',
                     isAgeValid: isAgeValid,
                     height: customer?.height || survey?.height || '-',
-                    job: customer?.jobDetail || survey?.jobDetail || customer?.jobCategory || survey?.jobCategory || '-',
+                    job: customer?.job_detail || customer?.jobDetail || survey?.jobDetail || customer?.job_category || customer?.jobCategory || survey?.jobCategory || '-',
                     qualifications: invitation?.qualifications || '-',
                     onsiteItems: onsiteItems,
                     wineBonus: invitation?.wineBonus ? '🍷' : '-',
@@ -4079,30 +4272,39 @@
                 lineupData.sort((a, b) => {
                     let valA, valB;
                     switch (reservationSortField) {
+                        case 'partyTime':
+                            valA = a.partyTimeDisplay;
+                            valB = b.partyTimeDisplay;
+                            break;
+                        case 'paymentType':
+                            const paymentOrder = { 'frip': 1, 'cash': 2, 'waived': 3, 'comp': 4 };
+                            valA = paymentOrder[a.paymentType] || 0;
+                            valB = paymentOrder[b.paymentType] || 0;
+                            break;
                         case 'source': valA = a.source; valB = b.source; break;
                         case 'name': valA = a.name; valB = b.name; break;
                         case 'nickname': valA = a.nickname; valB = b.nickname; break;
                         case 'gender': valA = a.gender; valB = b.gender; break;
-                        case 'age': 
-                            valA = a.age === '-' ? 999 : a.age; 
-                            valB = b.age === '-' ? 999 : b.age; 
+                        case 'age':
+                            valA = a.age === '-' ? 999 : a.age;
+                            valB = b.age === '-' ? 999 : b.age;
                             break;
-                        case 'height': 
-                            valA = a.height === '-' ? 0 : parseInt(a.height); 
-                            valB = b.height === '-' ? 0 : parseInt(b.height); 
+                        case 'height':
+                            valA = a.height === '-' ? 0 : parseInt(a.height);
+                            valB = b.height === '-' ? 0 : parseInt(b.height);
                             break;
                         case 'job': valA = a.job; valB = b.job; break;
-                        case 'onsite': 
-                            valA = a.onsiteItems.length; 
-                            valB = b.onsiteItems.length; 
+                        case 'onsite':
+                            valA = a.onsiteItems.length;
+                            valB = b.onsiteItems.length;
                             break;
-                        case 'wine': 
-                            valA = a.wineBonus === '🍷' ? 1 : 0; 
-                            valB = b.wineBonus === '🍷' ? 1 : 0; 
+                        case 'wine':
+                            valA = a.wineBonus === '🍷' ? 1 : 0;
+                            valB = b.wineBonus === '🍷' ? 1 : 0;
                             break;
-                        case 'survey': 
-                            valA = a.hasSurvey ? 1 : 0; 
-                            valB = b.hasSurvey ? 1 : 0; 
+                        case 'survey':
+                            valA = a.hasSurvey ? 1 : 0;
+                            valB = b.hasSurvey ? 1 : 0;
                             break;
                         default: valA = ''; valB = '';
                     }
@@ -4165,6 +4367,14 @@
                 const surveyClass = d.hasSurvey ? 'status-success' : 'status-warning';
                 const surveyLabel = d.hasSurvey ? '완료' : '미완';
 
+                // 결제 유형 스타일
+                const paymentClass = {
+                    'frip': 'status-info',
+                    'cash': 'status-success',
+                    'waived': 'status-warning',
+                    'comp': 'status-muted'
+                }[d.paymentType] || 'status-info';
+
                 // 관리용 데이터 JSON (escape 처리)
                 const resData = JSON.stringify({
                     id: d.reservationId,
@@ -4174,20 +4384,24 @@
                     eventPart: d.eventPart,
                     option: d.option,
                     isInvitation: d.isInvitation,
-                    status: d.status
+                    status: d.status,
+                    paymentType: d.paymentType,
+                    paymentNote: d.paymentNote
                 }).replace(/"/g, '&quot;');
 
                 return `
                     <tr>
                         <td style="text-align: center; color: var(--text-muted);">${d.index}</td>
+                        <td style="font-size: 11px; white-space: nowrap;" title="${d.partyTimeDisplay}">${d.partyTimeDisplay}</td>
+                        <td><span class="status ${paymentClass}" style="font-size: 10px;" title="${d.paymentNote || ''}">${d.paymentTypeDisplay}</span></td>
                         <td><span class="status ${sourceClass}" style="font-size: 11px;">${d.source}</span></td>
                         <td style="font-weight: 500; cursor: pointer;" onclick="openCustomerModal('${d.phone}')">${d.name}</td>
                         <td style="color: var(--text-muted);">${d.nickname}</td>
                         <td class="${genderClass}">${d.gender === '남자' ? '♂' : d.gender === '여자' ? '♀' : '-'}</td>
                         <td style="${!d.isAgeValid ? 'color: var(--danger); font-weight: bold;' : ''}">${d.birthYear ? formatBirthYear(d.birthYear) : '-'}${!d.isAgeValid ? ' ⚠️' : ''}</td>
                         <td>${d.height !== '-' ? d.height : '-'}</td>
-                        <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.job}">${d.job}</td>
-                        <td style="font-size: 11px; max-width: 90px; overflow: hidden; text-overflow: ellipsis;" title="${d.qualifications}">${d.qualifications}</td>
+                        <td style="max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.job}">${d.job}</td>
+                        <td style="font-size: 11px; max-width: 80px; overflow: hidden; text-overflow: ellipsis;" title="${d.qualifications}">${d.qualifications}</td>
                         <td>${onsiteHtml}</td>
                         <td style="text-align: center;">${d.wineBonus}</td>
                         <td><span class="status ${surveyClass}" style="font-size: 10px;">${surveyLabel}</span></td>
@@ -4219,6 +4433,9 @@
             document.getElementById('reservationModalTitle').textContent = '예약 추가';
             document.getElementById('reservationForm').reset();
             document.getElementById('rf_editId').value = '';
+            document.getElementById('rf_paymentType').value = 'frip';
+            document.getElementById('rf_paymentNote').value = '';
+            document.getElementById('paymentNoteWrapper').style.display = 'none';
 
             // 날짜 옵션 채우기
             populateReservationDateOptions();
@@ -4236,11 +4453,27 @@
             document.getElementById('rf_option').value = res.option || '';
             document.getElementById('rf_isInvitation').value = res.isInvitation ? 'true' : 'false';
             document.getElementById('rf_status').value = res.status || '예약완료';
+            document.getElementById('rf_paymentType').value = res.paymentType || 'frip';
+            document.getElementById('rf_paymentNote').value = res.paymentNote || '';
+
+            // 결제 사유 표시/숨김
+            togglePaymentNote();
 
             // 날짜 옵션 채우기 후 선택
             populateReservationDateOptions(res.eventDate);
 
             openModal('reservationModal');
+        }
+
+        // 결제 사유 입력창 표시/숨김
+        function togglePaymentNote() {
+            const paymentType = document.getElementById('rf_paymentType').value;
+            const wrapper = document.getElementById('paymentNoteWrapper');
+            if (paymentType === 'waived' || paymentType === 'comp') {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+            }
         }
 
         // 날짜 옵션 채우기
@@ -4303,6 +4536,8 @@
             const option = document.getElementById('rf_option').value.trim();
             const isInvitation = document.getElementById('rf_isInvitation').value === 'true';
             const status = document.getElementById('rf_status').value;
+            const paymentType = document.getElementById('rf_paymentType').value;
+            const paymentNote = document.getElementById('rf_paymentNote').value.trim();
 
             if (!phone || !crewName || !eventDateValue) {
                 showToast('필수 항목을 입력해주세요', 'warning');
@@ -4327,7 +4562,9 @@
                 eventPart: selectedPart,
                 option: option || `[${selectedPart}] ${isInvitation ? '인비테이션 패스' : '일반'}`,
                 isInvitation: isInvitation,
-                status: status
+                status: status,
+                paymentType: paymentType,
+                paymentNote: (paymentType === 'waived' || paymentType === 'comp') ? paymentNote : ''
             };
 
             try {

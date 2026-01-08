@@ -638,7 +638,7 @@
                 <select class="filter-select" id="customerBlacklistFilter" style="border-color: var(--danger);">
                     <option value="">전체 고객</option>
                     <option value="blacklist">⛔ 블랙리스트만</option>
-                    <option value="normal">정상 고객만</option>
+                    <option value="normal" selected>정상 고객만</option>
                 </select>
                 <button class="btn btn-secondary" onclick="refreshIntegratedData()">
                     <i class="fas fa-sync-alt"></i> 새로고침
@@ -7099,8 +7099,14 @@
                 // 블랙리스트 제외
                 const phone = normalizePhone(r.phone);
                 const customer = data.customers.find(c => normalizePhone(c.id) === phone);
-                const notBlacklisted = !customer?.is_blacklisted && !customer?.isBlacklisted;
-                return matchDate && matchPart && notCancelled && notBlacklisted;
+                const isBlacklisted = customer?.isBlacklisted === true || customer?.is_blacklisted === true;
+
+                // 블랙리스트 디버그
+                if (isBlacklisted) {
+                    console.warn(`[라인업] 블랙리스트 제외: ${r.crewName} (${phone})`);
+                }
+
+                return matchDate && matchPart && notCancelled && !isBlacklisted;
             });
 
             // 실제 예약자 데이터 가공
@@ -7125,7 +7131,15 @@
 
                 // 디버그: 고객 매칭 확인
                 if (!customer && !survey) {
-                    console.log(`[라인업] 고객/조사 미매칭: phone=${phone}, name=${name}, crewName=${r.crewName}`);
+                    // 비슷한 전화번호 찾기 (디버깅용)
+                    const similarCustomers = data.customers.filter(c => {
+                        const cPhone = normalizePhone(c.id);
+                        return cPhone.includes(phone.slice(-4)) || phone.includes(cPhone.slice(-4));
+                    }).map(c => `${c.name}(${normalizePhone(c.id)})`);
+                    console.warn(`[라인업] 고객/조사 미매칭: phone=${phone}, crewName=${r.crewName}`);
+                    if (similarCustomers.length > 0) {
+                        console.warn(`  → 비슷한 고객: ${similarCustomers.join(', ')}`);
+                    }
                 }
 
                 return {

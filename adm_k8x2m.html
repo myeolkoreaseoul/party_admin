@@ -2878,8 +2878,8 @@
                 const inv = invitationMap[normalizedPhone] || {};
                 const survey = surveyMap[normalizedPhone];
                 const reservations = reservationMap[normalizedPhone] || [];
-                const hasSurvey = survey || (customer.gender && customer.birthYear);
-                
+                const hasSurvey = survey || (customer.gender && (customer.birth_year || customer.birthYear));
+
                 // 활성 예약 (취소 제외)
                 const activeReservations = reservations.filter(r => r.status !== '취소');
                 // 모든 예약이 취소된 경우
@@ -2906,10 +2906,10 @@
                     닉네임: nickname,
                     연락처: phone,
                     성별: customer.gender || survey?.gender || '',
-                    출생연도: customer.birthYear || survey?.birthYear || '',
+                    출생연도: customer.birth_year || customer.birthYear || survey?.birth_year || survey?.birthYear || '',
                     신장: customer.height || survey?.height || '',
-                    직업분류: customer.jobCategory || survey?.jobCategory || '',
-                    직업상세: customer.jobDetail || survey?.jobDetail || '',
+                    직업분류: customer.job_category || customer.jobCategory || survey?.job_category || survey?.jobCategory || '',
+                    직업상세: customer.job_detail || customer.jobDetail || survey?.job_detail || survey?.jobDetail || '',
                     선택자격: inv.qualifications || '',
                     선택그룹: inv.groups || '',
                     와인보너스: inv.wineBonus ? 'Y' : 'N',
@@ -2939,8 +2939,8 @@
 
                 const customer = customerMap[normalizedPhone] || {};
                 const survey = surveyMap[normalizedPhone];
-                const hasSurvey = survey || (customer.gender && customer.birthYear);
-                
+                const hasSurvey = survey || (customer.gender && (customer.birth_year || customer.birthYear));
+
                 result.push({
                     인증단계: '1.초대장신청',
                     유입경로: 'invitation',
@@ -2948,10 +2948,10 @@
                     닉네임: customer.nickname || '',
                     연락처: phone,
                     성별: customer.gender || survey?.gender || '',
-                    출생연도: customer.birthYear || survey?.birthYear || '',
+                    출생연도: customer.birth_year || customer.birthYear || survey?.birth_year || survey?.birthYear || '',
                     신장: customer.height || survey?.height || '',
-                    직업분류: customer.jobCategory || survey?.jobCategory || '',
-                    직업상세: customer.jobDetail || survey?.jobDetail || '',
+                    직업분류: customer.job_category || customer.jobCategory || survey?.job_category || survey?.jobCategory || '',
+                    직업상세: customer.job_detail || customer.jobDetail || survey?.job_detail || survey?.jobDetail || '',
                     선택자격: inv.qualifications || '',
                     선택그룹: inv.groups || '',
                     와인보너스: inv.wineBonus ? 'Y' : 'N',
@@ -2980,8 +2980,8 @@
                 processedPhones.add(normalizedPhone);
 
                 const survey = surveyMap[normalizedPhone];
-                const hasSurvey = survey || (c.gender && c.birthYear);
-                
+                const hasSurvey = survey || (c.gender && (c.birth_year || c.birthYear));
+
                 result.push({
                     인증단계: hasSurvey ? '3.사전조사완료' : '0.미분류',
                     유입경로: c.source || 'organic',
@@ -2989,10 +2989,10 @@
                     닉네임: c.nickname || '',
                     연락처: phone,
                     성별: c.gender || survey?.gender || '',
-                    출생연도: c.birthYear || survey?.birthYear || '',
+                    출생연도: c.birth_year || c.birthYear || survey?.birth_year || survey?.birthYear || '',
                     신장: c.height || survey?.height || '',
-                    직업분류: c.jobCategory || survey?.jobCategory || '',
-                    직업상세: c.jobDetail || survey?.jobDetail || '',
+                    직업분류: c.job_category || c.jobCategory || survey?.job_category || survey?.jobCategory || '',
+                    직업상세: c.job_detail || c.jobDetail || survey?.job_detail || survey?.jobDetail || '',
                     선택자격: '',
                     선택그룹: '',
                     와인보너스: 'N',
@@ -4226,7 +4226,7 @@
                 }
 
                 // 나이 계산
-                const birthYear = customer?.birth_year || customer?.birthYear || survey?.birthYear;
+                const birthYear = customer?.birth_year || customer?.birthYear || survey?.birth_year || survey?.birthYear;
                 const age = birthYear ? (2026 - birthYear) : null;
 
                 // 나이조건 체크
@@ -4251,7 +4251,7 @@
                     age: age || '-',
                     isAgeValid: isAgeValid,
                     height: customer?.height || survey?.height || '-',
-                    job: customer?.job_detail || customer?.jobDetail || survey?.jobDetail || customer?.job_category || customer?.jobCategory || survey?.jobCategory || '-',
+                    job: customer?.job_detail || customer?.jobDetail || survey?.job_detail || survey?.jobDetail || customer?.job_category || customer?.jobCategory || survey?.job_category || survey?.jobCategory || '-',
                     qualifications: invitation?.qualifications || '-',
                     onsiteItems: onsiteItems,
                     wineBonus: invitation?.wineBonus ? '🍷' : '-',
@@ -6820,9 +6820,9 @@
                 const hasSurvey = !!survey;
                 const name = customer?.name || survey?.name || r.crewName || '이름없음';
                 const gender = customer?.gender || survey?.gender || '미상';
-                const birthYear = customer?.birthYear || survey?.birthYear;
+                const birthYear = customer?.birth_year || customer?.birthYear || survey?.birth_year || survey?.birthYear;
                 const height = customer?.height || survey?.height;
-                const job = customer?.jobCategory || survey?.jobCategory || '-';
+                const job = customer?.job_category || customer?.jobCategory || survey?.job_category || survey?.jobCategory || '-';
                 const tier = getTier(gender, job);
                 
                 return {

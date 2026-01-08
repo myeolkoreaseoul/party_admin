@@ -7097,21 +7097,18 @@
 
                 // 디버깅: 이상윤 예약 찾기
                 if (r.phone?.includes('2400') || r.crewName?.includes('이상윤')) {
-                    console.log('이상윤 예약:', {
-                        eventDate: r.eventDate,
-                        normalizedEventDate: normalizeDateStr(r.eventDate),
-                        eventPart: r.eventPart,
-                        matchDate,
-                        matchPart,
-                        notCancelled,
-                        notBlacklisted,
-                        status: r.status
-                    });
+                    console.log('=== 이상윤 예약 체크 ===');
+                    console.log('matchDate:', matchDate);
+                    console.log('matchPart:', matchPart);
+                    console.log('notCancelled:', notCancelled, '(status:', r.status, ')');
+                    console.log('notBlacklisted:', notBlacklisted);
+                    console.log('최종 결과:', matchDate && matchPart && notCancelled && notBlacklisted);
                 }
 
                 return matchDate && matchPart && notCancelled && notBlacklisted;
             });
-            
+            console.log('=== 필터 통과한 예약 수:', realReservations.length, '===');
+
             // 실제 예약자 데이터 가공
             const realPeople = realReservations.map(r => {
                 const customer = data.customers.find(c => normalizePhone(c.id) === normalizePhone(r.phone));

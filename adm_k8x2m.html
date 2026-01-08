@@ -3126,96 +3126,94 @@
         // ========================================
         function renderDashboard() {
             const integrated = data.integratedCustomers;
-            const confirmed = integrated.filter(c => c.현재단계 === '3.사전조사완료').length;
-            const needSurvey = integrated.filter(c => c.현재단계 === '2.프립예약').length;
-            const waiting = integrated.filter(c => c.현재단계 === '1.초대장신청').length;
-            
-            document.getElementById('stat-totalCustomers').textContent = data.customers.length;
+            // 인증단계 기준 (현재단계가 아니라 인증단계)
+            const confirmed = integrated.filter(c => c.인증단계?.startsWith('3.')).length;
+            const needSurvey = integrated.filter(c => c.인증단계?.startsWith('2.')).length;
+            const waiting = integrated.filter(c => c.인증단계?.startsWith('1.')).length;
+
+            // 전체 고객 = integratedCustomers 수 (고객관리 탭과 일치)
+            document.getElementById('stat-totalCustomers').textContent = integrated.length;
             document.getElementById('stat-confirmed').textContent = confirmed;
             document.getElementById('stat-needSurvey').textContent = needSurvey;
             document.getElementById('stat-waiting').textContent = waiting;
-            
+
             document.getElementById('customerBadge').textContent = integrated.length;
-            
+
             renderUpcomingParties();
         }
         
         function renderUpcomingParties() {
             const container = document.getElementById('upcomingParties');
-            const parties = groupByPartyFromReservations(data.reservations);
-            
+
+            // 파티 일정에서 다가오는 파티 가져오기
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const minDate = new Date(2026, 0, 11);
-            
-            const upcomingKeys = Object.keys(parties)
-                .filter(key => {
-                    const partyDate = parsePartyDate(key.split('|')[0]);
-                    return partyDate >= today && partyDate >= minDate;
+
+            // 스케줄 기준으로 파티 목록 생성
+            const upcomingSchedules = (data.schedules || [])
+                .filter(s => {
+                    if (!s.isActive && s.isActive !== undefined) return false;
+                    const partyDate = parsePartyDate(s.date);
+                    return partyDate >= today;
                 })
+                .sort((a, b) => parsePartyDate(a.date) - parsePartyDate(b.date))
                 .slice(0, 6);
-            
-            if (upcomingKeys.length === 0) {
+
+            if (upcomingSchedules.length === 0) {
                 container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><h3>예정된 파티가 없습니다</h3></div>';
                 return;
             }
-            
-            container.innerHTML = upcomingKeys.map(key => renderPartyCard(parties[key])).join('');
-        }
-        
-        // 예약 데이터로 파티 그룹화
-        function groupByPartyFromReservations(reservations) {
-            const parties = {};
-            const customerMap = {};
-            data.customers.forEach(c => { customerMap[c.id] = c; });
-            
-            reservations.forEach(res => {
-                if (res.status !== '예약완료') return;
-                
-                // 진행일시에서 날짜/시간 파싱
-                const eventDate = res.eventDate || '';
-                const dateMatch = eventDate.match(/(\d+)월\s*(\d+)일/);
-                const timeMatch = eventDate.match(/(\d+):00/) || eventDate.match(/(\d+)시/);
-                
-                if (!dateMatch) return;
-                
-                const month = parseInt(dateMatch[1]);
-                const day = parseInt(dateMatch[2]);
-                const hour = timeMatch ? parseInt(timeMatch[1]) : 12;
-                
-                // 부 결정 (12시=1부, 15시=2부, 19시=3부)
-                let partyName = '1부 커피';
-                if (hour === 15 || hour === 3) partyName = '2부 커피';
-                else if (hour === 19 || hour === 7) partyName = '3부 와인';
-                
-                const date = new Date(2026, month - 1, day);
-                const days = ['일','월','화','수','목','금','토'];
-                const dateStr = `${month}/${day} ${days[date.getDay()]}`;
-                
-                const key = `${dateStr}|${partyName}`;
-                
-                if (!parties[key]) {
-                    parties[key] = {
-                        date: dateStr,
-                        party: partyName,
-                        time: hour + ':00',
-                        male: { total: 5, filled: 0 },
-                        female: { total: 5, filled: 0 }
-                    };
+
+            // 각 스케줄에 대해 예약 현황 계산
+            const parties = upcomingSchedules.map(schedule => {
+                const scheduleDate = schedule.date;
+                const schedulePart = schedule.part;
+
+                // 해당 날짜/세션의 예약 필터링 (취소 제외, 블랙리스트 제외)
+                const reservations = (data.reservations || []).filter(r => {
+                    if (r.status === '취소') return false;
+                    const phone = normalizePhone(r.phone);
+                    const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
+                    if (customer?.is_blacklisted || customer?.isBlacklisted) return false;
+                    return isSameDate(r.eventDate, scheduleDate) && r.eventPart === schedulePart;
+                });
+
+                // 성별별 카운트
+                let maleCount = 0, femaleCount = 0;
+                reservations.forEach(r => {
+                    const phone = normalizePhone(r.phone);
+                    const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
+                    const survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
+                    const gender = customer?.gender || survey?.gender;
+                    if (gender === '남자') maleCount++;
+                    else if (gender === '여자') femaleCount++;
+                });
+
+                // 날짜 포맷팅
+                const dateMatch = scheduleDate.match(/(\d+)월\s*(\d+)일/);
+                let dateStr = scheduleDate;
+                if (dateMatch) {
+                    const month = parseInt(dateMatch[1]);
+                    const day = parseInt(dateMatch[2]);
+                    const date = new Date(2026, month - 1, day);
+                    const days = ['일','월','화','수','목','금','토'];
+                    dateStr = `${month}/${day} ${days[date.getDay()]}`;
                 }
-                
-                // 고객 정보에서 성별 가져오기
-                const customer = customerMap[res.phone];
-                const gender = customer?.gender;
-                
-                if (gender === '남자') {
-                    parties[key].male.filled++;
-                } else if (gender === '여자') {
-                    parties[key].female.filled++;
-                }
+
+                // 파티 이름
+                const partyType = schedule.partyType || 'coffee';
+                const partyName = `${schedulePart} ${partyType === 'wine' ? '와인' : '커피'}`;
+
+                return {
+                    date: dateStr,
+                    party: partyName,
+                    time: schedule.time || '',
+                    male: { total: schedule.maleCapacity || 12, filled: maleCount },
+                    female: { total: schedule.femaleCapacity || 12, filled: femaleCount }
+                };
             });
-            
-            return parties;
+
+            container.innerHTML = parties.map(p => renderPartyCard(p)).join('');
         }
         
         function groupByParty(lineupData) {
@@ -3968,14 +3966,19 @@
                         const resPaymentType = document.getElementById('cf_resPaymentType').value;
 
                         if (resDate) {
+                            // 초대장 고객인지 확인
+                            const hasInvitation = (data.invitations || []).some(inv =>
+                                normalizePhone(inv.phone) === normalizedPhone
+                            );
+
                             const reservationData = {
                                 id: 'RES-' + Date.now(),  // 예약 ID 필수!
                                 phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
                                 crew_name: customerData.nickname || customerData.name || '',
                                 event_date: resDate,
                                 event_part: resPart,
-                                option: '직접등록',
-                                is_invitation: false,
+                                option: hasInvitation ? '인비테이션' : '직접등록',
+                                is_invitation: hasInvitation,  // 초대장 여부 자동 감지
                                 status: '예약완료',
                                 payment_type: resPaymentType,
                                 payment_note: '직접 등록'

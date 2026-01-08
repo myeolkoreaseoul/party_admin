@@ -4,7 +4,54 @@
 
 ---
 
-## 🚀 최신 업데이트 (2026-01-08)
+## 🚀 최신 업데이트 (2026-01-09)
+
+### ✅ 2026-01-09 완료된 작업
+
+**1. 고객 추가 시 예약 함께 생성 기능**
+- 고객 추가/수정 폼에 "예약도 함께 생성" 체크박스 추가
+- 날짜/세션/결제유형 선택 가능
+- 초대장 고객이면 자동으로 INV로 표시
+
+**2. 버그 수정: 날짜 중복, 인증단계, 예약 수정 에러**
+- 날짜 드롭다운 중복: 날짜 정규화 후 Map으로 중복 제거
+- 인증단계 변경 안됨: `manual_stage` 필드 사용, DB 스키마 추가
+- 예약 수정 400 에러: `payment_type`, `payment_note` 컬럼 추가
+
+**3. 블랙리스트 관리 기능**
+- 블랙리스트 탭 추가: 목록 조회, 해제 기능
+- 예약관리: 블랙리스트 고객 자동 숨김
+- 고객관리: 블랙리스트 고객 빨간 배경 + ⛔ 아이콘 표시
+- 라인업: 블랙리스트 고객 제외
+
+**4. 대시보드 전면 수정**
+- 전체 고객 수: `integratedCustomers` 기준 (고객관리와 일치)
+- 다가오는 파티: `party_schedules` 기준으로 표시
+- 비활성화(삭제)된 일정 제외
+- 정원은 스케줄의 `maleCapacity`/`femaleCapacity` 사용
+
+**5. 라인업 개선**
+- 직업 상세(`job_detail`) 우선 표시, 없으면 대분류
+- 날짜 정규화: 연도 없는 형식 ("1월 11일") 지원
+- 블랙리스트 고객 제외
+
+**6. Supabase 스키마 변경**
+```sql
+-- customers 테이블
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS manual_stage TEXT;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS is_blacklisted BOOLEAN DEFAULT FALSE;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklist_reason TEXT;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS blacklisted_at TIMESTAMPTZ;
+
+-- reservations 테이블
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS payment_type TEXT;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS payment_note TEXT;
+```
+
+---
+
+## 📋 이전 업데이트 (2026-01-08)
 
 ### ✅ 2026-01-08 완료된 작업
 

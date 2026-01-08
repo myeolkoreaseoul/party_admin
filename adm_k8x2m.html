@@ -4505,6 +4505,9 @@
                     ? checkAgeCondition(birthYear, ageCondition.minBirthYear, ageCondition.maxBirthYear)
                     : true;
 
+                // 초대장 고객인지 확인 (invitations 테이블에 있으면 INV)
+                const isInvitationCustomer = !!invitation || res.isInvitation;
+
                 return {
                     index: idx + 1,
                     partyTimeDisplay: partyTimeDisplay,
@@ -4513,7 +4516,7 @@
                     paymentType: paymentType,
                     paymentTypeDisplay: paymentTypeDisplay,
                     paymentNote: res.paymentNote || '',
-                    source: res.isInvitation ? 'INV' : 'ORG',
+                    source: isInvitationCustomer ? 'INV' : 'ORG',
                     name: customer?.name || survey?.name || '-',
                     nickname: res.crewName || '-',
                     gender: customer?.gender || survey?.gender || '-',
@@ -7082,6 +7085,7 @@
             const ageCondition = getAgeCondition(dateFilter, partFilter);
             
             // 실제 예약자 (해당 날짜/세션, 블랙리스트 제외)
+            console.log('라인업 필터:', { dateFilter, partFilter, normalizedDate: normalizeDateStr(dateFilter) });
             const realReservations = data.reservations.filter(r => {
                 const matchDate = isSameDate(r.eventDate, dateFilter);
                 const matchPart = r.eventPart === partFilter;
@@ -7090,6 +7094,21 @@
                 const phone = normalizePhone(r.phone);
                 const customer = data.customers.find(c => normalizePhone(c.id) === phone);
                 const notBlacklisted = !customer?.is_blacklisted && !customer?.isBlacklisted;
+
+                // 디버깅: 이상윤 예약 찾기
+                if (r.phone?.includes('2400') || r.crewName?.includes('이상윤')) {
+                    console.log('이상윤 예약:', {
+                        eventDate: r.eventDate,
+                        normalizedEventDate: normalizeDateStr(r.eventDate),
+                        eventPart: r.eventPart,
+                        matchDate,
+                        matchPart,
+                        notCancelled,
+                        notBlacklisted,
+                        status: r.status
+                    });
+                }
+
                 return matchDate && matchPart && notCancelled && notBlacklisted;
             });
             

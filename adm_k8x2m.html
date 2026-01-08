@@ -3835,7 +3835,8 @@
 
                 // 기존 데이터 불러오기 (customers 테이블 우선, 없으면 integratedCustomers에서)
                 const normalizedPhone = normalizePhone(phone);
-                let customer = data.customers.find(c => c.id === normalizedPhone || c.id === phone);
+                // 전화번호 형식에 관계없이 찾기 (정규화해서 비교)
+                let customer = data.customers.find(c => normalizePhone(c.id) === normalizedPhone);
 
                 // customers에 없으면 integratedCustomers에서 찾기 (예약/초대장에서만 온 고객)
                 if (!customer) {
@@ -3968,15 +3969,16 @@
 
                         if (resDate) {
                             const reservationData = {
-                                phone: normalizedPhone,
-                                crewName: customerData.nickname || customerData.name || '',
-                                eventDate: resDate,
-                                eventPart: resPart,
+                                id: 'RES-' + Date.now(),  // 예약 ID 필수!
+                                phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
+                                crew_name: customerData.nickname || customerData.name || '',
+                                event_date: resDate,
+                                event_part: resPart,
                                 option: '직접등록',
-                                isInvitation: false,
-                                status: 'confirmed',
-                                paymentType: resPaymentType,
-                                paymentNote: '직접 등록'
+                                is_invitation: false,
+                                status: '예약완료',
+                                payment_type: resPaymentType,
+                                payment_note: '직접 등록'
                             };
 
                             const resResponse = await fetch(`${API_BASE}/${TB.RESERVATIONS}`, {

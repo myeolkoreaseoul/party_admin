@@ -7162,8 +7162,10 @@
             const ratio = getRatioByDday(daysUntil);
             
             // 실제 예약자 성별별 분류
+            console.log('realPeople:', realPeople.map(p => ({ name: p.name, gender: p.gender })));
             const realMalesPeople = realPeople.filter(p => p.gender === '남자');
             const realFemalesPeople = realPeople.filter(p => p.gender === '여자');
+            console.log('남자:', realMalesPeople.length, '여자:', realFemalesPeople.length);
             
             // 비율 기반 목표 계산
             const targetMale = Math.round(maleCapacity * ratio / 100);

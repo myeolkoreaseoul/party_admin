@@ -7085,7 +7085,6 @@
             const ageCondition = getAgeCondition(dateFilter, partFilter);
             
             // 실제 예약자 (해당 날짜/세션, 블랙리스트 제외)
-            console.log('라인업 필터:', { dateFilter, partFilter, normalizedDate: normalizeDateStr(dateFilter) });
             const realReservations = data.reservations.filter(r => {
                 const matchDate = isSameDate(r.eventDate, dateFilter);
                 const matchPart = r.eventPart === partFilter;
@@ -7094,20 +7093,8 @@
                 const phone = normalizePhone(r.phone);
                 const customer = data.customers.find(c => normalizePhone(c.id) === phone);
                 const notBlacklisted = !customer?.is_blacklisted && !customer?.isBlacklisted;
-
-                // 디버깅: 이상윤 예약 찾기
-                if (r.phone?.includes('2400') || r.crewName?.includes('이상윤')) {
-                    console.log('=== 이상윤 예약 체크 ===');
-                    console.log('matchDate:', matchDate);
-                    console.log('matchPart:', matchPart);
-                    console.log('notCancelled:', notCancelled, '(status:', r.status, ')');
-                    console.log('notBlacklisted:', notBlacklisted);
-                    console.log('최종 결과:', matchDate && matchPart && notCancelled && notBlacklisted);
-                }
-
                 return matchDate && matchPart && notCancelled && notBlacklisted;
             });
-            console.log('=== 필터 통과한 예약 수:', realReservations.length, '===');
 
             // 실제 예약자 데이터 가공
             const realPeople = realReservations.map(r => {
@@ -7147,22 +7134,21 @@
                 return normalizeDateStr(s.date) === normalizedDateFilter && s.part === partFilter;
             });
             
-            // 파티 유형별 정원 정보
+            // 정원 정보: 개별 스케줄 우선, 없으면 파티 유형에서
             const partyType = schedule?.partyType || 'coffee';
             const partyTypeInfo = data.partyTypes?.find(t => t.id === partyType);
-            const maleCapacity = partyTypeInfo?.maleCapacity || 12;  // party_types에서 직접 가져옴
-            const femaleCapacity = partyTypeInfo?.femaleCapacity || 12;  // party_types에서 직접 가져옴
-            const minVacancy = partyTypeInfo?.minVacancy || 2;  // party_types에서 직접 가져옴
+            // schedule.maleCapacity/femaleCapacity 우선 사용 (개별 날짜 정원)
+            const maleCapacity = schedule?.maleCapacity ?? schedule?.male_capacity ?? partyTypeInfo?.maleCapacity ?? 12;
+            const femaleCapacity = schedule?.femaleCapacity ?? schedule?.female_capacity ?? partyTypeInfo?.femaleCapacity ?? 12;
+            const minVacancy = schedule?.minVacancy ?? schedule?.min_vacancy ?? partyTypeInfo?.minVacancy ?? 2;
             
             // D-day 및 비율 계산
             const daysUntil = getDaysUntil(dateFilter);
             const ratio = getRatioByDday(daysUntil);
             
             // 실제 예약자 성별별 분류
-            console.log('realPeople:', realPeople.map(p => ({ name: p.name, gender: p.gender })));
             const realMalesPeople = realPeople.filter(p => p.gender === '남자');
             const realFemalesPeople = realPeople.filter(p => p.gender === '여자');
-            console.log('남자:', realMalesPeople.length, '여자:', realFemalesPeople.length);
             
             // 비율 기반 목표 계산
             const targetMale = Math.round(maleCapacity * ratio / 100);

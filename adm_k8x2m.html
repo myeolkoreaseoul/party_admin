@@ -4506,15 +4506,27 @@
                 let survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
                 let invitation = (data.invitations || []).find(i => normalizePhone(i.phone) === phone);
 
-                // 2. 전화번호로 못 찾으면 이름으로 찾기 (crewName 사용)
+                // 2. 전화번호로 찾았지만 정보가 없으면, 이름으로 "정보 있는" 고객 찾기
                 const crewName = res.crewName?.trim();
-                if (!customer && crewName) {
-                    customer = (data.customers || []).find(c =>
-                        c.name?.trim() === crewName ||
-                        c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                const hasCustomerInfo = customer && (customer.birth_year || customer.birthYear || customer.gender || customer.height);
+
+                if (!hasCustomerInfo && crewName) {
+                    const customerWithInfo = (data.customers || []).find(c =>
+                        (c.name?.trim() === crewName || c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')) &&
+                        (c.birth_year || c.birthYear || c.gender || c.height)
                     );
-                    if (customer) {
-                        console.warn(`[예약관리] 이름으로 고객 매칭: ${crewName}`);
+                    if (customerWithInfo) {
+                        console.warn(`[예약관리] 정보 있는 고객으로 대체: ${crewName} (기존: ${customer?.id || '없음'} → ${customerWithInfo.id})`);
+                        customer = customerWithInfo;
+                    } else if (!customer) {
+                        // 정보 없어도 이름으로 찾기
+                        customer = (data.customers || []).find(c =>
+                            c.name?.trim() === crewName ||
+                            c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                        );
+                        if (customer) {
+                            console.warn(`[예약관리] 이름으로 고객 매칭 (정보 없음): ${crewName}`);
+                        }
                     }
                 }
                 if (!invitation && crewName) {
@@ -7200,12 +7212,21 @@
                 let survey = data.surveys.find(s => normalizePhone(s.phone) === phone);
                 let invitation = data.invitations.find(i => normalizePhone(i.phone) === phone);
 
-                // 2. 전화번호로 못 찾으면 이름으로 찾기
-                if (!customer && crewName) {
-                    customer = data.customers.find(c =>
-                        c.name?.trim() === crewName ||
-                        c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                // 2. 전화번호로 찾았지만 정보가 없으면, 이름으로 "정보 있는" 고객 찾기
+                const hasInfo = customer && (customer.birth_year || customer.birthYear || customer.gender || customer.height);
+                if (!hasInfo && crewName) {
+                    const customerWithInfo = data.customers.find(c =>
+                        (c.name?.trim() === crewName || c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')) &&
+                        (c.birth_year || c.birthYear || c.gender || c.height)
                     );
+                    if (customerWithInfo) {
+                        customer = customerWithInfo;
+                    } else if (!customer) {
+                        customer = data.customers.find(c =>
+                            c.name?.trim() === crewName ||
+                            c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                        );
+                    }
                 }
                 if (!invitation && crewName) {
                     invitation = data.invitations.find(i =>

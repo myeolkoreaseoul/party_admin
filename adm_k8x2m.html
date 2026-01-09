@@ -2527,7 +2527,49 @@
             if (age >= 50) return '50대';
             return '20대';
         }
-        
+
+        // ========================================
+        // 고객 필드 접근 유틸 (snake_case/camelCase 통일)
+        // ========================================
+        function getCustomerField(customer, fieldName) {
+            if (!customer) return null;
+            const snakeCaseMap = {
+                'birthYear': 'birth_year',
+                'jobCategory': 'job_category',
+                'jobDetail': 'job_detail',
+                'jobCertFile': 'job_cert_file',
+                'marketingAgree': 'marketing_agree',
+                'createdAt': 'created_at',
+                'updatedAt': 'updated_at',
+                'isBlocked': 'is_blocked'
+            };
+            const snakeCase = snakeCaseMap[fieldName];
+            if (snakeCase) {
+                return customer[snakeCase] ?? customer[fieldName] ?? null;
+            }
+            return customer[fieldName] ?? null;
+        }
+
+        // 고객 정보가 충분한지 (사전조사 완료로 볼 수 있는지) 체크
+        function hasCustomerInfo(customer, survey) {
+            if (survey) return true;
+            if (!customer) return false;
+            const gender = getCustomerField(customer, 'gender') || customer.gender;
+            const birthYear = getCustomerField(customer, 'birthYear');
+            return !!(gender && birthYear);
+        }
+
+        // 고객이 블랙리스트인지 체크
+        function isBlacklisted(customer) {
+            if (!customer) return false;
+            // is_blocked 필드 체크
+            const blocked = getCustomerField(customer, 'isBlocked');
+            if (blocked === true || blocked === 1 || blocked === '1') return true;
+            // 메모에 "블랙리스트" 포함 여부 체크
+            const memo = (customer.memo || '').toLowerCase();
+            return memo.includes('블랙리스트') || memo.includes('블랙') || memo.includes('blacklist');
+        }
+
         // 데이터 저장소
         const data = {
             customers: [],
@@ -2946,7 +2988,7 @@
                 const inv = invitationMap[normalizedPhone] || {};
                 const survey = surveyMap[normalizedPhone];
                 const reservations = reservationMap[normalizedPhone] || [];
-                const hasSurvey = survey || (customer.gender && (customer.birth_year || customer.birthYear));
+                const hasSurvey = hasCustomerInfo(customer, survey);
 
                 // 활성 예약 (취소 제외)
                 const activeReservations = reservations.filter(r => r.status !== '취소');
@@ -3016,7 +3058,7 @@
 
                 const customer = customerMap[normalizedPhone] || {};
                 const survey = surveyMap[normalizedPhone];
-                const hasSurvey = survey || (customer.gender && (customer.birth_year || customer.birthYear));
+                const hasSurvey = hasCustomerInfo(customer, survey);
 
                 // manual_stage가 있으면 우선 사용 (camelCase로 변환됨)
                 const stageLabels2 = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
@@ -3067,7 +3109,7 @@
                 processedPhones.add(normalizedPhone);
 
                 const survey = surveyMap[normalizedPhone];
-                const hasSurvey = survey || (c.gender && (c.birth_year || c.birthYear));
+                const hasSurvey = hasCustomerInfo(c, survey);
 
                 // manual_stage가 있으면 우선 사용 (camelCase로 변환됨)
                 const stageLabels3 = {'0': '0.미분류', '1': '1.초대장신청', '2': '2.프립예약', '3': '3.사전조사완료', '4': '4.참여완료', '5': '5.행사불참', '6': '6.예약취소'};
@@ -4411,11 +4453,11 @@
             // 예약 필터링 (취소 제외)
             let filtered = reservations.filter(r => r.status !== '취소');
 
-            // 블랙리스트 고객 제외
+            // 블랙리스트 고객 제외 (is_blocked 필드 또는 메모에 "블랙리스트" 포함)
             filtered = filtered.filter(r => {
                 const phone = normalizePhone(r.phone);
                 const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
-                return !customer?.is_blacklisted && !customer?.isBlacklisted;
+                return !isBlacklisted(customer);
             });
 
             // 검색
@@ -4574,7 +4616,7 @@
                     qualifications: invitation?.qualifications || '-',
                     onsiteItems: onsiteItems,
                     wineBonus: invitation?.wineBonus ? '🍷' : '-',
-                    hasSurvey: !!survey,
+                    hasSurvey: hasCustomerInfo(customer, survey),
                     phone: res.phone || '-',
                     eventPart: res.eventPart || '-',
                     // 블랙리스트 정보
@@ -7135,17 +7177,17 @@
                 const matchDate = isSameDate(r.eventDate, dateFilter);
                 const matchPart = r.eventPart === partFilter;
                 const notCancelled = r.status !== '취소';
-                // 블랙리스트 제외
+                // 블랙리스트 제외 (is_blocked 필드 또는 메모에 "블랙리스트" 포함)
                 const phone = normalizePhone(r.phone);
                 const customer = data.customers.find(c => normalizePhone(c.id) === phone);
-                const isBlacklisted = customer?.isBlacklisted === true || customer?.is_blacklisted === true;
+                const blocked = isBlacklisted(customer);
 
                 // 블랙리스트 디버그
-                if (isBlacklisted) {
+                if (blocked) {
                     console.warn(`[라인업] 블랙리스트 제외: ${r.crewName} (${phone})`);
                 }
 
-                return matchDate && matchPart && notCancelled && !isBlacklisted;
+                return matchDate && matchPart && notCancelled && !blocked;
             });
 
             // 실제 예약자 데이터 가공

@@ -4508,9 +4508,9 @@
 
                 // 2. 전화번호로 찾았지만 정보가 없으면, 이름으로 "정보 있는" 고객 찾기
                 const crewName = res.crewName?.trim();
-                const hasCustomerInfo = customer && (customer.birth_year || customer.birthYear || customer.gender || customer.height);
+                const hasInfo = customer && (customer.birth_year || customer.birthYear || customer.gender || customer.height);
 
-                if (!hasCustomerInfo && crewName) {
+                if (!hasInfo && crewName) {
                     const customerWithInfo = (data.customers || []).find(c =>
                         (c.name?.trim() === crewName || c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')) &&
                         (c.birth_year || c.birthYear || c.gender || c.height)

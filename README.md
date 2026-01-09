@@ -47,6 +47,17 @@ git push origin master
 - **해결**: `isBlacklisted()` 함수 추가 → `is_blocked` 필드 + 메모에 "블랙리스트" 포함 시 필터링
 - **효과**: 메모에 "블랙리스트"라고 적어도 예약관리/라인업에서 제외
 
+**4. 전화번호 다른 동명이인 문제 해결 (이상윤 추가 수정)**
+- **원인**: 예약 전화번호(010-AAAA, Frip)로 찾은 customer에는 정보 없음, 수기 입력한 customer(010-BBBB)에 정보 있음
+- **해결**: 전화번호로 찾은 customer에 정보 없으면, 같은 이름의 "정보 있는" customer로 대체
+- **코드 위치**: `adm_k8x2m.html` line 4509-4531
+- **효과**: 전화번호가 달라도 이름 같으면 수기 입력 정보 표시
+
+**5. hasCustomerInfo 함수/변수 충돌 해결**
+- **원인**: line 4511에서 `const hasCustomerInfo = ...` 변수가 line 2554의 `hasCustomerInfo()` 함수를 가림 (shadowing)
+- **해결**: 변수명 `hasCustomerInfo` → `hasInfo`로 변경
+- **효과**: 예약관리 탭 TypeError 해결, 정상 로딩
+
 ---
 
 ### ✅ 2026-01-09 완료된 작업
@@ -1578,8 +1589,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Legacy servic
 
 ---
 
-**최종 수정일:** 2026-01-04 (v12)  
-**버전:** v12.0 (비율 기반 가상참여자 시스템)  
+**최종 수정일:** 2026-01-09 (v12.1)
+**버전:** v12.1 (고질적 버그 해결 - 고객정보 표시/동명이인 처리)
 **설계자:** Claude (AI Assistant)
 
 ---

@@ -897,11 +897,11 @@
                                 <tr>
                                     <th>#</th>
                                     <th class="sortable" onclick="sortLineupBy('lineupNumber')" style="cursor: pointer;">번호 <span id="lineupSort_lineupNumber"></span></th>
-                                    <th class="sortable" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier"></span></th>
+                                    <th class="sortable lineup-tier-col" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('name')" style="cursor: pointer;">이름 <span id="lineupSort_name"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height"></span></th>
-                                    <th>직업</th>
+                                    <th class="lineup-job-col">직업</th>
                                     <th class="lineup-type-col">유형</th>
                                     <th class="attendance-col" style="display: none;">참석</th>
                                 </tr>
@@ -927,11 +927,11 @@
                                 <tr>
                                     <th>#</th>
                                     <th class="sortable" onclick="sortLineupBy('lineupNumber')" style="cursor: pointer;">번호 <span id="lineupSort_lineupNumber2"></span></th>
-                                    <th class="sortable" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier2"></span></th>
+                                    <th class="sortable lineup-tier-col" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier2"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('name')" style="cursor: pointer;">이름 <span id="lineupSort_name2"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear2"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height2"></span></th>
-                                    <th>직업</th>
+                                    <th class="lineup-job-col">직업</th>
                                     <th class="lineup-type-col">유형</th>
                                     <th class="attendance-col" style="display: none;">참석</th>
                                 </tr>
@@ -2867,8 +2867,9 @@
                     headerTitle.innerHTML = '뭘좀<span>Staff</span> 현장관리';
                 }
 
-                // 라인업 탭: 유형 컬럼 숨기기, 참석 컬럼 보이기
+                // 라인업 탭: 민감한 컬럼 숨기기, 참석 컬럼 보이기
                 document.querySelectorAll('.lineup-type-col').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lineup-tier-col').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('.attendance-col').forEach(el => el.style.display = '');
 
                 // 참석 통계 보이기, 가상참여 통계 숨기기
@@ -8231,11 +8232,11 @@
                         <tr class="pending-row" style="opacity: 0.7;" ${pendingClickHandler}>
                             <td>${idx + 1}</td>
                             <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
-                            <td><span class="tier tier-pending">?</span></td>
+                            <td class="lineup-tier-col"><span class="tier tier-pending">?</span></td>
                             <td>${p.name || '-'}</td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--text-muted);">-</td>
-                            <td style="color: var(--warning); font-weight: 500;">정보확인중 ${p.type === 'virtual' ? '<i class="fas fa-edit" style="font-size: 11px;"></i>' : ''}</td>
+                            <td class="lineup-job-col" style="color: var(--warning); font-weight: 500;">정보확인중 ${p.type === 'virtual' ? '<i class="fas fa-edit" style="font-size: 11px;"></i>' : ''}</td>
                             <td class="lineup-type-col">${typeIcon} ${revealBtn}</td>
                             ${attendanceCell}
                         </tr>
@@ -8256,11 +8257,11 @@
                     <tr class="${p.type === 'virtual' ? 'virtual-row' : ''} ${!isAgeValid ? 'age-warning-row' : ''}" ${clickHandler}>
                         <td>${idx + 1}</td>
                         <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
-                        <td><span class="tier tier-${p.tier}">${p.tier}</span></td>
+                        <td class="lineup-tier-col"><span class="tier tier-${p.tier}">${p.tier}</span></td>
                         <td>${p.name || '-'}</td>
                         <td style="${ageStyle}">${formatBirthYear(p.birthYear)}${ageWarning}</td>
                         <td>${p.height || '-'}</td>
-                        <td>${p.job}</td>
+                        <td class="lineup-job-col">${p.job}</td>
                         <td class="lineup-type-col">${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''} ${deleteBtn}</td>
                         ${attendanceCell}
                     </tr>

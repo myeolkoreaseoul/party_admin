@@ -1,7 +1,3 @@
 # 서브도메인 redirect 설정
 https://invite.svvys.com/* https://svvys.com/lineup-public.html 301
 https://survey.svvys.com/* https://svvys.com/survey.html 301
-https://talk.svvys.com/* https://svvys.com/talk.html 301
-
-# 경로 redirect
-/talk https://svvys.com/talk.html 301

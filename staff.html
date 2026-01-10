@@ -321,19 +321,33 @@
         // 데이터 로드
         async function loadData() {
             try {
-                const [schedulesRes, reservationsRes, virtualRes, customersRes] = await Promise.all([
-                    fetch(`${API_BASE}/party_schedules?is_active=eq.true&select=*`, { headers: HEADERS }),
-                    fetch(`${API_BASE}/reservations?select=*`, { headers: HEADERS }),
-                    fetch(`${API_BASE}/party_virtual_assignments?select=*`, { headers: HEADERS }),
-                    fetch(`${API_BASE}/customers?select=*`, { headers: HEADERS })
-                ]);
+                console.log('데이터 로드 시작...');
 
+                const schedulesRes = await fetch(`${API_BASE}/party_schedules?is_active=eq.true&select=*`, { headers: HEADERS });
+                console.log('schedules 응답:', schedulesRes.status, schedulesRes.statusText);
                 schedules = await schedulesRes.json();
+                console.log('schedules 개수:', schedules.length);
+
+                const reservationsRes = await fetch(`${API_BASE}/reservations?select=*`, { headers: HEADERS });
+                console.log('reservations 응답:', reservationsRes.status, reservationsRes.statusText);
                 reservations = await reservationsRes.json();
+                console.log('reservations 개수:', reservations.length);
+                if (reservations.length > 0) {
+                    console.log('첫번째 예약:', JSON.stringify(reservations[0]));
+                }
+
+                const virtualRes = await fetch(`${API_BASE}/party_virtual_assignments?select=*`, { headers: HEADERS });
+                console.log('virtual 응답:', virtualRes.status, virtualRes.statusText);
                 virtualAssignments = await virtualRes.json();
+                console.log('virtual 개수:', virtualAssignments.length);
+
+                const customersRes = await fetch(`${API_BASE}/customers?select=*`, { headers: HEADERS });
+                console.log('customers 응답:', customersRes.status, customersRes.statusText);
                 customers = await customersRes.json();
+                console.log('customers 개수:', customers.length);
 
                 populateDateFilter();
+                console.log('데이터 로드 완료!');
             } catch (e) {
                 console.error('데이터 로드 실패:', e);
                 showToast('데이터 로드 실패');

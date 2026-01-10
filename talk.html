@@ -98,7 +98,7 @@
 
         <!-- 질문 영역 -->
         <div class="flex-1 flex items-center justify-center px-6" style="min-height: calc(100vh - 180px);">
-            <p id="questionContent" class="text-white text-xl text-center leading-relaxed"></p>
+            <div id="questionContent" class="text-white text-2xl text-center leading-relaxed"></div>
         </div>
 
         <!-- 다음 질문 버튼 -->
@@ -207,13 +207,26 @@
             }
         }
 
+        // 질문 포맷팅 (VS 질문은 줄바꿈)
+        function formatQuestion(content) {
+            // VS 패턴 찾기: "A VS B" 또는 "A vs B"
+            const vsMatch = content.match(/^(.+?)\s*(VS|vs)\s*(.+)$/);
+            if (vsMatch) {
+                const [, optionA, vs, optionB] = vsMatch;
+                return `<div class="mb-4">${optionA.trim()}</div>
+                        <div class="text-[#a8e063] text-3xl font-bold my-4">VS</div>
+                        <div class="mt-4">${optionB.trim()}</div>`;
+            }
+            return content;
+        }
+
         // 질문 화면 업데이트
         function updateQuestionDisplay() {
             if (!currentCategory || !currentQuestion) return;
 
             const info = CATEGORY_INFO[currentCategory];
             categoryDisplayEl.textContent = `${info.emoji} ${info.label || '19금'}`;
-            questionContentEl.textContent = `"${currentQuestion.content}"`;
+            questionContentEl.innerHTML = formatQuestion(currentQuestion.content);
 
             // 자동 라벨
             autoLabelEl.classList.toggle('hidden', !isAutoMode);

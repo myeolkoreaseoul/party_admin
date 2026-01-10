@@ -304,6 +304,55 @@ CREATE POLICY "public_lineup_all_service" ON public_lineup FOR ALL USING (auth.r
 CREATE POLICY "attendance_all_service" ON attendance FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
+-- 고객 ID 기반 시스템 (2026-01-10 추가)
+-- 전화번호 의존 매칭 → customer_id 기반 매칭으로 전환
+-- ============================================
+
+-- customers 테이블에 customer_id 추가
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS customer_id TEXT UNIQUE;
+
+-- reservations 테이블에 customer_id 추가
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS customer_id TEXT;
+
+-- invitations 테이블에 customer_id 추가
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS customer_id TEXT;
+
+-- surveys 테이블에 customer_id 추가
+ALTER TABLE surveys ADD COLUMN IF NOT EXISTS customer_id TEXT;
+
+-- 기존 customers 데이터에 customer_id 부여 (전화번호 기반으로 생성)
+UPDATE customers
+SET customer_id = 'CUS-' || EXTRACT(EPOCH FROM created_at)::BIGINT || '-' || SUBSTR(MD5(id), 1, 6)
+WHERE customer_id IS NULL;
+
+-- 기존 reservations에 customer_id 연결 (전화번호 매칭)
+UPDATE reservations r
+SET customer_id = c.customer_id
+FROM customers c
+WHERE r.customer_id IS NULL
+  AND REPLACE(REPLACE(r.phone, '-', ''), ' ', '') = REPLACE(REPLACE(c.id, '-', ''), ' ', '');
+
+-- 기존 invitations에 customer_id 연결
+UPDATE invitations i
+SET customer_id = c.customer_id
+FROM customers c
+WHERE i.customer_id IS NULL
+  AND REPLACE(REPLACE(i.phone, '-', ''), ' ', '') = REPLACE(REPLACE(c.id, '-', ''), ' ', '');
+
+-- 기존 surveys에 customer_id 연결
+UPDATE surveys s
+SET customer_id = c.customer_id
+FROM customers c
+WHERE s.customer_id IS NULL
+  AND REPLACE(REPLACE(s.phone, '-', ''), ' ', '') = REPLACE(REPLACE(c.id, '-', ''), ' ', '');
+
+-- 인덱스 생성 (성능 최적화)
+CREATE INDEX IF NOT EXISTS idx_customers_customer_id ON customers(customer_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_customer_id ON reservations(customer_id);
+CREATE INDEX IF NOT EXISTS idx_invitations_customer_id ON invitations(customer_id);
+CREATE INDEX IF NOT EXISTS idx_surveys_customer_id ON surveys(customer_id);
+
+-- ============================================
 -- 완료 메시지
 -- ============================================
 SELECT 'All tables and RLS policies created successfully!' as result;

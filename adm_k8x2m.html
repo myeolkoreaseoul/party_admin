@@ -1669,6 +1669,16 @@
                         <i class="fas fa-trash"></i> 테스트 데이터 삭제
                     </button>
                 </div>
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <h4 style="margin-bottom: 8px;">🔑 고객 ID 마이그레이션</h4>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                        기존 고객 데이터에 고유 customer_id를 부여합니다. 전화번호 매칭 문제 해결을 위해 필요합니다.
+                    </p>
+                    <button class="btn btn-warning" onclick="migrateCustomerIds()">
+                        <i class="fas fa-key"></i> customer_id 마이그레이션 실행
+                    </button>
+                    <span id="migrateStatus" style="margin-left: 12px; font-size: 13px;"></span>
+                </div>
             </div>
         </div>
     </main>
@@ -2740,7 +2750,44 @@
             if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
             return true;
         }
-        
+
+        // ========================================
+        // 고객 ID 생성 (전화번호 의존 탈피)
+        // ========================================
+        function generateCustomerId() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            return `CUS-${timestamp}-${random}`;
+        }
+
+        // 고객 찾기 (customer_id 우선, 전화번호 fallback)
+        function findCustomer(customerId, phone) {
+            // 1순위: customer_id로 찾기
+            if (customerId) {
+                const byId = data.customers.find(c => c.customerId === customerId);
+                if (byId) return byId;
+            }
+            // 2순위: 전화번호로 찾기
+            if (phone) {
+                const normalizedPhone = normalizePhone(phone);
+                const byPhone = data.customers.find(c => normalizePhone(c.id) === normalizedPhone);
+                if (byPhone) return byPhone;
+            }
+            return null;
+        }
+
+        // 고객맵 생성 (customer_id + phone 둘 다 인덱싱)
+        function buildCustomerMaps() {
+            const byCustomerId = {};
+            const byPhone = {};
+            data.customers.forEach(c => {
+                if (c.customerId) byCustomerId[c.customerId] = c;
+                const normalizedPhone = normalizePhone(c.id);
+                if (normalizedPhone) byPhone[normalizedPhone] = c;
+            });
+            return { byCustomerId, byPhone };
+        }
+
         // ========================================
         // 설문 → 고객 자동 동기화
         // ========================================
@@ -2823,6 +2870,58 @@
                     data.customers = (await customersRes.json()).map(convertToCamelCase);
                 }
             }
+        }
+
+        // ========================================
+        // 기존 고객 데이터에 customer_id 부여 (마이그레이션)
+        // ========================================
+        async function migrateCustomerIds() {
+            showToast('customer_id 마이그레이션 시작...', 'info');
+            let updated = 0;
+            let failed = 0;
+
+            // customer_id가 없는 고객 찾기
+            const customersWithoutId = data.customers.filter(c => !c.customerId);
+
+            if (customersWithoutId.length === 0) {
+                showToast('모든 고객에 customer_id가 이미 있습니다', 'success');
+                return;
+            }
+
+            console.log(`[마이그레이션] ${customersWithoutId.length}명의 고객에 customer_id 부여 시작`);
+
+            for (const customer of customersWithoutId) {
+                const newCustomerId = generateCustomerId();
+                try {
+                    const res = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(customer.id)}`, {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({ customer_id: newCustomerId })
+                    });
+                    if (res.ok) {
+                        updated++;
+                        // 연결된 예약에도 customer_id 추가
+                        const relatedReservations = data.reservations.filter(r =>
+                            normalizePhone(r.phone) === normalizePhone(customer.id)
+                        );
+                        for (const res of relatedReservations) {
+                            await fetch(`${API_BASE}/${TB.RESERVATIONS}?id=eq.${encodeURIComponent(res.id)}`, {
+                                method: 'PATCH',
+                                headers: SUPABASE_HEADERS,
+                                body: JSON.stringify({ customer_id: newCustomerId })
+                            }).catch(e => console.warn('예약 customer_id 업데이트 실패:', res.id));
+                        }
+                    } else {
+                        failed++;
+                    }
+                } catch (e) {
+                    console.error('customer_id 부여 실패:', customer.id, e);
+                    failed++;
+                }
+            }
+
+            showToast(`마이그레이션 완료: ${updated}명 성공, ${failed}명 실패`, updated > 0 ? 'success' : 'warning');
+            await refreshAllData();
         }
 
         // ========================================
@@ -2944,14 +3043,43 @@
         // 통합 고객 데이터 생성 (customers + invitations + reservations JOIN)
         function buildIntegratedCustomers() {
             const result = [];
-            const processedPhones = new Set();
-            
-            // 고객 맵 생성 (normalizedPhone -> customer)
-            const customerMap = {};
+            const processedKeys = new Set();  // customer_id 또는 phone으로 중복 체크
+
+            // 고객 맵 생성 (customer_id + normalizedPhone -> customer)
+            const customerByIdMap = {};   // customer_id -> customer
+            const customerByPhoneMap = {}; // normalizedPhone -> customer
+            const customerByNameMap = {};  // name -> customer (fallback용)
             data.customers.forEach(c => {
+                if (c.customerId) customerByIdMap[c.customerId] = c;
                 const normalizedId = normalizePhone(c.id);
-                customerMap[normalizedId] = c;
+                if (normalizedId) customerByPhoneMap[normalizedId] = c;
+                if (c.name) {
+                    const normalizedName = c.name.trim().replace(/\s/g, '');
+                    customerByNameMap[normalizedName] = c;
+                }
             });
+
+            // 고객 찾기 헬퍼 (customer_id > phone > name 순으로 시도)
+            const findCustomerFor = (customerId, phone, crewName) => {
+                // 1순위: customer_id
+                if (customerId && customerByIdMap[customerId]) {
+                    return customerByIdMap[customerId];
+                }
+                // 2순위: 전화번호
+                const normalizedPhone = normalizePhone(phone);
+                if (normalizedPhone && customerByPhoneMap[normalizedPhone]) {
+                    return customerByPhoneMap[normalizedPhone];
+                }
+                // 3순위: 이름 (crewName)
+                if (crewName) {
+                    const normalizedName = crewName.trim().replace(/\s/g, '');
+                    if (customerByNameMap[normalizedName]) {
+                        console.log(`[통합고객] 이름으로 매칭: ${crewName}`);
+                        return customerByNameMap[normalizedName];
+                    }
+                }
+                return null;
+            };
 
             // 초대장 맵 생성 (normalizedPhone -> invitation)
             const invitationMap = {};
@@ -2976,15 +3104,21 @@
                 }
                 reservationMap[normalizedPhone].push(res);
             });
-            
+
             // 1. 예약이 있는 고객 (1명 = 1행)
             data.reservations.forEach(res => {
                 const phone = res.phone;
-                const normalizedPhone = normalizePhone(phone); // 정규화된 전화번호로 중복 체크
-                if (processedPhones.has(normalizedPhone)) return;
-                processedPhones.add(normalizedPhone);
-                
-                const customer = customerMap[normalizedPhone] || {};
+                const normalizedPhone = normalizePhone(phone);
+                const customerId = res.customerId;
+
+                // 중복 체크 (customer_id 우선, 없으면 phone)
+                const key = customerId || normalizedPhone;
+                if (processedKeys.has(key)) return;
+                processedKeys.add(key);
+                if (normalizedPhone) processedKeys.add(normalizedPhone);  // phone도 추가로 등록
+
+                // 고객 찾기 (customer_id > phone > crewName)
+                const customer = findCustomerFor(customerId, phone, res.crewName) || {};
                 const inv = invitationMap[normalizedPhone] || {};
                 const survey = surveyMap[normalizedPhone];
                 const reservations = reservationMap[normalizedPhone] || [];
@@ -3053,10 +3187,14 @@
             data.invitations.forEach(inv => {
                 const phone = inv.phone;
                 const normalizedPhone = normalizePhone(phone);
-                if (processedPhones.has(normalizedPhone)) return;
-                processedPhones.add(normalizedPhone);
+                const customerId = inv.customerId;
 
-                const customer = customerMap[normalizedPhone] || {};
+                const key = customerId || normalizedPhone;
+                if (processedKeys.has(key)) return;
+                processedKeys.add(key);
+                if (normalizedPhone) processedKeys.add(normalizedPhone);
+
+                const customer = findCustomerFor(customerId, phone, inv.name) || {};
                 const survey = surveyMap[normalizedPhone];
                 const hasSurvey = hasCustomerInfo(customer, survey);
 
@@ -3105,8 +3243,12 @@
             data.customers.forEach(c => {
                 const phone = c.id;
                 const normalizedPhone = normalizePhone(phone);
-                if (processedPhones.has(normalizedPhone)) return;
-                processedPhones.add(normalizedPhone);
+                const customerId = c.customerId;
+
+                const key = customerId || normalizedPhone;
+                if (processedKeys.has(key)) return;
+                processedKeys.add(key);
+                if (normalizedPhone) processedKeys.add(normalizedPhone);
 
                 const survey = surveyMap[normalizedPhone];
                 const hasSurvey = hasCustomerInfo(c, survey);
@@ -3986,8 +4128,11 @@
                 const existingInDB = await checkResponse.json();
 
                 let response;
+                let customerId;  // customer_id 저장용
+
                 if (existingInDB && existingInDB.length > 0) {
-                    // DB에 있으면 PATCH로 수정
+                    // DB에 있으면 PATCH로 수정 (기존 customer_id 유지)
+                    customerId = existingInDB[0].customer_id;
                     const updateData = { ...customerData };
                     delete updateData.id;
                     response = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
@@ -3996,7 +4141,9 @@
                         body: JSON.stringify(updateData)
                     });
                 } else {
-                    // DB에 없으면 POST로 추가
+                    // DB에 없으면 POST로 추가 (새 customer_id 생성)
+                    customerId = generateCustomerId();
+                    customerData.customer_id = customerId;
                     response = await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
                         method: 'POST',
                         headers: SUPABASE_HEADERS,
@@ -4021,6 +4168,7 @@
                             const reservationData = {
                                 id: 'RES-' + Date.now(),  // 예약 ID 필수!
                                 phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
+                                customer_id: customerId,  // 고객 ID 연결!
                                 crew_name: customerData.nickname || customerData.name || '',
                                 event_date: resDate,
                                 event_part: resPart,
@@ -4040,6 +4188,8 @@
                             if (resResponse.ok) {
                                 showToast('고객 + 예약이 생성되었습니다', 'success');
                             } else {
+                                const errText = await resResponse.text();
+                                console.error('예약 생성 실패:', errText);
                                 showToast('고객 저장됨, 예약 생성 실패', 'warning');
                             }
                         }
@@ -4453,18 +4603,46 @@
             // 예약 필터링 (취소 제외)
             let filtered = reservations.filter(r => r.status !== '취소');
 
-            // 블랙리스트 고객 제외 (is_blocked 필드 또는 메모에 "블랙리스트" 포함)
+            // 고객 매칭 헬퍼 (customer_id > phone > crewName)
+            const findCustomerForRes = (res) => {
+                // 1순위: customer_id
+                if (res.customerId) {
+                    const byId = (data.customers || []).find(c => c.customerId === res.customerId);
+                    if (byId) return byId;
+                }
+                // 2순위: 전화번호
+                const phone = normalizePhone(res.phone);
+                if (phone) {
+                    const byPhone = (data.customers || []).find(c => normalizePhone(c.id) === phone);
+                    if (byPhone) return byPhone;
+                }
+                // 3순위: 이름
+                const crewName = res.crewName?.trim();
+                if (crewName) {
+                    const byName = (data.customers || []).find(c =>
+                        c.name?.trim() === crewName ||
+                        c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
+                    if (byName) return byName;
+                }
+                return null;
+            };
+
+            // 블랙리스트 고객 제외 (개선된 매칭)
             filtered = filtered.filter(r => {
-                const phone = normalizePhone(r.phone);
-                const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
-                return !isBlacklisted(customer);
+                const customer = findCustomerForRes(r);
+                const isBlacklisted = customer?.isBlacklisted === true;
+                if (isBlacklisted) {
+                    console.log(`[예약관리] 블랙리스트 제외: ${r.crewName}`);
+                }
+                return !isBlacklisted;
             });
 
-            // 검색
+            // 검색 (개선된 매칭)
             if (search) {
                 filtered = filtered.filter(r => {
+                    const customer = findCustomerForRes(r);
                     const phone = normalizePhone(r.phone);
-                    const customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
                     const survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
                     const name = customer?.name || survey?.name || '';
                     return (r.crewName || '').toLowerCase().includes(search) ||
@@ -4500,35 +4678,15 @@
             // 관련 데이터 조인 (customers, surveys, invitations, schedules)
             const lineupData = filtered.map((res, idx) => {
                 const phone = normalizePhone(res.phone);
+                const crewName = res.crewName?.trim();
 
-                // 1. 전화번호로 먼저 찾기
-                let customer = (data.customers || []).find(c => normalizePhone(c.id) === phone);
+                // 개선된 고객 찾기 (customer_id > phone > name)
+                let customer = findCustomerForRes(res);
+
+                // survey, invitation 찾기 (phone > name)
                 let survey = (data.surveys || []).find(s => normalizePhone(s.phone) === phone);
                 let invitation = (data.invitations || []).find(i => normalizePhone(i.phone) === phone);
 
-                // 2. 전화번호로 찾았지만 정보가 없으면, 이름으로 "정보 있는" 고객 찾기
-                const crewName = res.crewName?.trim();
-                const hasInfo = customer && (customer.birth_year || customer.birthYear || customer.gender || customer.height);
-
-                if (!hasInfo && crewName) {
-                    const customerWithInfo = (data.customers || []).find(c =>
-                        (c.name?.trim() === crewName || c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')) &&
-                        (c.birth_year || c.birthYear || c.gender || c.height)
-                    );
-                    if (customerWithInfo) {
-                        console.warn(`[예약관리] 정보 있는 고객으로 대체: ${crewName} (기존: ${customer?.id || '없음'} → ${customerWithInfo.id})`);
-                        customer = customerWithInfo;
-                    } else if (!customer) {
-                        // 정보 없어도 이름으로 찾기
-                        customer = (data.customers || []).find(c =>
-                            c.name?.trim() === crewName ||
-                            c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
-                        );
-                        if (customer) {
-                            console.warn(`[예약관리] 이름으로 고객 매칭 (정보 없음): ${crewName}`);
-                        }
-                    }
-                }
                 if (!invitation && crewName) {
                     invitation = (data.invitations || []).find(i =>
                         i.name?.trim() === crewName ||
@@ -4542,8 +4700,8 @@
                     );
                 }
 
-                // 디버그: 매칭 결과
-                console.log(`[예약관리] ${crewName}: customer=${!!customer}, survey=${!!survey}, invitation=${!!invitation}`);
+                // 디버그: 매칭 결과 (customer_id 포함)
+                console.log(`[예약관리] ${crewName}: customer=${!!customer} (id:${res.customerId || 'none'}), survey=${!!survey}, invitation=${!!invitation}`);
 
                 // 파티 일정에서 시간 조회 (연동)
                 const schedule = (data.schedules || []).find(s =>
@@ -7184,19 +7342,46 @@
             // 나이조건 가져오기
             const ageCondition = getAgeCondition(dateFilter, partFilter);
             
+            // 고객 찾기 헬퍼 (customer_id > phone > name)
+            const findCustomerForLineup = (res) => {
+                // 1순위: customer_id
+                if (res.customerId) {
+                    const byId = data.customers.find(c => c.customerId === res.customerId);
+                    if (byId) return byId;
+                }
+                // 2순위: 전화번호
+                const phone = normalizePhone(res.phone);
+                if (phone) {
+                    const byPhone = data.customers.find(c => normalizePhone(c.id) === phone);
+                    if (byPhone) return byPhone;
+                }
+                // 3순위: 이름
+                const crewName = res.crewName?.trim();
+                if (crewName) {
+                    const byName = data.customers.find(c =>
+                        c.name?.trim() === crewName ||
+                        c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
+                    );
+                    if (byName) {
+                        console.log(`[라인업] 이름으로 매칭: ${crewName}`);
+                        return byName;
+                    }
+                }
+                return null;
+            };
+
             // 실제 예약자 (해당 날짜/세션, 블랙리스트 제외)
             const realReservations = data.reservations.filter(r => {
                 const matchDate = isSameDate(r.eventDate, dateFilter);
                 const matchPart = r.eventPart === partFilter;
                 const notCancelled = r.status !== '취소';
-                // 블랙리스트 제외 (is_blocked 필드 또는 메모에 "블랙리스트" 포함)
-                const phone = normalizePhone(r.phone);
-                const customer = data.customers.find(c => normalizePhone(c.id) === phone);
-                const blocked = isBlacklisted(customer);
 
-                // 블랙리스트 디버그
-                if (blocked) {
-                    console.warn(`[라인업] 블랙리스트 제외: ${r.crewName} (${phone})`);
+                // 블랙리스트 제외 (개선된 매칭)
+                const customer = findCustomerForLineup(r);
+                const isBlacklisted = customer?.isBlacklisted === true;
+
+                if (isBlacklisted) {
+                    console.warn(`[라인업] 블랙리스트 제외: ${r.crewName}`);
                 }
 
                 return matchDate && matchPart && notCancelled && !blocked;
@@ -7207,27 +7392,12 @@
                 const phone = normalizePhone(r.phone);
                 const crewName = r.crewName?.trim();
 
-                // 1. 전화번호로 먼저 찾기
-                let customer = data.customers.find(c => normalizePhone(c.id) === phone);
+                // 개선된 고객 찾기 (customer_id > phone > name)
+                let customer = findCustomerForLineup(r);
                 let survey = data.surveys.find(s => normalizePhone(s.phone) === phone);
                 let invitation = data.invitations.find(i => normalizePhone(i.phone) === phone);
 
-                // 2. 전화번호로 찾았지만 정보가 없으면, 이름으로 "정보 있는" 고객 찾기
-                const hasInfo = customer && (customer.birth_year || customer.birthYear || customer.gender || customer.height);
-                if (!hasInfo && crewName) {
-                    const customerWithInfo = data.customers.find(c =>
-                        (c.name?.trim() === crewName || c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')) &&
-                        (c.birth_year || c.birthYear || c.gender || c.height)
-                    );
-                    if (customerWithInfo) {
-                        customer = customerWithInfo;
-                    } else if (!customer) {
-                        customer = data.customers.find(c =>
-                            c.name?.trim() === crewName ||
-                            c.name?.trim().replace(/\s/g, '') === crewName.replace(/\s/g, '')
-                        );
-                    }
-                }
+                // survey/invitation fallback (이름으로)
                 if (!invitation && crewName) {
                     invitation = data.invitations.find(i =>
                         i.name?.trim() === crewName ||

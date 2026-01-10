@@ -12230,6 +12230,18 @@
         let matchingResults = [];
         let currentMatchingPartyType = 'coffee';
 
+        // 한글 날짜에서 요일 계산
+        function getWeekdayFromKoreanDate(koreanDate) {
+            const match = koreanDate.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+            if (!match) return '';
+            const year = parseInt(match[1]);
+            const month = parseInt(match[2]) - 1;
+            const day = parseInt(match[3]);
+            const d = new Date(year, month, day);
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            return weekdays[d.getDay()];
+        }
+
         // 매칭 탭 날짜 필터 초기화
         async function initMatchingDateFilter() {
             const select = document.getElementById('matchingDateFilter');
@@ -12239,12 +12251,12 @@
             existingOptions.forEach(opt => opt.remove());
 
             const schedules = data.schedules || [];
-            const uniqueDates = [...new Set(schedules.map(s => s.date))].sort();
+            const uniqueDates = [...new Set(schedules.map(s => s.date))];
             uniqueDates.forEach(date => {
                 const option = document.createElement('option');
                 option.value = date;
-                const d = new Date(date + 'T00:00:00');
-                option.textContent = `${d.getMonth() + 1}/${d.getDate()}`;
+                const weekday = getWeekdayFromKoreanDate(date);
+                option.textContent = weekday ? `${date} (${weekday})` : date;
                 select.appendChild(option);
             });
         }

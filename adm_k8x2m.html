@@ -7697,7 +7697,6 @@
                     );
                 }
 
-                const hasSurvey = !!survey;
                 // 이름: 고객 > 사전조사 > 초대장 > 예약crewName 순으로 우선
                 const name = customer?.name || survey?.name || invitation?.name || r.crewName || '이름없음';
                 // 성별: 고객 > 사전조사 순으로 우선 (초대장에는 성별 없음)
@@ -7708,6 +7707,8 @@
                 const jobDetail = customer?.job_detail || customer?.jobDetail || survey?.job_detail || survey?.jobDetail;
                 const jobCategory = customer?.job_category || customer?.jobCategory || survey?.job_category || survey?.jobCategory;
                 const job = jobDetail || jobCategory || '-';
+                // 정보 있음 = survey 있거나 customer에 핵심 정보(출생연도/키/직업) 있음
+                const hasSurvey = !!survey || !!(birthYear || height || (job && job !== '-'));
                 const tier = getTier(gender, jobCategory || job);  // 티어는 대분류 기준
 
                 // 디버그: 고객 매칭 확인

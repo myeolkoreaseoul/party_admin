@@ -154,6 +154,52 @@
             color: var(--primary);
             font-weight: 700;
         }
+        .none-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        .none-btn:hover { border-color: #444; }
+        .none-btn.selected {
+            border-color: var(--text-muted);
+            background: rgba(136, 136, 136, 0.2);
+            color: var(--text);
+        }
+        .inputs-disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .manner-section {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 165, 0, 0.04));
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+        .manner-section label {
+            color: #FFD700 !important;
+        }
+        .comment-box {
+            width: 100%;
+            min-height: 80px;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .comment-box:focus { outline: none; border-color: var(--primary); }
+        .comment-box::placeholder { color: var(--text-muted); }
         .submit-btn {
             width: 100%;
             padding: 16px;
@@ -282,14 +328,32 @@
 
             <!-- 상대 번호 선택 -->
             <div class="form-group">
-                <label>마음에 드는 상대 번호 <span class="required">*</span></label>
+                <label>마음에 드는 상대 번호</label>
                 <p class="selection-info">최대 <span class="count" id="maxCount">3</span>명까지 선택 가능</p>
                 <div class="target-numbers" id="targetNumbersWrap">
                     <input type="text" class="form-control target-input" placeholder="0" maxlength="2" inputmode="numeric">
                     <input type="text" class="form-control target-input" placeholder="0" maxlength="2" inputmode="numeric">
                     <input type="text" class="form-control target-input" placeholder="0" maxlength="2" inputmode="numeric">
                 </div>
-                <p class="hint">상대방 번호를 입력하세요 (빈칸은 무시됩니다)</p>
+                <button type="button" class="none-btn" id="noMatchBtn" onclick="toggleNoMatch()">없어요 😅</button>
+            </div>
+
+            <!-- 오늘의 매너인 -->
+            <div class="form-group">
+                <div class="manner-section">
+                    <label>⭐ 오늘의 매너인</label>
+                    <p class="hint" style="margin-bottom: 12px;">매칭과 별개로, 매너가 좋았던 분이 있다면 알려주세요</p>
+                    <div class="target-numbers" id="mannerNumbersWrap">
+                        <input type="text" class="form-control manner-input" placeholder="0" maxlength="2" inputmode="numeric">
+                    </div>
+                    <button type="button" class="none-btn" id="noMannerBtn" onclick="toggleNoManner()">없어요</button>
+                </div>
+            </div>
+
+            <!-- 하고 싶은 말 -->
+            <div class="form-group">
+                <label>하고 싶은 말 (선택)</label>
+                <textarea id="comment" class="comment-box" placeholder="운영진에게 전하고 싶은 말이 있다면 자유롭게 적어주세요"></textarea>
             </div>
 
             <button type="submit" class="submit-btn" id="submitBtn">제출하기</button>
@@ -300,10 +364,14 @@
             <div class="success-icon">✅</div>
             <h2>제출 완료!</h2>
             <div class="result-box">
-                <div class="label">내가 선택한 번호</div>
+                <div class="label">마음에 드는 상대</div>
                 <div class="value" id="submittedNumbers">-</div>
             </div>
-            <p>매칭 결과는 파티 종료 후<br>관리자가 개별 연락드립니다.</p>
+            <div class="result-box" style="margin-top: 12px;">
+                <div class="label">오늘의 매너인</div>
+                <div class="value" id="submittedManner" style="color: #FFD700;">-</div>
+            </div>
+            <p style="margin-top: 16px;">매칭 결과는 파티 종료 후<br>관리자가 개별 연락드립니다.</p>
             <button onclick="location.reload()" class="submit-btn" style="margin-top: 20px;">다시 제출하기</button>
         </div>
 
@@ -328,6 +396,8 @@
         let selectedGender = '';
         let selectedContactType = '';
         let selectionLimit = 3;
+        let noMatchSelected = false;
+        let noMannerSelected = false;
 
         // 한글 날짜에서 요일 계산
         function getWeekdayFromKoreanDate(koreanDate) {
@@ -372,9 +442,38 @@
                     e.target.value = e.target.value.replace(/\D/g, '');
                 });
             });
+            document.querySelectorAll('.manner-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                });
+            });
 
             document.getElementById('eventDate').addEventListener('change', onDateChange);
             document.getElementById('matchForm').addEventListener('submit', handleSubmit);
+        }
+
+        // 없어요 토글 - 마음에 드는 상대
+        function toggleNoMatch() {
+            noMatchSelected = !noMatchSelected;
+            const btn = document.getElementById('noMatchBtn');
+            const wrap = document.getElementById('targetNumbersWrap');
+            btn.classList.toggle('selected', noMatchSelected);
+            wrap.classList.toggle('inputs-disabled', noMatchSelected);
+            if (noMatchSelected) {
+                document.querySelectorAll('.target-input').forEach(input => input.value = '');
+            }
+        }
+
+        // 없어요 토글 - 매너인
+        function toggleNoManner() {
+            noMannerSelected = !noMannerSelected;
+            const btn = document.getElementById('noMannerBtn');
+            const wrap = document.getElementById('mannerNumbersWrap');
+            btn.classList.toggle('selected', noMannerSelected);
+            wrap.classList.toggle('inputs-disabled', noMannerSelected);
+            if (noMannerSelected) {
+                document.querySelectorAll('.manner-input').forEach(input => input.value = '');
+            }
         }
 
         async function loadSchedules() {
@@ -496,6 +595,18 @@
             return numbers;
         }
 
+        function getMannerPersons() {
+            const inputs = document.querySelectorAll('.manner-input');
+            const numbers = [];
+            inputs.forEach(input => {
+                const val = parseInt(input.value);
+                if (val > 0 && !numbers.includes(val)) {
+                    numbers.push(val);
+                }
+            });
+            return numbers;
+        }
+
         async function handleSubmit(e) {
             e.preventDefault();
 
@@ -503,6 +614,8 @@
             const myName = document.getElementById('myName').value.trim();
             const contactValue = document.getElementById('contactValue').value.trim();
             const targets = getSelectedTargets();
+            const mannerPersons = getMannerPersons();
+            const comment = document.getElementById('comment').value.trim();
 
             // 검증
             if (!selectedDate || !selectedSession) {
@@ -525,8 +638,9 @@
                 alert('연락처를 입력해주세요');
                 return;
             }
-            if (targets.length === 0) {
-                alert('상대 번호를 최소 1개 이상 입력해주세요');
+            // 마음에 드는 상대: 없어요 선택 안 했으면 최소 1명 필요
+            if (!noMatchSelected && targets.length === 0) {
+                alert('마음에 드는 상대 번호를 입력하거나, "없어요"를 선택해주세요');
                 return;
             }
 
@@ -558,7 +672,11 @@
                     name: myName,
                     contact_type: selectedContactType,
                     contact_value: normalizedContact,
-                    selected_numbers: targets,
+                    selected_numbers: noMatchSelected ? [] : targets,
+                    no_selection: noMatchSelected,
+                    manner_persons: noMannerSelected ? [] : mannerPersons,
+                    no_manner_person: noMannerSelected,
+                    comment: comment || null,
                     is_latest: true
                 };
 
@@ -570,7 +688,13 @@
 
                 if (!res.ok) throw new Error('제출 실패');
 
-                document.getElementById('submittedNumbers').textContent = targets.join(', ') + '번';
+                // 결과 표시
+                const matchResult = noMatchSelected ? '없어요 선택' : (targets.join(', ') + '번');
+                document.getElementById('submittedNumbers').textContent = matchResult;
+
+                const mannerResult = noMannerSelected ? '없음' : (mannerPersons.length > 0 ? mannerPersons.join(', ') + '번' : '없음');
+                document.getElementById('submittedManner').textContent = mannerResult;
+
                 document.getElementById('matchForm').classList.add('hidden');
                 document.getElementById('successCard').classList.add('show');
 

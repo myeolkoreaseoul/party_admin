@@ -348,6 +348,18 @@
             return map[type] || type;
         }
 
+        // 전화번호 정규화 (010-0000-0000 형식으로 통일)
+        function normalizePhone(phone) {
+            const digits = phone.replace(/\D/g, '');
+            if (digits.length === 11 && digits.startsWith('010')) {
+                return `${digits.slice(0,3)}-${digits.slice(3,7)}-${digits.slice(7)}`;
+            }
+            if (digits.length === 10 && digits.startsWith('01')) {
+                return `${digits.slice(0,3)}-${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            return phone; // 형식 안 맞으면 원본 유지
+        }
+
         async function init() {
             await loadSchedules();
 
@@ -533,7 +545,10 @@
                     }
                 );
 
-                // 새 제출
+                // 새 제출 (전화번호는 정규화)
+                const normalizedContact = selectedContactType === 'phone'
+                    ? normalizePhone(contactValue)
+                    : contactValue;
                 const submission = {
                     event_date: selectedDate,
                     event_part: selectedSession.part,
@@ -542,7 +557,7 @@
                     lineup_number: myNumber,
                     name: myName,
                     contact_type: selectedContactType,
-                    contact_value: contactValue,
+                    contact_value: normalizedContact,
                     selected_numbers: targets,
                     is_latest: true
                 };

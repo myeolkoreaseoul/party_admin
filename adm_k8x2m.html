@@ -4035,8 +4035,16 @@
             
             const select = document.getElementById('customerDateFilter');
             if (select) {
+                // 날짜순 정렬 (월/일 파싱)
+                const sortedDates = [...dates].sort((a, b) => {
+                    const parseDate = (str) => {
+                        const m = str.match(/(\d+)월\s*(\d+)일/);
+                        return m ? parseInt(m[1]) * 100 + parseInt(m[2]) : 0;
+                    };
+                    return parseDate(a) - parseDate(b);
+                });
                 select.innerHTML = '<option value="">전체 날짜</option>' +
-                    [...dates].sort().map(d => `<option value="${d}">${d}</option>`).join('');
+                    sortedDates.map(d => `<option value="${d}">${d}</option>`).join('');
             }
         }
         
@@ -4429,7 +4437,16 @@
             const dateSelect = document.getElementById('cf_resDate');
             dateSelect.innerHTML = '';
             const schedules = data.schedules || [];
-            const uniqueDates = [...new Set(schedules.map(s => s.date))].sort();
+            const uniqueDates = [...new Set(schedules.map(s => s.date))];
+            // 날짜순 정렬 (한국어 날짜 파싱)
+            uniqueDates.sort((a, b) => {
+                const parseKoreanDate = (str) => {
+                    const match = str.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+                    if (!match) return 0;
+                    return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
+                };
+                return parseKoreanDate(a) - parseKoreanDate(b);
+            });
             uniqueDates.forEach(date => {
                 const opt = document.createElement('option');
                 opt.value = date;

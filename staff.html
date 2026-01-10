@@ -407,6 +407,12 @@
             const maleList = document.getElementById('maleList');
             const femaleList = document.getElementById('femaleList');
 
+            console.log('선택된 날짜:', date, '세션:', part);
+            console.log('전체 예약 수:', reservations.length);
+            if (reservations.length > 0) {
+                console.log('예약 샘플:', reservations[0]);
+            }
+
             if (!date || !part) {
                 maleList.innerHTML = '<div class="empty-state">날짜와 세션을 선택하세요</div>';
                 femaleList.innerHTML = '<div class="empty-state">날짜와 세션을 선택하세요</div>';
@@ -414,48 +420,60 @@
                 return;
             }
 
-            // 해당 일정의 예약자
+            // 해당 일정의 예약자 (snake_case 컬럼명 사용)
             const dateReservations = reservations.filter(r => {
-                const matchDate = r.event_date === date ||
-                    r.eventDate === date ||
-                    normalizeDate(r.event_date) === normalizeDate(date) ||
-                    normalizeDate(r.eventDate) === normalizeDate(date);
-                const matchPart = r.event_part === part || r.eventPart === part;
+                // 날짜 비교 - 정규화해서 비교
+                const rDate = r.event_date || '';
+                const matchDate = isSameDate(rDate, date);
+                const matchPart = r.event_part === part;
                 const notCancelled = r.status !== '취소';
+
+                if (matchDate && matchPart) {
+                    console.log('매칭된 예약:', r.crew_name, rDate, r.event_part);
+                }
                 return matchDate && matchPart && notCancelled;
             });
 
+            console.log('필터된 예약 수:', dateReservations.length);
+
             // 가상참여자
             const dateVirtuals = virtualAssignments.filter(v => {
-                const matchDate = v.schedule_date === date ||
-                    v.scheduleDate === date ||
-                    normalizeDate(v.schedule_date) === normalizeDate(date) ||
-                    normalizeDate(v.scheduleDate) === normalizeDate(date);
-                const matchPart = v.schedule_part === part || v.schedulePart === part;
+                const vDate = v.schedule_date || '';
+                const matchDate = isSameDate(vDate, date);
+                const matchPart = v.schedule_part === part;
                 return matchDate && matchPart;
             });
+
+            console.log('필터된 가상참여자 수:', dateVirtuals.length);
 
             // 성별로 분류
             const males = [];
             const females = [];
 
             dateReservations.forEach(r => {
-                const customer = customers.find(c =>
-                    c.id === normalizePhone(r.phone) ||
-                    c.customer_id === r.customer_id ||
-                    c.customerId === r.customerId
-                );
-                const gender = customer?.gender || r.gender || '미상';
+                // 고객 찾기 (전화번호로)
+                const phone = normalizePhone(r.phone);
+                const customer = customers.find(c => normalizePhone(c.id) === phone);
+
+                const gender = customer?.gender || '미상';
                 const item = {
                     id: r.id,
                     type: 'reservation',
-                    lineupNumber: r.lineup_number || r.lineupNumber,
-                    name: customer?.name || r.crew_name || r.crewName || '이름없음',
+                    lineupNumber: r.lineup_number,
+                    name: customer?.name || r.crew_name || '이름없음',
                     attended: r.attended || false,
-                    attendedAt: r.attended_at || r.attendedAt
+                    attendedAt: r.attended_at
                 };
+
+                console.log('처리:', item.name, '성별:', gender, '번호:', item.lineupNumber);
+
                 if (gender === '남자') males.push(item);
                 else if (gender === '여자') females.push(item);
+                else {
+                    // 성별 미상도 일단 표시 (남자쪽에)
+                    console.log('성별 미상:', item.name);
+                    males.push({ ...item, name: item.name + ' (성별?)' });
+                }
             });
 
             dateVirtuals.forEach(v => {
@@ -567,19 +585,28 @@
             return phone.replace(/\D/g, '');
         }
 
-        // 날짜 정규화
-        function normalizeDate(dateStr) {
-            if (!dateStr) return '';
-            // "2026년 1월 11일" or "2026-01-11" → "2026년 1월 11일"
-            const d = parseKoreanDate(dateStr);
-            if (d) return dateStr;
+        // 날짜 비교 (다양한 형식 지원)
+        function isSameDate(date1, date2) {
+            if (!date1 || !date2) return false;
+            if (date1 === date2) return true;
 
-            // ISO format
-            const isoMatch = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-            if (isoMatch) {
-                return `${isoMatch[1]}년 ${parseInt(isoMatch[2])}월 ${parseInt(isoMatch[3])}일`;
-            }
-            return dateStr;
+            // 정규화해서 비교
+            const normalize = (d) => {
+                if (!d) return '';
+                // "2026년 1월 11일" 형식
+                const korMatch = d.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+                if (korMatch) {
+                    return `${korMatch[1]}-${korMatch[2].padStart(2,'0')}-${korMatch[3].padStart(2,'0')}`;
+                }
+                // "1월 11일" 형식 (년도 없음)
+                const shortMatch = d.match(/(\d+)월\s*(\d+)일/);
+                if (shortMatch) {
+                    return `${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
+                }
+                return d;
+            };
+
+            return normalize(date1) === normalize(date2);
         }
 
         // 이벤트 리스너

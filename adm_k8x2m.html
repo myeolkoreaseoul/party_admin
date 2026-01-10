@@ -7670,7 +7670,7 @@
                     console.warn(`[라인업] 블랙리스트 제외: ${r.crewName}`);
                 }
 
-                return matchDate && matchPart && notCancelled && !blocked;
+                return matchDate && matchPart && notCancelled && !isBlacklisted;
             });
 
             // 실제 예약자 데이터 가공

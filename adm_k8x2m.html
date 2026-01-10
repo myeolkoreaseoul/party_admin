@@ -2799,8 +2799,8 @@
                 const phone = survey.phone ? normalizePhone(survey.phone) : null;
                 if (!phone) continue;
 
-                // 이미 고객 테이블에 있는지 확인
-                const existingCustomer = data.customers.find(c => c.id === phone);
+                // 이미 고객 테이블에 있는지 확인 (전화번호 형식 통일)
+                const existingCustomer = data.customers.find(c => normalizePhone(c.id) === phone);
 
                 // 설문에서 가져올 데이터 (null이 아닌 값만)
                 const surveyData = {
@@ -2846,7 +2846,8 @@
                     const hasReservation = data.reservations.some(r => normalizePhone(r.phone) === phone);
                     if (hasReservation) {
                         const newCustomer = {
-                            id: phone,
+                            id: formatPhone(phone),  // 하이픈 포함 형식으로 통일
+                            customer_id: generateCustomerId(),  // customer_id도 자동 생성
                             source: 'survey',
                             ...surveyData
                         };
@@ -4103,11 +4104,12 @@
                 return;
             }
 
-            // 전화번호 형식 정규화
+            // 전화번호 형식 정규화 (하이픈 포함 형식으로 통일)
             const normalizedPhone = normalizePhone(phone);
+            const formattedPhone = formatPhone(normalizedPhone);  // 010-xxxx-xxxx 형식
 
             const customerData = {
-                id: normalizedPhone,
+                id: formattedPhone,  // 하이픈 포함 형식으로 통일!
                 name: document.getElementById('cf_name').value.trim() || null,
                 nickname: document.getElementById('cf_nickname').value.trim() || null,
                 gender: document.getElementById('cf_gender').value || null,
@@ -4120,8 +4122,8 @@
             };
 
             try {
-                // DB에서 기존 고객 확인 (로컬 데이터가 아닌 실제 DB 확인)
-                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                // DB에서 기존 고객 확인 (두 가지 형식 모두 확인: 숫자만/하이픈포함)
+                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?or=(id.eq.${encodeURIComponent(normalizedPhone)},id.eq.${encodeURIComponent(formattedPhone)})`, {
                     method: 'GET',
                     headers: SUPABASE_HEADERS
                 });
@@ -4131,17 +4133,18 @@
                 let customerId;  // customer_id 저장용
 
                 if (existingInDB && existingInDB.length > 0) {
-                    // DB에 있으면 PATCH로 수정 (기존 customer_id 유지)
+                    // DB에 있으면 PATCH로 수정 (기존 customer_id 유지, 기존 ID 형식 사용)
+                    const existingId = existingInDB[0].id;
                     customerId = existingInDB[0].customer_id;
                     const updateData = { ...customerData };
                     delete updateData.id;
-                    response = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                    response = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(existingId)}`, {
                         method: 'PATCH',
                         headers: SUPABASE_HEADERS,
                         body: JSON.stringify(updateData)
                     });
                 } else {
-                    // DB에 없으면 POST로 추가 (새 customer_id 생성)
+                    // DB에 없으면 POST로 추가 (새 customer_id 생성, 하이픈 형식으로 저장)
                     customerId = generateCustomerId();
                     customerData.customer_id = customerId;
                     response = await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
@@ -4260,6 +4263,7 @@
         // 블랙리스트 토글 함수
         async function toggleBlacklist(phone, setBlacklisted) {
             const normalizedPhone = normalizePhone(phone);
+            const formattedPhone = formatPhone(normalizedPhone);  // 하이픈 포함 형식
 
             let reason = '';
             if (setBlacklisted) {
@@ -4270,12 +4274,12 @@
             }
 
             try {
-                // customers 테이블에 해당 고객이 있는지 확인
-                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                // customers 테이블에 해당 고객이 있는지 확인 (두 가지 형식 모두)
+                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?or=(id.eq.${encodeURIComponent(normalizedPhone)},id.eq.${encodeURIComponent(formattedPhone)})`, {
                     method: 'GET',
                     headers: SUPABASE_HEADERS
                 });
-                const existingCustomer = await checkResponse.json();
+                const existingCustomers = await checkResponse.json();
 
                 const blacklistData = {
                     is_blacklisted: setBlacklisted,
@@ -4283,20 +4287,22 @@
                     blacklisted_at: setBlacklisted ? new Date().toISOString() : null
                 };
 
-                if (existingCustomer && existingCustomer.length > 0) {
-                    // 기존 고객 업데이트
-                    await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                if (existingCustomers && existingCustomers.length > 0) {
+                    // 기존 고객 업데이트 (기존 ID 사용)
+                    const existingId = existingCustomers[0].id;
+                    await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(existingId)}`, {
                         method: 'PATCH',
                         headers: SUPABASE_HEADERS,
                         body: JSON.stringify(blacklistData)
                     });
                 } else {
-                    // 신규 고객 생성 (블랙리스트 정보만)
+                    // 신규 고객 생성 (하이픈 포함 형식으로)
                     await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
                         method: 'POST',
                         headers: SUPABASE_HEADERS,
                         body: JSON.stringify({
-                            id: normalizedPhone,
+                            id: formattedPhone,  // 하이픈 포함 형식
+                            customer_id: generateCustomerId(),
                             ...blacklistData
                         })
                     });
@@ -4414,19 +4420,23 @@
                 }
 
                 // customers 테이블에 manual_stage 업데이트 (없으면 생성)
-                const existingCustomer = (data.customers || []).find(c => c.id === normalizedPhone);
+                const formattedPhone = formatPhone(normalizedPhone);
+                const existingCustomer = (data.customers || []).find(c => normalizePhone(c.id) === normalizedPhone);
                 if (existingCustomer) {
-                    await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(normalizedPhone)}`, {
+                    // 기존 고객의 실제 ID 사용
+                    await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(existingCustomer.id)}`, {
                         method: 'PATCH',
                         headers: SUPABASE_HEADERS,
                         body: JSON.stringify({ manual_stage: newStage })
                     });
                 } else {
+                    // 신규 고객 생성 (하이픈 포함 형식으로)
                     await fetch(`${API_BASE}/${TB.CUSTOMERS}`, {
                         method: 'POST',
                         headers: SUPABASE_HEADERS,
                         body: JSON.stringify({
-                            id: normalizedPhone,
+                            id: formattedPhone,  // 하이픈 포함 형식
+                            customer_id: generateCustomerId(),
                             name: customerName,
                             gender: customer?.성별 || null,
                             birth_year: customer?.출생연도 || null,

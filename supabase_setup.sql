@@ -353,6 +353,142 @@ CREATE INDEX IF NOT EXISTS idx_invitations_customer_id ON invitations(customer_i
 CREATE INDEX IF NOT EXISTS idx_surveys_customer_id ON surveys(customer_id);
 
 -- ============================================
+-- 전화번호 형식 통일 마이그레이션 (2026-01-10 추가)
+-- 중복 고객 병합 및 전화번호 형식 010-xxxx-xxxx로 통일
+-- ============================================
+
+-- 1. 중복 고객 찾기 (같은 전화번호가 다른 형식으로 저장된 경우)
+-- 먼저 중복 확인 쿼리 (실행 전 확인용)
+-- SELECT
+--     REPLACE(REPLACE(id, '-', ''), ' ', '') as normalized_phone,
+--     COUNT(*) as cnt,
+--     array_agg(id) as ids
+-- FROM customers
+-- GROUP BY REPLACE(REPLACE(id, '-', ''), ' ', '')
+-- HAVING COUNT(*) > 1;
+
+-- 2. 전화번호 형식 통일 함수 생성
+CREATE OR REPLACE FUNCTION format_phone(phone TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    digits TEXT;
+BEGIN
+    IF phone IS NULL THEN RETURN NULL; END IF;
+
+    -- 숫자만 추출
+    digits := REGEXP_REPLACE(phone, '[^0-9]', '', 'g');
+
+    -- 82로 시작하면 제거
+    IF digits LIKE '82%' THEN
+        digits := SUBSTRING(digits FROM 3);
+    END IF;
+
+    -- 10자리이고 0으로 시작하지 않으면 0 추가
+    IF LENGTH(digits) = 10 AND digits NOT LIKE '0%' THEN
+        digits := '0' || digits;
+    END IF;
+
+    -- 11자리면 하이픈 포맷으로 변환
+    IF LENGTH(digits) = 11 THEN
+        RETURN SUBSTRING(digits, 1, 3) || '-' || SUBSTRING(digits, 4, 4) || '-' || SUBSTRING(digits, 8, 4);
+    END IF;
+
+    RETURN digits;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. 중복 고객 병합 (하이픈 형식 유지, 데이터 병합)
+-- 중복된 고객 중 데이터가 더 많은 레코드를 유지
+DO $$
+DECLARE
+    dup_record RECORD;
+    keep_id TEXT;
+    delete_id TEXT;
+BEGIN
+    -- 중복 고객 찾기
+    FOR dup_record IN
+        SELECT
+            REPLACE(REPLACE(id, '-', ''), ' ', '') as normalized_phone,
+            array_agg(id ORDER BY
+                CASE WHEN id LIKE '%-%' THEN 0 ELSE 1 END,  -- 하이픈 있는 것 우선
+                CASE WHEN name IS NOT NULL THEN 0 ELSE 1 END,  -- 이름 있는 것 우선
+                created_at
+            ) as ids
+        FROM customers
+        GROUP BY REPLACE(REPLACE(id, '-', ''), ' ', '')
+        HAVING COUNT(*) > 1
+    LOOP
+        -- 첫 번째(우선순위 높은) 레코드 유지
+        keep_id := dup_record.ids[1];
+
+        -- 나머지 레코드들의 데이터를 유지 레코드에 병합 후 삭제
+        FOR i IN 2..array_length(dup_record.ids, 1) LOOP
+            delete_id := dup_record.ids[i];
+
+            -- 빈 필드만 병합 (기존 데이터 유지)
+            UPDATE customers c1
+            SET
+                name = COALESCE(c1.name, c2.name),
+                nickname = COALESCE(c1.nickname, c2.nickname),
+                gender = COALESCE(c1.gender, c2.gender),
+                birth_year = COALESCE(c1.birth_year, c2.birth_year),
+                height = COALESCE(c1.height, c2.height),
+                job_category = COALESCE(c1.job_category, c2.job_category),
+                job_detail = COALESCE(c1.job_detail, c2.job_detail),
+                source = COALESCE(c1.source, c2.source),
+                memo = COALESCE(c1.memo, c2.memo),
+                customer_id = COALESCE(c1.customer_id, c2.customer_id),
+                is_blacklisted = c1.is_blacklisted OR COALESCE(c2.is_blacklisted, false),
+                blacklist_reason = COALESCE(c1.blacklist_reason, c2.blacklist_reason),
+                blacklisted_at = COALESCE(c1.blacklisted_at, c2.blacklisted_at)
+            FROM customers c2
+            WHERE c1.id = keep_id AND c2.id = delete_id;
+
+            -- 관련 테이블의 전화번호도 업데이트 (customer_id가 없는 경우)
+            UPDATE reservations SET phone = keep_id
+            WHERE REPLACE(REPLACE(phone, '-', ''), ' ', '') = dup_record.normalized_phone
+              AND customer_id IS NULL;
+
+            UPDATE invitations SET phone = keep_id
+            WHERE REPLACE(REPLACE(phone, '-', ''), ' ', '') = dup_record.normalized_phone
+              AND customer_id IS NULL;
+
+            UPDATE surveys SET phone = keep_id
+            WHERE REPLACE(REPLACE(phone, '-', ''), ' ', '') = dup_record.normalized_phone
+              AND customer_id IS NULL;
+
+            -- 중복 레코드 삭제
+            DELETE FROM customers WHERE id = delete_id;
+
+            RAISE NOTICE 'Merged customer % into %, deleted duplicate', delete_id, keep_id;
+        END LOOP;
+    END LOOP;
+END $$;
+
+-- 4. 모든 고객 전화번호를 하이픈 형식으로 통일
+-- (이미 하이픈 형식인 경우 제외)
+UPDATE customers
+SET id = format_phone(id)
+WHERE id NOT LIKE '___-____-____'
+  AND LENGTH(REGEXP_REPLACE(id, '[^0-9]', '', 'g')) = 11;
+
+-- 5. 관련 테이블도 전화번호 형식 통일
+UPDATE reservations
+SET phone = format_phone(phone)
+WHERE phone NOT LIKE '___-____-____'
+  AND LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '', 'g')) = 11;
+
+UPDATE invitations
+SET phone = format_phone(phone)
+WHERE phone NOT LIKE '___-____-____'
+  AND LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '', 'g')) = 11;
+
+UPDATE surveys
+SET phone = format_phone(phone)
+WHERE phone NOT LIKE '___-____-____'
+  AND LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '', 'g')) = 11;
+
+-- ============================================
 -- 완료 메시지
 -- ============================================
-SELECT 'All tables and RLS policies created successfully!' as result;
+SELECT 'All tables and RLS policies created successfully! Phone numbers normalized.' as result;

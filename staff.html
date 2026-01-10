@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현장 관리 | 뭘 좀 아는 사람들</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: #141414;
+            --border: #2a2a2a;
+            --text: #fff;
+            --text-muted: #888;
+            --primary: #00E676;
+            --primary-dark: #00C853;
+            --blue: #4a9eff;
+            --pink: #ff6b9d;
+            --danger: #ff4757;
+            --warning: #ffa502;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .header-sub { font-size: 12px; color: var(--text-muted); }
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-select {
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 15px;
+            min-width: 160px;
+        }
+        .filter-select:focus { outline: none; border-color: var(--primary); }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .stat.male .stat-value { color: var(--blue); }
+        .stat.female .stat-value { color: var(--pink); }
+        .checkin-list { display: flex; flex-direction: column; gap: 8px; }
+        .checkin-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--bg);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .checkin-item.checked {
+            border-color: var(--primary);
+            background: rgba(0, 230, 118, 0.1);
+        }
+        .checkin-item.male { border-left: 4px solid var(--blue); }
+        .checkin-item.female { border-left: 4px solid var(--pink); }
+        .checkin-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 50px;
+        }
+        .checkin-info { flex: 1; }
+        .checkin-name { font-size: 16px; font-weight: 600; }
+        .checkin-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .checkin-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .checkin-btn.check {
+            background: var(--primary);
+            color: #000;
+        }
+        .checkin-btn.uncheck {
+            background: var(--border);
+            color: var(--text-muted);
+        }
+        .checkin-btn:active { transform: scale(0.95); }
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin: 20px 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title.male { color: var(--blue); }
+        .section-title.female { color: var(--pink); }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        .links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .link-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .time-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            background: var(--border);
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: var(--primary);
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+        .toast.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="header-title">현장 관리</div>
+            <div class="header-sub">뭘 좀 아는 사람들</div>
+        </div>
+        <div id="currentTime" style="font-size: 20px; font-weight: 600;"></div>
+    </div>
+
+    <div class="container">
+        <!-- 날짜/세션 선택 -->
+        <div class="card">
+            <div class="filters">
+                <select id="dateFilter" class="filter-select">
+                    <option value="">날짜 선택</option>
+                </select>
+                <select id="partFilter" class="filter-select">
+                    <option value="">세션 선택</option>
+                </select>
+            </div>
+
+            <!-- 통계 -->
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalChecked">0</div>
+                    <div class="stat-label">참석 완료</div>
+                </div>
+                <div class="stat male">
+                    <div class="stat-value" id="maleChecked">0/0</div>
+                    <div class="stat-label">남자</div>
+                </div>
+                <div class="stat female">
+                    <div class="stat-value" id="femaleChecked">0/0</div>
+                    <div class="stat-label">여자</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 체크인 목록 -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-clipboard-check"></i> 참석 체크</div>
+
+            <div class="section-title male"><i class="fas fa-mars"></i> 남자</div>
+            <div class="checkin-list" id="maleList">
+                <div class="empty-state">날짜와 세션을 선택하세요</div>
+            </div>
+
+            <div class="section-title female"><i class="fas fa-venus"></i> 여자</div>
+            <div class="checkin-list" id="femaleList">
+                <div class="empty-state">날짜와 세션을 선택하세요</div>
+            </div>
+        </div>
+
+        <!-- 유용한 링크 -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-link"></i> 빠른 링크</div>
+            <div class="links">
+                <a href="match.html" target="_blank" class="link-btn">
+                    <i class="fas fa-heart"></i> 매칭 제출 페이지
+                </a>
+                <a href="lineup-public.html" target="_blank" class="link-btn">
+                    <i class="fas fa-users"></i> 공개 라인업
+                </a>
+                <a href="talk.html" target="_blank" class="link-btn">
+                    <i class="fas fa-comments"></i> 대화 주제
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcHhkeHNneG9hcGd1a254d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjUyNDAsImV4cCI6MjA4MzEwMTI0MH0.v_r3wIIIe024k-H-9dyHH-LJj73kP9iU_eYgHZX7CGA';
+        const API_BASE = `${SUPABASE_URL}/rest/v1`;
+        const HEADERS = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        };
+
+        let schedules = [];
+        let reservations = [];
+        let virtualAssignments = [];
+        let customers = [];
+
+        // 시계
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent =
+                now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 토스트
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // 한글 날짜 파싱
+        function parseKoreanDate(str) {
+            const match = str?.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+            if (!match) return null;
+            return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+        }
+
+        // 요일 계산
+        function getWeekday(str) {
+            const d = parseKoreanDate(str);
+            if (!d) return '';
+            return ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+        }
+
+        // 데이터 로드
+        async function loadData() {
+            try {
+                const [schedulesRes, reservationsRes, virtualRes, customersRes] = await Promise.all([
+                    fetch(`${API_BASE}/party_schedules?is_active=eq.true&select=*`, { headers: HEADERS }),
+                    fetch(`${API_BASE}/reservations?select=*`, { headers: HEADERS }),
+                    fetch(`${API_BASE}/party_virtual_assignments?select=*`, { headers: HEADERS }),
+                    fetch(`${API_BASE}/customers?select=*`, { headers: HEADERS })
+                ]);
+
+                schedules = await schedulesRes.json();
+                reservations = await reservationsRes.json();
+                virtualAssignments = await virtualRes.json();
+                customers = await customersRes.json();
+
+                populateDateFilter();
+            } catch (e) {
+                console.error('데이터 로드 실패:', e);
+                showToast('데이터 로드 실패');
+            }
+        }
+
+        // 날짜 필터 채우기
+        function populateDateFilter() {
+            const select = document.getElementById('dateFilter');
+            const uniqueDates = [...new Set(schedules.map(s => s.date))];
+
+            // 오늘 이후만, 날짜순 정렬
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const futureDates = uniqueDates
+                .filter(d => {
+                    const parsed = parseKoreanDate(d);
+                    return parsed && parsed >= today;
+                })
+                .sort((a, b) => parseKoreanDate(a) - parseKoreanDate(b));
+
+            futureDates.forEach(date => {
+                const opt = document.createElement('option');
+                opt.value = date;
+                opt.textContent = `${date} (${getWeekday(date)})`;
+                select.appendChild(opt);
+            });
+
+            // 오늘 날짜 자동 선택
+            const todayStr = futureDates.find(d => {
+                const parsed = parseKoreanDate(d);
+                return parsed && parsed.toDateString() === today.toDateString();
+            });
+            if (todayStr) {
+                select.value = todayStr;
+                onDateChange();
+            }
+        }
+
+        // 날짜 변경 시
+        function onDateChange() {
+            const date = document.getElementById('dateFilter').value;
+            const partSelect = document.getElementById('partFilter');
+
+            partSelect.innerHTML = '<option value="">세션 선택</option>';
+
+            if (!date) {
+                renderCheckinList();
+                return;
+            }
+
+            const sessions = schedules
+                .filter(s => s.date === date)
+                .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+            sessions.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.part;
+                const typeLabel = s.party_type === 'wine' ? '와인' : '커피';
+                opt.textContent = `${s.time} ${typeLabel} (${s.part})`;
+                partSelect.appendChild(opt);
+            });
+
+            // 첫 세션 자동 선택
+            if (sessions.length > 0) {
+                partSelect.value = sessions[0].part;
+                renderCheckinList();
+            }
+        }
+
+        // 체크인 목록 렌더링
+        function renderCheckinList() {
+            const date = document.getElementById('dateFilter').value;
+            const part = document.getElementById('partFilter').value;
+            const maleList = document.getElementById('maleList');
+            const femaleList = document.getElementById('femaleList');
+
+            if (!date || !part) {
+                maleList.innerHTML = '<div class="empty-state">날짜와 세션을 선택하세요</div>';
+                femaleList.innerHTML = '<div class="empty-state">날짜와 세션을 선택하세요</div>';
+                updateStats([], []);
+                return;
+            }
+
+            // 해당 일정의 예약자
+            const dateReservations = reservations.filter(r => {
+                const matchDate = r.event_date === date ||
+                    r.eventDate === date ||
+                    normalizeDate(r.event_date) === normalizeDate(date) ||
+                    normalizeDate(r.eventDate) === normalizeDate(date);
+                const matchPart = r.event_part === part || r.eventPart === part;
+                const notCancelled = r.status !== '취소';
+                return matchDate && matchPart && notCancelled;
+            });
+
+            // 가상참여자
+            const dateVirtuals = virtualAssignments.filter(v => {
+                const matchDate = v.schedule_date === date ||
+                    v.scheduleDate === date ||
+                    normalizeDate(v.schedule_date) === normalizeDate(date) ||
+                    normalizeDate(v.scheduleDate) === normalizeDate(date);
+                const matchPart = v.schedule_part === part || v.schedulePart === part;
+                return matchDate && matchPart;
+            });
+
+            // 성별로 분류
+            const males = [];
+            const females = [];
+
+            dateReservations.forEach(r => {
+                const customer = customers.find(c =>
+                    c.id === normalizePhone(r.phone) ||
+                    c.customer_id === r.customer_id ||
+                    c.customerId === r.customerId
+                );
+                const gender = customer?.gender || r.gender || '미상';
+                const item = {
+                    id: r.id,
+                    type: 'reservation',
+                    lineupNumber: r.lineup_number || r.lineupNumber,
+                    name: customer?.name || r.crew_name || r.crewName || '이름없음',
+                    attended: r.attended || false,
+                    attendedAt: r.attended_at || r.attendedAt
+                };
+                if (gender === '남자') males.push(item);
+                else if (gender === '여자') females.push(item);
+            });
+
+            dateVirtuals.forEach(v => {
+                const item = {
+                    id: v.id,
+                    type: 'virtual',
+                    lineupNumber: v.lineup_number || v.lineupNumber,
+                    name: v.name || '(가상)',
+                    attended: false, // 가상참여자는 참석 체크 불가
+                    isVirtual: true
+                };
+                const gender = v.gender;
+                if (gender === '남자') males.push(item);
+                else if (gender === '여자') females.push(item);
+            });
+
+            // 번호순 정렬
+            males.sort((a, b) => (a.lineupNumber || 999) - (b.lineupNumber || 999));
+            females.sort((a, b) => (a.lineupNumber || 999) - (b.lineupNumber || 999));
+
+            // 렌더링
+            maleList.innerHTML = males.length > 0
+                ? males.map(p => renderCheckinItem(p, 'male')).join('')
+                : '<div class="empty-state">남자 참가자 없음</div>';
+
+            femaleList.innerHTML = females.length > 0
+                ? females.map(p => renderCheckinItem(p, 'female')).join('')
+                : '<div class="empty-state">여자 참가자 없음</div>';
+
+            updateStats(males, females);
+        }
+
+        function renderCheckinItem(p, gender) {
+            if (p.isVirtual) {
+                return `
+                    <div class="checkin-item ${gender}" style="opacity: 0.5;">
+                        <div class="checkin-number">${p.lineupNumber || '-'}</div>
+                        <div class="checkin-info">
+                            <div class="checkin-name">${p.name}</div>
+                            <div class="checkin-detail">가상참여자</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const checked = p.attended;
+            const time = p.attendedAt ? new Date(p.attendedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+            return `
+                <div class="checkin-item ${gender} ${checked ? 'checked' : ''}" data-id="${p.id}">
+                    <div class="checkin-number">${p.lineupNumber || '-'}</div>
+                    <div class="checkin-info">
+                        <div class="checkin-name">${p.name}</div>
+                        <div class="checkin-detail">
+                            ${checked ? `<span style="color: var(--primary);"><i class="fas fa-check"></i> 참석 완료</span> <span class="time-badge">${time}</span>` : '미참석'}
+                        </div>
+                    </div>
+                    <button class="checkin-btn ${checked ? 'uncheck' : 'check'}" onclick="toggleAttendance('${p.id}', ${!checked})">
+                        ${checked ? '취소' : '참석'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function updateStats(males, females) {
+            const maleChecked = males.filter(p => p.attended && !p.isVirtual).length;
+            const femaleChecked = females.filter(p => p.attended && !p.isVirtual).length;
+            const maleTotal = males.filter(p => !p.isVirtual).length;
+            const femaleTotal = females.filter(p => !p.isVirtual).length;
+
+            document.getElementById('totalChecked').textContent = maleChecked + femaleChecked;
+            document.getElementById('maleChecked').textContent = `${maleChecked}/${maleTotal}`;
+            document.getElementById('femaleChecked').textContent = `${femaleChecked}/${femaleTotal}`;
+        }
+
+        // 참석 토글
+        async function toggleAttendance(id, attended) {
+            try {
+                const body = attended
+                    ? { attended: true, attended_at: new Date().toISOString() }
+                    : { attended: false, attended_at: null };
+
+                const res = await fetch(`${API_BASE}/reservations?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: HEADERS,
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) throw new Error('업데이트 실패');
+
+                // 로컬 데이터 업데이트
+                const idx = reservations.findIndex(r => r.id === id);
+                if (idx !== -1) {
+                    reservations[idx].attended = attended;
+                    reservations[idx].attended_at = attended ? new Date().toISOString() : null;
+                }
+
+                renderCheckinList();
+                showToast(attended ? '참석 체크 완료!' : '참석 취소됨');
+            } catch (e) {
+                console.error('참석 체크 오류:', e);
+                showToast('오류 발생');
+            }
+        }
+
+        // 전화번호 정규화
+        function normalizePhone(phone) {
+            if (!phone) return '';
+            return phone.replace(/\D/g, '');
+        }
+
+        // 날짜 정규화
+        function normalizeDate(dateStr) {
+            if (!dateStr) return '';
+            // "2026년 1월 11일" or "2026-01-11" → "2026년 1월 11일"
+            const d = parseKoreanDate(dateStr);
+            if (d) return dateStr;
+
+            // ISO format
+            const isoMatch = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (isoMatch) {
+                return `${isoMatch[1]}년 ${parseInt(isoMatch[2])}월 ${parseInt(isoMatch[3])}일`;
+            }
+            return dateStr;
+        }
+
+        // 이벤트 리스너
+        document.getElementById('dateFilter').addEventListener('change', onDateChange);
+        document.getElementById('partFilter').addEventListener('change', renderCheckinList);
+
+        // 초기화
+        loadData();
+    </script>
+</body>
+</html>

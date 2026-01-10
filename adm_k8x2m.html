@@ -716,7 +716,7 @@
         <!-- ==================== 예약 관리 (FM 엔트리 명단 스타일) ==================== -->
         <div class="tab-content" id="tab-reservations">
             <div class="toolbar" style="flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                     <input type="text" class="search-input" id="reservationSearch" placeholder="🔍 이름, 연락처 검색..." style="width: 180px;">
                     <select class="filter-select" id="reservationDateFilter" style="min-width: 180px;">
                         <option value="">📅 전체 날짜</option>
@@ -732,6 +732,9 @@
                         <option value="invitation">🎫 인비테이션</option>
                         <option value="organic">일반</option>
                     </select>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text-muted); cursor: pointer;">
+                        <input type="checkbox" id="reservationShowPast" style="cursor: pointer;"> 지난 파티 보기
+                    </label>
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-primary" onclick="openAddReservationModal()">
@@ -5050,15 +5053,21 @@
                 return dateA - dateB;
             });
 
-            // 미래 날짜만 (1/11 이후)
-            const minDate = new Date(2026, 0, 11);
-            const futureDates = sortedDates.filter(([norm, orig]) => parsePartyDate(orig) >= minDate);
+            // 지난 파티 보기 체크 여부
+            const showPast = document.getElementById('reservationShowPast')?.checked || false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 체크 안 하면 오늘 이후만, 체크하면 전체
+            const filteredDates = showPast
+                ? sortedDates
+                : sortedDates.filter(([norm, orig]) => parsePartyDate(orig) >= today);
 
             // 날짜 옵션 업데이트
             const currentValue = dateSelect?.value || '';
             if (dateSelect) {
                 dateSelect.innerHTML = '<option value="">📅 전체 날짜</option>' +
-                    futureDates.map(([norm, orig]) => `<option value="${orig}">${norm}</option>`).join('');
+                    filteredDates.map(([norm, orig]) => `<option value="${orig}">${norm}</option>`).join('');
                 if (currentValue) dateSelect.value = currentValue;
             }
             
@@ -5720,7 +5729,8 @@
         document.getElementById('reservationDateFilter')?.addEventListener('change', renderReservations);
         document.getElementById('reservationPartFilter')?.addEventListener('change', renderReservations);
         document.getElementById('reservationTypeFilter')?.addEventListener('change', renderReservations);
-        
+        document.getElementById('reservationShowPast')?.addEventListener('change', renderReservations);
+
         // 예약 관리 소팅
         let reservationSortField = '';
         let reservationSortAsc = true;
@@ -12271,7 +12281,8 @@
             const existingOptions = select.querySelectorAll('option:not(:first-child)');
             existingOptions.forEach(opt => opt.remove());
 
-            const schedules = data.schedules || [];
+            // 활성 일정만 필터링
+            const schedules = (data.schedules || []).filter(s => s.isActive !== false);
             const uniqueDates = [...new Set(schedules.map(s => s.date))];
 
             // 날짜순 정렬 (한국어 날짜 파싱)

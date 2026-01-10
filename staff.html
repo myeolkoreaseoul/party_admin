@@ -273,6 +273,11 @@
         const HEADERS = {
             'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+        };
+        const HEADERS_WRITE = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal'
         };
@@ -558,7 +563,7 @@
 
                 const res = await fetch(`${API_BASE}/reservations?id=eq.${id}`, {
                     method: 'PATCH',
-                    headers: HEADERS,
+                    headers: HEADERS_WRITE,
                     body: JSON.stringify(body)
                 });
 

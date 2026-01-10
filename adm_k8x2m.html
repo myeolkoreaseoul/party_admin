@@ -12252,6 +12252,17 @@
 
             const schedules = data.schedules || [];
             const uniqueDates = [...new Set(schedules.map(s => s.date))];
+
+            // 날짜순 정렬 (한국어 날짜 파싱)
+            uniqueDates.sort((a, b) => {
+                const parseKoreanDate = (str) => {
+                    const match = str.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+                    if (!match) return 0;
+                    return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
+                };
+                return parseKoreanDate(a) - parseKoreanDate(b);
+            });
+
             uniqueDates.forEach(date => {
                 const option = document.createElement('option');
                 option.value = date;
@@ -12273,6 +12284,7 @@
 
             try {
                 // 스케줄에서 파티 유형 확인
+                const schedules = data.schedules || [];
                 const schedule = schedules.find(s => s.date === dateFilter && s.part === partFilter);
                 currentMatchingPartyType = schedule?.party_type || 'coffee';
 

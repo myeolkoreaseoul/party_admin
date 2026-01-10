@@ -33,7 +33,11 @@
     </div>
 
     <!-- 홈 화면 -->
-    <div id="home" class="min-h-screen flex-col items-center justify-center px-6 py-10 hidden">
+    <div id="home" class="min-h-screen flex-col items-center justify-center px-6 py-10 hidden relative">
+        <!-- 좌측 상단 브랜드 -->
+        <div class="absolute top-4 left-4">
+            <span class="text-[#a8e063] text-sm font-medium">뭘 좀 아는 사람들</span>
+        </div>
         <div class="w-full max-w-sm flex flex-col items-center">
             <!-- 로고 -->
             <h1 class="text-white text-2xl font-bold mb-2">뭘 좀 아는 사람들</h1>
@@ -80,9 +84,12 @@
     <div id="question" class="min-h-screen flex-col hidden">
         <!-- 상단 헤더 -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-800">
-            <div class="text-white text-lg">
-                <span id="categoryDisplay"></span>
-                <span id="autoLabel" class="ml-2 text-xs text-gray-500 hidden">자동</span>
+            <div class="flex items-center gap-4">
+                <span class="text-[#a8e063] text-sm font-medium">뭘 좀 아는 사람들</span>
+                <div class="text-white text-lg">
+                    <span id="categoryDisplay"></span>
+                    <span id="autoLabel" class="ml-2 text-xs text-gray-500 hidden">자동</span>
+                </div>
             </div>
             <button onclick="goHome()" class="text-gray-400 text-2xl hover:text-white transition-colors">
                 ✕

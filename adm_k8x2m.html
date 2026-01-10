@@ -899,6 +899,7 @@
                                     <th class="sortable" onclick="sortLineupBy('lineupNumber')" style="cursor: pointer;">번호 <span id="lineupSort_lineupNumber"></span></th>
                                     <th class="sortable lineup-tier-col" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('name')" style="cursor: pointer;">이름 <span id="lineupSort_name"></span></th>
+                                    <th class="staff-phone-col" style="display: none;">전화번호</th>
                                     <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height"></span></th>
                                     <th class="lineup-job-col">직업</th>
@@ -929,6 +930,7 @@
                                     <th class="sortable" onclick="sortLineupBy('lineupNumber')" style="cursor: pointer;">번호 <span id="lineupSort_lineupNumber2"></span></th>
                                     <th class="sortable lineup-tier-col" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier2"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('name')" style="cursor: pointer;">이름 <span id="lineupSort_name2"></span></th>
+                                    <th class="staff-phone-col" style="display: none;">전화번호</th>
                                     <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear2"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height2"></span></th>
                                     <th class="lineup-job-col">직업</th>
@@ -2867,10 +2869,11 @@
                     headerTitle.innerHTML = '뭘좀<span>Staff</span> 현장관리';
                 }
 
-                // 라인업 탭: 민감한 컬럼 숨기기, 참석 컬럼 보이기
+                // 라인업 탭: 민감한 컬럼 숨기기, 참석/전화번호 컬럼 보이기
                 document.querySelectorAll('.lineup-type-col').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('.lineup-tier-col').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('.attendance-col').forEach(el => el.style.display = '');
+                document.querySelectorAll('.staff-phone-col').forEach(el => el.style.display = '');
 
                 // 참석 통계 보이기, 가상참여 통계 숨기기
                 document.querySelectorAll('.attendance-stat').forEach(el => el.style.display = '');
@@ -8222,9 +8225,9 @@
                         : `<td class="attendance-col" style="color: var(--text-muted);">-</td>`)
                     : '';
 
-                // 현장모드: 티어/유형 셀 조건부 렌더링
+                // 현장모드: 티어/유형 셀 조건부 렌더링, 전화번호 셀 추가
                 const tierCell = isStaffMode ? '' : `<td><span class="tier tier-${p.tier || 'pending'}">${p.tier || '?'}</span></td>`;
-                const typeCell = isStaffMode ? '' : `<td>${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''}</td>`;
+                const phoneCell = isStaffMode ? `<td><a href="tel:${p.phone || ''}" style="color: var(--primary);">${p.phone || '-'}</a></td>` : '';
 
                 if (isPending) {
                     // 정보확인중 - 가상참여자만 클릭 가능
@@ -8234,6 +8237,7 @@
 
                     const pendingTierCell = isStaffMode ? '' : `<td><span class="tier tier-pending">?</span></td>`;
                     const pendingTypeCell = isStaffMode ? '' : `<td>${typeIcon} ${revealBtn}</td>`;
+                    const pendingPhoneCell = isStaffMode ? `<td><a href="tel:${p.phone || ''}" style="color: var(--primary);">${p.phone || '-'}</a></td>` : '';
 
                     return `
                         <tr class="pending-row" style="opacity: 0.7;" ${pendingClickHandler}>
@@ -8241,6 +8245,7 @@
                             <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
                             ${pendingTierCell}
                             <td>${p.name || '-'}</td>
+                            ${pendingPhoneCell}
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--warning); font-weight: 500;">정보확인중</td>
@@ -8268,6 +8273,7 @@
                         <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
                         ${tierCell}
                         <td>${p.name || '-'}</td>
+                        ${phoneCell}
                         <td style="${ageStyle}">${formatBirthYear(p.birthYear)}${ageWarning}</td>
                         <td>${p.height || '-'}</td>
                         <td>${p.job}</td>

@@ -848,11 +848,15 @@
                         <div style="font-size: 13px; color: var(--text-muted);">총 인원</div>
                         <div style="font-size: 24px; font-weight: 600;" id="lineupTotalCount">-</div>
                     </div>
-                    <div>
-                        <div style="font-size: 13px; color: var(--text-muted);">실제 참석</div>
+                    <div class="attendance-stat" style="display: none;">
+                        <div style="font-size: 13px; color: var(--text-muted);">참석 체크</div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--primary);" id="lineupAttendedCount">0/0</div>
+                    </div>
+                    <div class="virtual-stat">
+                        <div style="font-size: 13px; color: var(--text-muted);">실제 예약</div>
                         <div style="font-size: 24px; font-weight: 600; color: var(--primary);" id="lineupRealCount">-</div>
                     </div>
-                    <div>
+                    <div class="virtual-stat">
                         <div style="font-size: 13px; color: var(--text-muted);">가상 참여</div>
                         <div style="font-size: 24px; font-weight: 600; color: var(--warning);" id="lineupVirtualCount">-</div>
                     </div>
@@ -898,7 +902,8 @@
                                     <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height"></span></th>
                                     <th>직업</th>
-                                    <th>유형</th>
+                                    <th class="lineup-type-col">유형</th>
+                                    <th class="attendance-col" style="display: none;">참석</th>
                                 </tr>
                             </thead>
                             <tbody id="lineupMaleBody">
@@ -927,7 +932,8 @@
                                     <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear2"></span></th>
                                     <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height2"></span></th>
                                     <th>직업</th>
-                                    <th>유형</th>
+                                    <th class="lineup-type-col">유형</th>
+                                    <th class="attendance-col" style="display: none;">참석</th>
                                 </tr>
                             </thead>
                             <tbody id="lineupFemaleBody">
@@ -2742,6 +2748,16 @@
             return memo.includes('블랙리스트') || memo.includes('블랙') || memo.includes('blacklist');
         }
 
+        // ========================================
+        // 현장모드 (Staff Mode) 감지
+        // ========================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const isStaffMode = urlParams.get('mode') === 'staff';
+        console.log('[현장모드] URL:', window.location.search, '| isStaffMode:', isStaffMode);
+
+        // 현장모드 전용 탭 목록 (이것만 표시)
+        const staffModeTabs = ['lineup', 'matching'];
+
         // 데이터 저장소
         const data = {
             customers: [],
@@ -2835,6 +2851,54 @@
         // 탭 관리
         // ========================================
         function initTabs() {
+            // 현장모드: 민감한 탭 숨기기 + 제목 변경
+            console.log('[initTabs] isStaffMode 체크:', isStaffMode);
+            if (isStaffMode) {
+                console.log('[initTabs] 현장모드 활성화 - 탭 숨기기 시작');
+                document.querySelectorAll('.tab').forEach(tab => {
+                    const tabName = tab.dataset.tab;
+                    if (!staffModeTabs.includes(tabName)) {
+                        tab.style.display = 'none';
+                    }
+                });
+                // 헤더 제목 변경
+                const headerTitle = document.querySelector('.header h1');
+                if (headerTitle) {
+                    headerTitle.innerHTML = '뭘좀<span>Staff</span> 현장관리';
+                }
+
+                // 라인업 탭: 유형 컬럼 숨기기, 참석 컬럼 보이기
+                document.querySelectorAll('.lineup-type-col').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.attendance-col').forEach(el => el.style.display = '');
+
+                // 참석 통계 보이기, 가상참여 통계 숨기기
+                document.querySelectorAll('.attendance-stat').forEach(el => el.style.display = '');
+                document.querySelectorAll('.virtual-stat').forEach(el => el.style.display = 'none');
+
+                // 가상참여자 관련 버튼 숨기기
+                document.querySelectorAll('[onclick*="addRandomVirtualToLineup"]').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('#assignNumbersBtn').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('[onclick*="showAllLineups"]').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('#allLineupWeeks').forEach(el => el.style.display = 'none');
+
+                // 공개용 라인업 섹션 숨기기 (class나 id로 찾아서 숨김)
+                const publicLineupSection = document.querySelector('.section-header + .card')?.closest('div');
+                const publicSectionHeaders = document.querySelectorAll('.section-header h2');
+                publicSectionHeaders.forEach(h => {
+                    if (h.textContent.includes('공개용 라인업')) {
+                        const section = h.closest('.section-header')?.nextElementSibling;
+                        if (section) section.style.display = 'none';
+                        h.closest('.section-header').style.display = 'none';
+                    }
+                });
+
+                // 첫 번째 허용된 탭으로 이동
+                const firstTab = document.querySelector(`.tab[data-tab="${staffModeTabs[0]}"]`);
+                if (firstTab) {
+                    firstTab.click();
+                }
+            }
+
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -5145,11 +5209,13 @@
                 filtered = filtered.filter(r => !r.isInvitation);
             }
             
-            // 미래 날짜만 표시
-            filtered = filtered.filter(r => {
-                const partyDate = parsePartyDate(r.eventDate);
-                return partyDate >= minDate;
-            });
+            // 지난 파티 표시 체크 안했으면 오늘 이후만
+            if (!showPast) {
+                filtered = filtered.filter(r => {
+                    const partyDate = parsePartyDate(r.eventDate);
+                    return partyDate >= today;
+                });
+            }
             
             // 관련 데이터 조인 (customers, surveys, invitations, schedules)
             const lineupData = filtered.map((res, idx) => {
@@ -7986,7 +8052,8 @@
                     job,
                     tier,
                     lineupNumber: r.lineupNumber || r.lineup_number || null,
-                    reservationId: r.id
+                    reservationId: r.id,
+                    attended: r.attended || false  // 참석 여부
                 };
             });
             
@@ -8096,6 +8163,12 @@
             document.getElementById('lineupFemaleCount').textContent = females.length;
             document.getElementById('lineupMaleSubCount').textContent = `(실제 ${realMales} + 가상 ${virtualMales})`;
             document.getElementById('lineupFemaleSubCount').textContent = `(실제 ${realFemales} + 가상 ${virtualFemales})` + (unknownCount > 0 ? ` ⚠️ 성별미상 ${unknownCount}명` : '');
+
+            // 현장모드: 참석 카운트 업데이트
+            if (isStaffMode) {
+                const attendedCount = realPeople.filter(p => p.attended).length;
+                document.getElementById('lineupAttendedCount').textContent = `${attendedCount}/${realPeople.length}`;
+            }
             
             // 비율 기반 정보 업데이트
             updateLineupRatioInfo(dateFilter, partFilter, males.length, females.length);
@@ -8134,12 +8207,26 @@
                 }
                 const revealBtn = visibilityBtn;
                 
+                // 참석 체크 버튼 (현장모드 + 실제 참가자만)
+                const attendanceCell = isStaffMode
+                    ? (p.type === 'real' && p.reservationId
+                        ? `<td class="attendance-col">
+                            <button onclick="event.stopPropagation(); toggleAttendance('${p.reservationId}', ${!p.attended})"
+                                class="btn btn-sm ${p.attended ? 'btn-primary' : 'btn-secondary'}"
+                                style="padding: 4px 8px; font-size: 12px;"
+                                title="${p.attended ? '참석 취소' : '참석 체크'}">
+                                ${p.attended ? '✓ 참석' : '미참석'}
+                            </button>
+                          </td>`
+                        : `<td class="attendance-col" style="color: var(--text-muted);">-</td>`)
+                    : '';
+
                 if (isPending) {
                     // 정보확인중 - 가상참여자만 클릭 가능
                     const pendingClickHandler = p.type === 'virtual' && p.id
                         ? `onclick="openLineupEditModal('${p.id}', '${p.gender}')" style="cursor: pointer;" title="클릭하여 수정"`
                         : '';
-                    
+
                     return `
                         <tr class="pending-row" style="opacity: 0.7;" ${pendingClickHandler}>
                             <td>${idx + 1}</td>
@@ -8149,7 +8236,8 @@
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--warning); font-weight: 500;">정보확인중 ${p.type === 'virtual' ? '<i class="fas fa-edit" style="font-size: 11px;"></i>' : ''}</td>
-                            <td>${typeIcon} ${revealBtn}</td>
+                            <td class="lineup-type-col">${typeIcon} ${revealBtn}</td>
+                            ${attendanceCell}
                         </tr>
                     `;
                 }
@@ -8173,7 +8261,8 @@
                         <td style="${ageStyle}">${formatBirthYear(p.birthYear)}${ageWarning}</td>
                         <td>${p.height || '-'}</td>
                         <td>${p.job}</td>
-                        <td>${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''} ${deleteBtn}</td>
+                        <td class="lineup-type-col">${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''} ${deleteBtn}</td>
+                        ${attendanceCell}
                     </tr>
                 `;
             };
@@ -8254,6 +8343,44 @@
                 textSpan.innerHTML = '<span style="color: var(--warning);">번호 미부여</span> - 매칭을 위해 번호를 부여하세요';
                 infoSpan.textContent = '';
                 document.getElementById('assignNumbersBtn').innerHTML = '<i class="fas fa-sort-numeric-down"></i> 번호 부여';
+            }
+        }
+
+        // ========================================
+        // 참석 체크 (현장모드)
+        // ========================================
+        async function toggleAttendance(reservationId, attended) {
+            try {
+                const now = new Date().toISOString();
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/reservations?id=eq.${encodeURIComponent(reservationId)}`,
+                    {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({
+                            attended: attended,
+                            attended_at: attended ? now : null
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`참석 체크 실패: ${response.status}`);
+                }
+
+                // 로컬 데이터 업데이트
+                const resIndex = data.reservations.findIndex(r => r.id === reservationId);
+                if (resIndex !== -1) {
+                    data.reservations[resIndex].attended = attended;
+                    data.reservations[resIndex].attended_at = attended ? now : null;
+                }
+
+                // 라인업 다시 렌더링
+                renderLineup();
+                showToast(attended ? '✓ 참석 체크 완료' : '참석 취소됨', attended ? 'success' : 'info');
+            } catch (err) {
+                console.error('참석 체크 오류:', err);
+                showToast('참석 체크 실패: ' + err.message, 'error');
             }
         }
 
@@ -12721,13 +12848,6 @@
             `;
             document.body.appendChild(modal);
         }
-
-        // 스케줄 로드 후 매칭 날짜 필터 초기화
-        const originalFetchSchedules = fetchSchedules;
-        fetchSchedules = async function() {
-            await originalFetchSchedules.apply(this, arguments);
-            initMatchingDateFilter();
-        };
 
     </script>
 </body>

@@ -2834,6 +2834,11 @@
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     tab.classList.add('active');
                     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+
+                    // 매칭 탭 클릭시 날짜 필터 초기화
+                    if (tab.dataset.tab === 'matching') {
+                        initMatchingDateFilter();
+                    }
                 });
             });
         }

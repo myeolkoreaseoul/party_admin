@@ -3379,9 +3379,12 @@
                 const normalizedPhone = normalizePhone(phone);
                 const customerId = inv.customerId;
 
-                const key = customerId || normalizedPhone;
-                if (processedKeys.has(key)) return;
-                processedKeys.add(key);
+                // 중복 체크 (customer_id와 phone 둘 다 체크)
+                if (customerId && processedKeys.has(customerId)) return;
+                if (normalizedPhone && processedKeys.has(normalizedPhone)) return;
+
+                // 둘 다 추가
+                if (customerId) processedKeys.add(customerId);
                 if (normalizedPhone) processedKeys.add(normalizedPhone);
 
                 const customer = findCustomerFor(customerId, phone, inv.name) || {};
@@ -3435,9 +3438,12 @@
                 const normalizedPhone = normalizePhone(phone);
                 const customerId = c.customerId;
 
-                const key = customerId || normalizedPhone;
-                if (processedKeys.has(key)) return;
-                processedKeys.add(key);
+                // 중복 체크 (customer_id와 phone 둘 다 체크)
+                if (customerId && processedKeys.has(customerId)) return;
+                if (normalizedPhone && processedKeys.has(normalizedPhone)) return;
+
+                // 둘 다 추가
+                if (customerId) processedKeys.add(customerId);
                 if (normalizedPhone) processedKeys.add(normalizedPhone);
 
                 const survey = surveyMap[normalizedPhone];

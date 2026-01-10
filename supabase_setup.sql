@@ -510,6 +510,81 @@ WHERE phone NOT LIKE '___-____-____'
   AND LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '', 'g')) = 11;
 
 -- ============================================
+-- 매칭 시스템 (2026-01-10 추가)
+-- 라인업 번호 부여 + 매칭 제출 기능
+-- ============================================
+
+-- 1. reservations에 lineup_number 추가 (라인업 번호)
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS lineup_number INTEGER;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS attended BOOLEAN DEFAULT FALSE;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS attended_at TIMESTAMPTZ;
+
+-- 2. party_virtual_assignments에 lineup_number 추가
+ALTER TABLE party_virtual_assignments ADD COLUMN IF NOT EXISTS lineup_number INTEGER;
+ALTER TABLE party_virtual_assignments ADD COLUMN IF NOT EXISTS name TEXT;
+
+-- 3. party_schedules에 선택 한도 추가
+ALTER TABLE party_schedules ADD COLUMN IF NOT EXISTS male_selection_limit INTEGER DEFAULT 3;
+ALTER TABLE party_schedules ADD COLUMN IF NOT EXISTS female_selection_limit INTEGER DEFAULT 3;
+ALTER TABLE party_schedules ADD COLUMN IF NOT EXISTS lineup_finalized BOOLEAN DEFAULT FALSE;
+ALTER TABLE party_schedules ADD COLUMN IF NOT EXISTS lineup_finalized_at TIMESTAMPTZ;
+
+-- 4. match_submissions 테이블 생성 (매칭 제출)
+CREATE TABLE IF NOT EXISTS match_submissions (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    event_date TEXT NOT NULL,
+    event_part TEXT NOT NULL,
+    party_type TEXT NOT NULL,              -- coffee/wine
+    gender TEXT NOT NULL,                   -- 남자/여자
+    lineup_number INTEGER NOT NULL,         -- 내 번호
+    name TEXT NOT NULL,                     -- 이름
+    contact_type TEXT NOT NULL,             -- phone/kakao/instagram
+    contact_value TEXT NOT NULL,            -- 연락처 값
+    selected_numbers INTEGER[] NOT NULL,    -- 선택한 상대 번호들
+    reservation_id TEXT,                    -- 예약번호 (연동용)
+    is_latest BOOLEAN DEFAULT TRUE,         -- 최신 유효 데이터
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. match_results 테이블 생성 (매칭 결과 - 관리자 처리용)
+CREATE TABLE IF NOT EXISTS match_results (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    event_date TEXT NOT NULL,
+    event_part TEXT NOT NULL,
+    party_type TEXT NOT NULL,
+    male_number INTEGER NOT NULL,
+    female_number INTEGER NOT NULL,
+    male_name TEXT,
+    female_name TEXT,
+    male_contact_type TEXT,
+    male_contact_value TEXT,
+    female_contact_type TEXT,
+    female_contact_value TEXT,
+    is_mutual BOOLEAN DEFAULT FALSE,        -- 쌍방 선택 여부 (와인용)
+    status TEXT DEFAULT 'pending',          -- pending/approved/sent
+    approved_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS 정책
+ALTER TABLE match_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE match_results ENABLE ROW LEVEL SECURITY;
+
+-- match_submissions: 누구나 제출 가능, 관리자만 조회/수정
+CREATE POLICY "match_submissions_insert_anon" ON match_submissions FOR INSERT WITH CHECK (true);
+CREATE POLICY "match_submissions_all_service" ON match_submissions FOR ALL USING (auth.role() = 'service_role');
+
+-- match_results: 관리자만
+CREATE POLICY "match_results_all_service" ON match_results FOR ALL USING (auth.role() = 'service_role');
+
+-- 인덱스
+CREATE INDEX IF NOT EXISTS idx_match_submissions_event ON match_submissions(event_date, event_part);
+CREATE INDEX IF NOT EXISTS idx_match_submissions_latest ON match_submissions(is_latest) WHERE is_latest = TRUE;
+CREATE INDEX IF NOT EXISTS idx_match_results_event ON match_results(event_date, event_part);
+CREATE INDEX IF NOT EXISTS idx_reservations_lineup ON reservations(event_date, event_part, lineup_number);
+
+-- ============================================
 -- 완료 메시지
 -- ============================================
-SELECT 'All tables and RLS policies created successfully! Phone numbers normalized.' as result;
+SELECT 'All tables and RLS policies created successfully! Phone numbers normalized. Matching system ready.' as result;

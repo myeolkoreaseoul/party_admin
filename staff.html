@@ -440,6 +440,13 @@
             }
 
             // 해당 일정의 예약자 (snake_case 컬럼명 사용)
+            console.log('=== 예약 필터링 시작 ===');
+            console.log('찾는 날짜:', date, '찾는 세션:', part);
+
+            // 모든 예약의 날짜/세션 확인
+            const uniqueDateParts = [...new Set(reservations.map(r => `${r.event_date}|${r.event_part}`))];
+            console.log('DB의 날짜/세션 조합들:', uniqueDateParts.slice(0, 10));
+
             const dateReservations = reservations.filter(r => {
                 // 날짜 비교 - 정규화해서 비교
                 const rDate = r.event_date || '';
@@ -447,13 +454,27 @@
                 const matchPart = r.event_part === part;
                 const notCancelled = r.status !== '취소';
 
-                if (matchDate && matchPart) {
-                    console.log('매칭된 예약:', r.crew_name, rDate, r.event_part);
+                // 매칭 안 되는 것도 로그
+                if (!matchDate || !matchPart) {
+                    if (r.crew_name?.includes('조세목')) {
+                        console.log('⚠️ 조세목 예약 발견하지만 매칭 안됨:', {
+                            crew_name: r.crew_name,
+                            event_date: r.event_date,
+                            event_part: r.event_part,
+                            status: r.status,
+                            matchDate, matchPart
+                        });
+                    }
+                }
+
+                if (matchDate && matchPart && notCancelled) {
+                    console.log('✓ 매칭:', r.crew_name, r.event_date, r.event_part);
                 }
                 return matchDate && matchPart && notCancelled;
             });
 
             console.log('필터된 예약 수:', dateReservations.length);
+            console.log('=== 예약 필터링 끝 ===');
 
             // 가상참여자
             const dateVirtuals = virtualAssignments.filter(v => {

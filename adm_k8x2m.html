@@ -2789,6 +2789,192 @@
         }
 
         // ========================================
+        // 예약 상태 상수 (통일된 상태값)
+        // ========================================
+        const RESERVATION_STATUS = {
+            CONFIRMED: '예약완료',
+            CANCELLED: '취소',
+            NO_SHOW: '노쇼'
+        };
+        const VALID_STATUSES = Object.values(RESERVATION_STATUS);
+
+        // ========================================
+        // 예약번호 생성 (RES-YYYYMMDD-NNN)
+        // ========================================
+        async function generateReservationId(eventDate) {
+            // 날짜를 YYYYMMDD 형식으로 변환
+            let dateStr = '';
+            if (eventDate) {
+                // "2026년 1월 15일" 또는 "2026-01-15" 형식 처리
+                const korMatch = eventDate.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+                const isoMatch = eventDate.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+                if (korMatch) {
+                    dateStr = korMatch[1] + korMatch[2].padStart(2, '0') + korMatch[3].padStart(2, '0');
+                } else if (isoMatch) {
+                    dateStr = isoMatch[1] + isoMatch[2].padStart(2, '0') + isoMatch[3].padStart(2, '0');
+                }
+            }
+            if (!dateStr) {
+                const today = new Date();
+                dateStr = today.getFullYear().toString() +
+                    (today.getMonth() + 1).toString().padStart(2, '0') +
+                    today.getDate().toString().padStart(2, '0');
+            }
+
+            // 해당 날짜의 기존 예약 개수 확인
+            const prefix = `RES-${dateStr}-`;
+            const existingCount = (data.reservations || []).filter(r =>
+                r.id && r.id.startsWith(prefix)
+            ).length;
+
+            // 순번 생성 (001, 002, ...)
+            const seq = (existingCount + 1).toString().padStart(3, '0');
+            return `${prefix}${seq}`;
+        }
+
+        // ========================================
+        // 중복 예약 체크 (같은 고객 + 같은 날 + 같은 부)
+        // ========================================
+        function checkDuplicateReservation(customerId, phone, eventDate, eventPart) {
+            const normalizedPhone = normalizePhone(phone);
+            const normalizedDate = normalizeDateStr(eventDate);
+
+            return (data.reservations || []).find(r => {
+                // 취소된 예약은 제외
+                if (r.status === RESERVATION_STATUS.CANCELLED) return false;
+
+                // 같은 날짜 + 같은 부 확인
+                const sameDate = normalizeDateStr(r.eventDate) === normalizedDate;
+                const samePart = r.eventPart === eventPart;
+                if (!sameDate || !samePart) return false;
+
+                // 같은 고객 확인 (customer_id 우선, 없으면 전화번호)
+                if (customerId && r.customerId === customerId) return true;
+                if (normalizedPhone && normalizePhone(r.phone) === normalizedPhone) return true;
+
+                return false;
+            });
+        }
+
+        // ========================================
+        // 정원 체크 (경고용)
+        // ========================================
+        function checkCapacity(eventDate, eventPart, gender) {
+            const normalizedDate = normalizeDateStr(eventDate);
+
+            // 해당 일정의 정원 찾기
+            const schedule = (data.schedules || []).find(s =>
+                normalizeDateStr(s.date) === normalizedDate && s.part === eventPart
+            );
+
+            const capacity = gender === '남'
+                ? (schedule?.maleCapacity || 12)
+                : (schedule?.femaleCapacity || 12);
+
+            // 현재 예약 인원 (취소 제외)
+            const currentCount = (data.reservations || []).filter(r => {
+                if (r.status === RESERVATION_STATUS.CANCELLED) return false;
+                const sameDate = normalizeDateStr(r.eventDate) === normalizedDate;
+                const samePart = r.eventPart === eventPart;
+                if (!sameDate || !samePart) return false;
+
+                // 해당 예약의 고객 성별 확인
+                const customer = findCustomer(r.customerId, r.phone);
+                return customer?.gender === gender;
+            }).length;
+
+            return {
+                capacity,
+                current: currentCount,
+                isFull: currentCount >= capacity,
+                remaining: capacity - currentCount
+            };
+        }
+
+        // ========================================
+        // 변경 이력 로깅
+        // ========================================
+        async function logChange(action, tableName, recordId, changes, oldData = null) {
+            try {
+                const logEntry = {
+                    id: `LOG-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                    action: action,  // 'CREATE', 'UPDATE', 'DELETE'
+                    table_name: tableName,
+                    record_id: recordId,
+                    changes: JSON.stringify(changes),
+                    old_data: oldData ? JSON.stringify(oldData) : null,
+                    created_at: new Date().toISOString(),
+                    user_info: 'admin'  // 추후 로그인 사용자 정보로 변경 가능
+                };
+
+                await fetch(`${API_BASE}/change_logs`, {
+                    method: 'POST',
+                    headers: SUPABASE_HEADERS,
+                    body: JSON.stringify(logEntry)
+                });
+            } catch (e) {
+                console.warn('변경 이력 저장 실패:', e);
+            }
+        }
+
+        // ========================================
+        // 고객 전화번호 변경 시 연관 테이블 업데이트
+        // ========================================
+        async function updatePhoneInRelatedTables(oldPhone, newPhone, customerId) {
+            const formattedNewPhone = formatPhone(normalizePhone(newPhone));
+            const normalizedOld = normalizePhone(oldPhone);
+
+            const updatePromises = [];
+
+            // reservations 업데이트
+            const relatedReservations = (data.reservations || []).filter(r =>
+                normalizePhone(r.phone) === normalizedOld && !r.customerId
+            );
+            for (const r of relatedReservations) {
+                updatePromises.push(
+                    fetch(`${API_BASE}/${TB.RESERVATIONS}?id=eq.${encodeURIComponent(r.id)}`, {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({ phone: formattedNewPhone, customer_id: customerId })
+                    })
+                );
+            }
+
+            // invitations 업데이트
+            const relatedInvitations = (data.invitations || []).filter(i =>
+                normalizePhone(i.phone) === normalizedOld && !i.customerId
+            );
+            for (const i of relatedInvitations) {
+                updatePromises.push(
+                    fetch(`${API_BASE}/${TB.INVITATIONS}?id=eq.${encodeURIComponent(i.id)}`, {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({ phone: formattedNewPhone, customer_id: customerId })
+                    })
+                );
+            }
+
+            // surveys 업데이트
+            const relatedSurveys = (data.surveys || []).filter(s =>
+                normalizePhone(s.phone) === normalizedOld && !s.customerId
+            );
+            for (const s of relatedSurveys) {
+                updatePromises.push(
+                    fetch(`${API_BASE}/${TB.SURVEYS}?id=eq.${encodeURIComponent(s.id)}`, {
+                        method: 'PATCH',
+                        headers: SUPABASE_HEADERS,
+                        body: JSON.stringify({ phone: formattedNewPhone, customer_id: customerId })
+                    })
+                );
+            }
+
+            if (updatePromises.length > 0) {
+                await Promise.all(updatePromises);
+                console.log(`전화번호 변경 연동: ${relatedReservations.length}개 예약, ${relatedInvitations.length}개 초대장, ${relatedSurveys.length}개 설문 업데이트`);
+            }
+        }
+
+        // ========================================
         // 설문 → 고객 자동 동기화
         // ========================================
         async function syncSurveyToCustomers() {
@@ -4096,7 +4282,7 @@
         async function saveCustomer(event) {
             event.preventDefault();
 
-            const editPhone = document.getElementById('cf_editPhone').value;
+            const editPhone = document.getElementById('cf_editPhone').value;  // 수정 시 기존 전화번호
             const phone = document.getElementById('cf_phone').value.trim();
 
             if (!phone) {
@@ -4107,6 +4293,9 @@
             // 전화번호 형식 정규화 (하이픈 포함 형식으로 통일)
             const normalizedPhone = normalizePhone(phone);
             const formattedPhone = formatPhone(normalizedPhone);  // 010-xxxx-xxxx 형식
+
+            // 전화번호 변경 여부 확인
+            const isPhoneChanged = editPhone && normalizePhone(editPhone) !== normalizedPhone;
 
             const customerData = {
                 id: formattedPhone,  // 하이픈 포함 형식으로 통일!
@@ -4123,7 +4312,14 @@
 
             try {
                 // DB에서 기존 고객 확인 (두 가지 형식 모두 확인: 숫자만/하이픈포함)
-                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?or=(id.eq.${encodeURIComponent(normalizedPhone)},id.eq.${encodeURIComponent(formattedPhone)})`, {
+                let checkQuery = `or=(id.eq.${encodeURIComponent(normalizedPhone)},id.eq.${encodeURIComponent(formattedPhone)})`;
+                // 전화번호 변경 시 기존 전화번호로도 확인
+                if (isPhoneChanged) {
+                    const oldNormalized = normalizePhone(editPhone);
+                    const oldFormatted = formatPhone(oldNormalized);
+                    checkQuery = `or=(id.eq.${encodeURIComponent(normalizedPhone)},id.eq.${encodeURIComponent(formattedPhone)},id.eq.${encodeURIComponent(oldNormalized)},id.eq.${encodeURIComponent(oldFormatted)})`;
+                }
+                const checkResponse = await fetch(`${API_BASE}/${TB.CUSTOMERS}?${checkQuery}`, {
                     method: 'GET',
                     headers: SUPABASE_HEADERS
                 });
@@ -4155,6 +4351,16 @@
                 }
 
                 if (response.ok) {
+                    // 변경 이력 기록
+                    const isNew = !existingInDB || existingInDB.length === 0;
+                    await logChange(isNew ? 'CREATE' : 'UPDATE', 'customers', formattedPhone, customerData, isNew ? null : existingInDB[0]);
+
+                    // 전화번호 변경 시 연관 테이블 업데이트
+                    if (isPhoneChanged && customerId) {
+                        await updatePhoneInRelatedTables(editPhone, formattedPhone, customerId);
+                        showToast('연관 데이터도 함께 업데이트되었습니다', 'info');
+                    }
+
                     // 예약도 함께 생성 옵션 체크
                     const createReservation = document.getElementById('cf_createReservation').checked;
                     if (createReservation) {
@@ -4163,13 +4369,45 @@
                         const resPaymentType = document.getElementById('cf_resPaymentType').value;
 
                         if (resDate) {
+                            // 1. 중복 예약 체크 (같은 고객 + 같은 날 + 같은 부)
+                            const duplicateRes = checkDuplicateReservation(customerId, normalizedPhone, resDate, resPart);
+                            if (duplicateRes) {
+                                showToast(`이미 ${resDate} ${resPart}에 예약이 있습니다 (${duplicateRes.id})`, 'error');
+                                closeModal('customerFormModal');
+                                await refreshAllData();
+                                return;
+                            }
+
+                            // 2. 정원 체크 (경고 후 허용)
+                            const gender = customerData.gender;
+                            if (gender) {
+                                const capacityInfo = checkCapacity(resDate, resPart, gender);
+                                if (capacityInfo.isFull) {
+                                    const proceed = confirm(
+                                        `⚠️ 정원 초과 경고\n\n` +
+                                        `${resDate} ${resPart} ${gender}성 정원: ${capacityInfo.capacity}명\n` +
+                                        `현재 예약: ${capacityInfo.current}명\n\n` +
+                                        `그래도 예약을 생성하시겠습니까?`
+                                    );
+                                    if (!proceed) {
+                                        showToast('고객 저장됨, 예약 생성 취소됨', 'info');
+                                        closeModal('customerFormModal');
+                                        await refreshAllData();
+                                        return;
+                                    }
+                                }
+                            }
+
                             // 초대장 고객인지 확인
                             const hasInvitation = (data.invitations || []).some(inv =>
                                 normalizePhone(inv.phone) === normalizedPhone
                             );
 
+                            // 3. 새 예약번호 체계 사용
+                            const newResId = await generateReservationId(resDate);
+
                             const reservationData = {
-                                id: 'RES-' + Date.now(),  // 예약 ID 필수!
+                                id: newResId,  // RES-YYYYMMDD-NNN 형식
                                 phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
                                 customer_id: customerId,  // 고객 ID 연결!
                                 crew_name: customerData.nickname || customerData.name || '',
@@ -4177,7 +4415,7 @@
                                 event_part: resPart,
                                 option: hasInvitation ? '인비테이션' : '직접등록',
                                 is_invitation: hasInvitation,  // 초대장 여부 자동 감지
-                                status: '예약완료',
+                                status: RESERVATION_STATUS.CONFIRMED,  // 상수 사용
                                 payment_type: resPaymentType,
                                 payment_note: '직접 등록'
                             };
@@ -4189,7 +4427,9 @@
                             });
 
                             if (resResponse.ok) {
-                                showToast('고객 + 예약이 생성되었습니다', 'success');
+                                // 예약 생성 이력 기록
+                                await logChange('CREATE', 'reservations', newResId, reservationData);
+                                showToast(`고객 + 예약 생성 완료 (${newResId})`, 'success');
                             } else {
                                 const errText = await resResponse.text();
                                 console.error('예약 생성 실패:', errText);
@@ -4214,45 +4454,71 @@
         
         // 고객 삭제
         async function deleteCustomer(phone) {
-            if (!confirm(`정말 이 고객을 삭제하시겠습니까?\n\n연락처: ${phone}\n\n관련된 예약, 초대장, 사전조사 데이터도 함께 삭제됩니다.`)) {
+            const normalizedPhone = normalizePhone(phone);
+            const formattedPhone = formatPhone(normalizedPhone);
+
+            // 관련 데이터 미리 조회
+            const relatedReservations = (data.reservations || []).filter(r => normalizePhone(r.phone) === normalizedPhone);
+            const relatedInvitations = (data.invitations || []).filter(i => normalizePhone(i.phone) === normalizedPhone);
+            const relatedSurveys = (data.surveys || []).filter(s => normalizePhone(s.phone) === normalizedPhone);
+
+            // 상세한 삭제 확인 메시지
+            const confirmMsg = `⚠️ 정말 이 고객을 삭제하시겠습니까?\n\n` +
+                `연락처: ${phone}\n\n` +
+                `📋 함께 삭제될 데이터:\n` +
+                `• 예약: ${relatedReservations.length}건\n` +
+                `• 초대장: ${relatedInvitations.length}건\n` +
+                `• 사전조사: ${relatedSurveys.length}건\n\n` +
+                `이 작업은 되돌릴 수 없습니다.`;
+
+            if (!confirm(confirmMsg)) {
                 return;
             }
-            
+
             try {
-                // 고객 삭제 (Supabase)
-                await fetch(`${API_BASE}/${TB.CUSTOMERS}?id=eq.${encodeURIComponent(phone)}`, {
+                // 고객 데이터 백업 (이력용)
+                const customer = (data.customers || []).find(c => normalizePhone(c.id) === normalizedPhone);
+                const deletedData = {
+                    customer,
+                    reservations: relatedReservations,
+                    invitations: relatedInvitations,
+                    surveys: relatedSurveys
+                };
+
+                // 고객 삭제 (두 가지 형식 모두 시도)
+                await fetch(`${API_BASE}/${TB.CUSTOMERS}?or=(id.eq.${encodeURIComponent(normalizedPhone)},id.eq.${encodeURIComponent(formattedPhone)})`, {
                     method: 'DELETE',
                     headers: SUPABASE_HEADERS
                 });
-                
+
                 // 관련 예약 삭제
-                const relatedReservations = data.reservations.filter(r => r.phone === phone);
                 for (const r of relatedReservations) {
                     await fetch(`${API_BASE}/${TB.RESERVATIONS}?id=eq.${encodeURIComponent(r.id)}`, {
                         method: 'DELETE',
                         headers: SUPABASE_HEADERS
                     });
                 }
-                
+
                 // 관련 초대장 삭제
-                const relatedInvitations = data.invitations.filter(i => i.phone === phone);
                 for (const i of relatedInvitations) {
                     await fetch(`${API_BASE}/${TB.INVITATIONS}?id=eq.${encodeURIComponent(i.id)}`, {
                         method: 'DELETE',
                         headers: SUPABASE_HEADERS
                     });
                 }
-                
+
                 // 관련 사전조사 삭제
-                const relatedSurveys = data.surveys.filter(s => s.phone === phone);
                 for (const s of relatedSurveys) {
                     await fetch(`${API_BASE}/${TB.SURVEYS}?id=eq.${encodeURIComponent(s.id)}`, {
                         method: 'DELETE',
                         headers: SUPABASE_HEADERS
                     });
                 }
-                
-                showToast('고객이 삭제되었습니다', 'success');
+
+                // 삭제 이력 기록
+                await logChange('DELETE', 'customers', phone, null, deletedData);
+
+                showToast('고객 및 관련 데이터가 삭제되었습니다', 'success');
                 closeModal('customerModal');
                 await refreshAllData();
             } catch (error) {
@@ -4354,13 +4620,12 @@
                             method: 'POST',
                             headers: SUPABASE_HEADERS,
                             body: JSON.stringify({
-                                id: `INV_MANUAL_${normalizedPhone}_${Date.now()}`,
-                                phone: normalizedPhone,
+                                id: `INV-MANUAL-${Date.now()}`,
+                                phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
                                 name: customerName,
                                 qualifications: '수동등록',
-                                status: 'approved',
-                                source: 'manual',
-                                createdAt: new Date().toISOString()
+                                approval_status: 'approved',
+                                source: 'manual'
                             })
                         });
                     }
@@ -4376,22 +4641,25 @@
                             .filter(s => parsePartyDate(s.date) >= today && s.isActive !== false)
                             .sort((a, b) => parsePartyDate(a.date) - parsePartyDate(b.date));
                         const nextSchedule = futureSchedules[0];
+                        const eventDate = nextSchedule?.date || '-';
+
+                        // 새 예약번호 체계 사용
+                        const newResId = await generateReservationId(eventDate);
 
                         await fetch(`${API_BASE}/${TB.RESERVATIONS}`, {
                             method: 'POST',
                             headers: SUPABASE_HEADERS,
                             body: JSON.stringify({
-                                id: `RES_MANUAL_${normalizedPhone}_${Date.now()}`,
-                                phone: normalizedPhone,
-                                crewName: customerName,
-                                eventDate: nextSchedule?.date || '-',
-                                eventPart: nextSchedule?.part || '1부',
+                                id: newResId,  // RES-YYYYMMDD-NNN 형식
+                                phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
+                                crew_name: customerName,
+                                event_date: eventDate,
+                                event_part: nextSchedule?.part || '1부',
                                 option: '수동등록',
-                                status: '예약완료',
-                                isInvitation: false,
-                                paymentType: 'waived',
-                                paymentNote: '단계 수동 변경으로 생성',
-                                createdAt: new Date().toISOString()
+                                status: RESERVATION_STATUS.CONFIRMED,  // 상수 사용
+                                is_invitation: false,
+                                payment_type: 'waived',
+                                payment_note: '단계 수동 변경으로 생성'
                             })
                         });
                     }
@@ -4405,15 +4673,14 @@
                             method: 'POST',
                             headers: SUPABASE_HEADERS,
                             body: JSON.stringify({
-                                id: `SRV_MANUAL_${normalizedPhone}_${Date.now()}`,
-                                phone: normalizedPhone,
+                                id: `SRV-MANUAL-${Date.now()}`,
+                                phone: formatPhone(normalizedPhone),  // 하이픈 포함 형식
                                 name: customerName,
                                 gender: customer?.성별 || null,
-                                birthYear: customer?.출생연도 || null,
+                                birth_year: customer?.출생연도 || null,
                                 height: customer?.신장 || null,
-                                jobCategory: customer?.직업분류 || null,
-                                jobDetail: customer?.직업상세 || null,
-                                submittedAt: new Date().toISOString()
+                                job_category: customer?.직업분류 || null,
+                                job_detail: customer?.직업상세 || null
                             })
                         });
                     }

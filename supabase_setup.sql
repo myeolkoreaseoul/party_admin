@@ -214,6 +214,23 @@ CREATE TABLE IF NOT EXISTS attendance (
     memo TEXT
 );
 
+-- 15. change_logs (변경 이력)
+CREATE TABLE IF NOT EXISTS change_logs (
+    id TEXT PRIMARY KEY,
+    action TEXT NOT NULL,  -- 'CREATE', 'UPDATE', 'DELETE'
+    table_name TEXT NOT NULL,
+    record_id TEXT,
+    changes JSONB,
+    old_data JSONB,
+    user_info TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- change_logs 인덱스
+CREATE INDEX IF NOT EXISTS idx_change_logs_table ON change_logs(table_name);
+CREATE INDEX IF NOT EXISTS idx_change_logs_record ON change_logs(record_id);
+CREATE INDEX IF NOT EXISTS idx_change_logs_created ON change_logs(created_at DESC);
+
 -- ============================================
 -- Row Level Security (RLS) 설정
 -- ============================================
@@ -233,6 +250,7 @@ ALTER TABLE virtual_pool ENABLE ROW LEVEL SECURITY;
 ALTER TABLE party_virtual_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public_lineup ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE change_logs ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 공개 테이블 정책 (누구나 읽기 가능)
@@ -302,6 +320,9 @@ CREATE POLICY "public_lineup_all_service" ON public_lineup FOR ALL USING (auth.r
 
 -- attendance (관리자만)
 CREATE POLICY "attendance_all_service" ON attendance FOR ALL USING (auth.role() = 'service_role');
+
+-- change_logs (관리자만)
+CREATE POLICY "change_logs_all_service" ON change_logs FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- 고객 ID 기반 시스템 (2026-01-10 추가)

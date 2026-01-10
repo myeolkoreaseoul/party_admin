@@ -8222,47 +8222,56 @@
                         : `<td class="attendance-col" style="color: var(--text-muted);">-</td>`)
                     : '';
 
+                // 현장모드: 티어/유형 셀 조건부 렌더링
+                const tierCell = isStaffMode ? '' : `<td><span class="tier tier-${p.tier || 'pending'}">${p.tier || '?'}</span></td>`;
+                const typeCell = isStaffMode ? '' : `<td>${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''}</td>`;
+
                 if (isPending) {
                     // 정보확인중 - 가상참여자만 클릭 가능
                     const pendingClickHandler = p.type === 'virtual' && p.id
                         ? `onclick="openLineupEditModal('${p.id}', '${p.gender}')" style="cursor: pointer;" title="클릭하여 수정"`
                         : '';
 
+                    const pendingTierCell = isStaffMode ? '' : `<td><span class="tier tier-pending">?</span></td>`;
+                    const pendingTypeCell = isStaffMode ? '' : `<td>${typeIcon} ${revealBtn}</td>`;
+
                     return `
                         <tr class="pending-row" style="opacity: 0.7;" ${pendingClickHandler}>
                             <td>${idx + 1}</td>
                             <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
-                            <td class="lineup-tier-col"><span class="tier tier-pending">?</span></td>
+                            ${pendingTierCell}
                             <td>${p.name || '-'}</td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--text-muted);">-</td>
-                            <td class="lineup-job-col" style="color: var(--warning); font-weight: 500;">정보확인중 ${p.type === 'virtual' ? '<i class="fas fa-edit" style="font-size: 11px;"></i>' : ''}</td>
-                            <td class="lineup-type-col">${typeIcon} ${revealBtn}</td>
+                            <td style="color: var(--warning); font-weight: 500;">정보확인중</td>
+                            ${pendingTypeCell}
                             ${attendanceCell}
                         </tr>
                     `;
                 }
-                
+
                 // 가상참여자만 클릭 가능
                 const clickHandler = p.type === 'virtual' && p.id
                     ? `onclick="openLineupEditModal('${p.id}', '${p.gender}')" style="cursor: pointer;" title="클릭하여 수정"`
                     : '';
-                
-                // 삭제 버튼 (가상참여자만)
-                const deleteBtn = p.type === 'virtual' && p.id
+
+                // 삭제 버튼 (가상참여자만, 일반모드에서만)
+                const deleteBtn = !isStaffMode && p.type === 'virtual' && p.id
                     ? `<button onclick="event.stopPropagation(); deleteFromLineup('${p.id}')" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 2px 4px;" title="삭제"><i class="fas fa-trash" style="font-size: 11px;"></i></button>`
                     : '';
-                
+
+                const normalTypeCell = isStaffMode ? '' : `<td>${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''} ${deleteBtn}</td>`;
+
                 return `
                     <tr class="${p.type === 'virtual' ? 'virtual-row' : ''} ${!isAgeValid ? 'age-warning-row' : ''}" ${clickHandler}>
                         <td>${idx + 1}</td>
                         <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
-                        <td class="lineup-tier-col"><span class="tier tier-${p.tier}">${p.tier}</span></td>
+                        ${tierCell}
                         <td>${p.name || '-'}</td>
                         <td style="${ageStyle}">${formatBirthYear(p.birthYear)}${ageWarning}</td>
                         <td>${p.height || '-'}</td>
-                        <td class="lineup-job-col">${p.job}</td>
-                        <td class="lineup-type-col">${typeIcon}${p.type === 'virtual' ? ' <i class="fas fa-edit" style="color: var(--text-muted); font-size: 11px;"></i>' : ''} ${deleteBtn}</td>
+                        <td>${p.job}</td>
+                        ${normalTypeCell}
                         ${attendanceCell}
                     </tr>
                 `;

@@ -29,7 +29,71 @@ git push origin master
 
 ---
 
-## 🚀 최신 업데이트 (2026-01-10)
+## 🚀 최신 업데이트 (2026-01-11)
+
+### ✅ 2026-01-11 완료된 작업
+
+**🏢 현장모드(Staff Mode) 구현**
+
+파티 현장에서 스태프가 사용할 수 있는 간소화된 관리 화면.
+
+**사용법:**
+```
+https://svvys.com/adm_k8x2m.html?mode=staff
+```
+
+**현장모드 기능:**
+- 표시되는 탭: **라인업**, **매칭** (2개만)
+- 숨겨지는 탭: 대시보드, 고객관리, 초대장신청, 예약관리, 가상참여자, 파티일정, 직업티어표, 블랙리스트, 설정
+- 라인업 테이블에서 **티어/유형 컬럼 숨김** (민감정보 보호)
+- 라인업 테이블에 **참석 체크 버튼** 추가 (클릭으로 참석/미참석 토글)
+- 상단에 **참석 카운터** 표시 (예: "참석 체크: 5/12")
+- 헤더 제목: "뭘좀**Staff** 현장관리"
+- 가상참여자 관련 버튼 숨김 (랜덤추가, 번호부여 등)
+
+**변경된 파일:**
+- `adm_k8x2m.html`: 현장모드 감지 및 UI 분기 처리
+
+---
+
+**💕 매칭 폼 개선 (match.html)**
+
+- "없어요" 버튼 추가 (마음에 드는 상대가 없을 때)
+- "오늘의 매너인" 섹션 추가 (마음에 드는 상대와 중복 선택 가능)
+- "하고 싶은 말" 코멘트 입력 추가
+- 전화번호 자동 정규화 (01000000000 → 010-0000-0000)
+
+**새 마이그레이션:**
+```sql
+-- migrations/002_match_extra_fields.sql 실행 필요
+ALTER TABLE match_submissions ADD COLUMN IF NOT EXISTS no_selection BOOLEAN DEFAULT FALSE;
+ALTER TABLE match_submissions ADD COLUMN IF NOT EXISTS manner_persons INTEGER[];
+ALTER TABLE match_submissions ADD COLUMN IF NOT EXISTS no_manner_person BOOLEAN DEFAULT FALSE;
+ALTER TABLE match_submissions ADD COLUMN IF NOT EXISTS comment TEXT;
+```
+
+---
+
+**🐛 버그 수정**
+
+| 문제 | 원인 | 해결 |
+|------|------|------|
+| `fetchSchedules is not defined` 에러 | 존재하지 않는 함수를 참조하는 코드가 있었음 | 해당 코드 제거 |
+| `minDate is not defined` 에러 | 변수 정의 전에 사용 | `today` 변수로 대체, showPast 조건문 안에서 처리 |
+
+---
+
+### ⚠️ 장기적 유의사항
+
+1. **배포 필수**: 코드 수정 후 반드시 `git push` 해야 Cloudflare에 반영됨
+2. **함수/변수 참조**: 정의되지 않은 함수나 변수를 참조하면 페이지 전체가 동작 안함
+3. **현장 운영**: 파티 현장에서는 반드시 `?mode=staff` URL로 접속
+4. **티어 보안**: 현장모드에서 티어 정보가 노출되면 안됨 (직업은 OK)
+5. **단일 코드베이스**: staff.html 별도 파일 대신 관리자 페이지에 모드 분기로 구현 (코드 중복 방지)
+
+---
+
+## 🚀 이전 업데이트 (2026-01-10)
 
 ### ✅ 2026-01-10 완료된 작업
 

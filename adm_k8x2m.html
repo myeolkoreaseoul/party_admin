@@ -580,6 +580,7 @@
         <div class="tab" data-tab="invitations">초대장 신청</div>
         <div class="tab" data-tab="reservations">예약 관리</div>
         <div class="tab" data-tab="lineup">라인업</div>
+        <div class="tab" data-tab="matching">💕 매칭</div>
         <div class="tab" data-tab="virtual">가상참여자</div>
         <div class="tab" data-tab="schedules">파티일정</div>
         <div class="tab" data-tab="tiers">직업티어표</div>
@@ -813,6 +814,9 @@
                     <option value="3부">3부</option>
                 </select>
                 <div style="flex: 1;"></div>
+                <button class="btn btn-warning btn-sm" onclick="assignLineupNumbers()" id="assignNumbersBtn" title="가나다순으로 번호 부여">
+                    <i class="fas fa-sort-numeric-down"></i> 번호 부여
+                </button>
                 <select class="filter-select" id="allLineupWeeks" style="width: auto;">
                     <option value="1">향후 1주</option>
                     <option value="2" selected>향후 2주</option>
@@ -822,6 +826,16 @@
                 <button class="btn btn-primary btn-sm" onclick="showAllLineups()">
                     <i class="fas fa-calendar-week"></i> 전체 라인업 보기
                 </button>
+            </div>
+
+            <!-- 번호 부여 상태 -->
+            <div id="lineupNumberStatus" class="card" style="margin-bottom: 16px; padding: 12px; display: none;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span id="lineupNumberStatusIcon"></span>
+                    <span id="lineupNumberStatusText" style="font-size: 13px;"></span>
+                    <div style="flex: 1;"></div>
+                    <span id="lineupNumberStatusInfo" style="font-size: 12px; color: var(--text-muted);"></span>
+                </div>
             </div>
             
             <!-- 라인업 요약 카드 -->
@@ -875,6 +889,7 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>번호</th>
                                     <th>티어</th>
                                     <th>이름</th>
                                     <th>나이</th>
@@ -884,7 +899,7 @@
                                 </tr>
                             </thead>
                             <tbody id="lineupMaleBody">
-                                <tr><td colspan="7" class="empty-state">날짜/세션을 선택하세요</td></tr>
+                                <tr><td colspan="8" class="empty-state">날짜/세션을 선택하세요</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -903,6 +918,7 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>번호</th>
                                     <th>티어</th>
                                     <th>이름</th>
                                     <th>나이</th>
@@ -912,7 +928,7 @@
                                 </tr>
                             </thead>
                             <tbody id="lineupFemaleBody">
-                                <tr><td colspan="7" class="empty-state">날짜/세션을 선택하세요</td></tr>
+                                <tr><td colspan="8" class="empty-state">날짜/세션을 선택하세요</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -999,7 +1015,133 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- ==================== 매칭 ==================== -->
+        <div class="tab-content" id="tab-matching">
+            <div class="section-header">
+                <h2>💕 매칭 관리</h2>
+            </div>
+
+            <!-- 날짜/세션 필터 -->
+            <div class="card" style="padding: 16px; margin-bottom: 24px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                    <select id="matchingDateFilter" class="form-control" style="width: 150px;">
+                        <option value="">날짜 선택</option>
+                    </select>
+                    <select id="matchingPartFilter" class="form-control" style="width: 120px;">
+                        <option value="">세션 선택</option>
+                        <option value="1부">1부</option>
+                        <option value="2부">2부</option>
+                        <option value="3부">3부</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadMatchingData()">
+                        <i class="fas fa-search"></i> 조회
+                    </button>
+                    <button class="btn btn-secondary" onclick="generateMatchingQR()" title="참가자용 QR 코드 생성">
+                        <i class="fas fa-qrcode"></i> QR 생성
+                    </button>
+                </div>
+            </div>
+
+            <!-- 매칭 요약 -->
+            <div id="matchingSummaryCard" class="card" style="margin-bottom: 24px; padding: 20px; display: none;">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <div style="font-size: 13px; color: var(--text-muted);">파티 유형</div>
+                        <div style="font-size: 20px; font-weight: 600;" id="matchingPartyType">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: var(--text-muted);">남자 제출</div>
+                        <div style="font-size: 24px; font-weight: 600; color: #4a9eff;" id="matchingMaleSubmit">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: var(--text-muted);">여자 제출</div>
+                        <div style="font-size: 24px; font-weight: 600; color: #ff6b9d;" id="matchingFemaleSubmit">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: var(--text-muted);">매칭 결과</div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--accent);" id="matchingResultCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 제출 현황 (2컬럼) -->
+            <div id="matchingSubmissions" style="display: none;">
+                <div class="section-header">
+                    <h3>📝 제출 현황</h3>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <!-- 남자 제출 -->
+                    <div class="card" style="padding: 16px;">
+                        <h4 style="color: #4a9eff; margin-bottom: 12px;">👨 남자</h4>
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>번호</th>
+                                        <th>이름</th>
+                                        <th>선택</th>
+                                        <th>연락처</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matchingMaleBody">
+                                    <tr><td colspan="4" class="empty-state">조회해주세요</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- 여자 제출 -->
+                    <div class="card" style="padding: 16px;">
+                        <h4 style="color: #ff6b9d; margin-bottom: 12px;">👩 여자</h4>
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>번호</th>
+                                        <th>이름</th>
+                                        <th>선택</th>
+                                        <th>연락처</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matchingFemaleBody">
+                                    <tr><td colspan="4" class="empty-state">조회해주세요</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 매칭 결과 (커피: 일방향 / 와인: 쌍방) -->
+            <div id="matchingResults" style="display: none; margin-top: 24px;">
+                <div class="section-header">
+                    <h3>💌 매칭 결과</h3>
+                    <button class="btn btn-primary" onclick="processMatching()" id="processMatchingBtn">
+                        <i class="fas fa-magic"></i> 매칭 처리
+                    </button>
+                </div>
+
+                <div class="card" style="padding: 16px;">
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>유형</th>
+                                    <th>남자</th>
+                                    <th>여자</th>
+                                    <th>상태</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matchingResultsBody">
+                                <tr><td colspan="5" class="empty-state">매칭 처리를 실행해주세요</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== 가상참여자 ==================== -->
         <div class="tab-content" id="tab-virtual">
             <!-- 가상참여자 풀 관리 -->
@@ -1855,6 +1997,19 @@
                     </div>
                     <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="scheduleAgeHint">
                         세션 기본값: -
+                    </p>
+                </div>
+                <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
+                    <label><i class="fas fa-heart"></i> 매칭 선택 한도</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="font-size: 12px;">남자:</span>
+                        <input type="number" id="scheduleMaleSelectionLimit" placeholder="3" min="1" max="20" class="form-control" style="width: 60px;" value="3">
+                        <span style="font-size: 12px; margin-left: 8px;">여자:</span>
+                        <input type="number" id="scheduleFemaleSelectionLimit" placeholder="3" min="1" max="20" class="form-control" style="width: 60px;" value="3">
+                        <span style="font-size: 11px; color: var(--text-muted);">명</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                        매칭 폼에서 각 성별이 선택할 수 있는 상대방 수
                     </p>
                 </div>
             </div>
@@ -7611,8 +7766,8 @@
             const femaleBody = document.getElementById('lineupFemaleBody');
             
             if (!dateFilter || !partFilter) {
-                maleBody.innerHTML = '<tr><td colspan="7" class="empty-state">날짜와 세션을 선택하세요</td></tr>';
-                femaleBody.innerHTML = '<tr><td colspan="7" class="empty-state">날짜와 세션을 선택하세요</td></tr>';
+                maleBody.innerHTML = '<tr><td colspan="8" class="empty-state">날짜와 세션을 선택하세요</td></tr>';
+                femaleBody.innerHTML = '<tr><td colspan="8" class="empty-state">날짜와 세션을 선택하세요</td></tr>';
                 document.getElementById('lineupTotalCount').textContent = '-';
                 document.getElementById('lineupRealCount').textContent = '-';
                 document.getElementById('lineupVirtualCount').textContent = '-';
@@ -7620,8 +7775,12 @@
                 document.getElementById('lineupFemaleCount').textContent = '-';
                 document.getElementById('lineupMaleSubCount').textContent = '';
                 document.getElementById('lineupFemaleSubCount').textContent = '';
+                document.getElementById('lineupNumberStatus').style.display = 'none';
                 return;
             }
+
+            // 번호 부여 상태 업데이트
+            updateLineupNumberStatus(dateFilter, partFilter);
             
             const currentYear = new Date().getFullYear();
             
@@ -7734,7 +7893,9 @@
                     age: birthYear ? currentYear - birthYear : null,
                     height,
                     job,
-                    tier
+                    tier,
+                    lineupNumber: r.lineupNumber || r.lineup_number || null,
+                    reservationId: r.id
                 };
             });
             
@@ -7802,7 +7963,9 @@
                     age: v.birthYear ? currentYear - v.birthYear : null,
                     height: v.height,
                     job: v.job,
-                    tier: v.tier || getTier(v.gender, v.job)
+                    tier: v.tier || getTier(v.gender, v.job),
+                    lineupNumber: v.lineupNumber || v.lineup_number || null,
+                    name: v.name || ''
                 }));
             
             // 배정된 모든 가상참여자 표시 (DB에 저장된 모든 배정 표시)
@@ -7885,6 +8048,7 @@
                     return `
                         <tr class="pending-row" style="opacity: 0.7;" ${pendingClickHandler}>
                             <td>${idx + 1}</td>
+                            <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
                             <td><span class="tier tier-pending">?</span></td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--text-muted);">-</td>
@@ -7908,6 +8072,7 @@
                 return `
                     <tr class="${p.type === 'virtual' ? 'virtual-row' : ''} ${!isAgeValid ? 'age-warning-row' : ''}" ${clickHandler}>
                         <td>${idx + 1}</td>
+                        <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
                         <td><span class="tier tier-${p.tier}">${p.tier}</span></td>
                         <td style="color: var(--text-muted);">-</td>
                         <td style="${ageStyle}">${formatBirthYear(p.birthYear)}${ageWarning}</td>
@@ -7920,17 +8085,17 @@
             
             maleBody.innerHTML = males.length > 0
                 ? males.map(renderRow).join('')
-                : '<tr><td colspan="7" class="empty-state">남자 라인업 없음</td></tr>';
+                : '<tr><td colspan="8" class="empty-state">남자 라인업 없음</td></tr>';
 
             femaleBody.innerHTML = females.length > 0
                 ? females.map(renderRow).join('')
-                : '<tr><td colspan="7" class="empty-state">여자 라인업 없음</td></tr>';
+                : '<tr><td colspan="8" class="empty-state">여자 라인업 없음</td></tr>';
 
             // 성별 미상 경고 표시
             if (unknowns.length > 0) {
                 const unknownWarning = `
                     <tr style="background: var(--warning-bg, #fff3cd);">
-                        <td colspan="7" style="color: var(--warning, #856404); padding: 12px; text-align: center;">
+                        <td colspan="8" style="color: var(--warning, #856404); padding: 12px; text-align: center;">
                             <i class="fas fa-exclamation-triangle"></i>
                             <strong>성별 미상 ${unknowns.length}명:</strong>
                             ${unknowns.map(p => `${p.name}(${p.phone?.slice(-4)})`).join(', ')}
@@ -7944,7 +8109,177 @@
         
         document.getElementById('lineupDateFilter')?.addEventListener('change', renderLineup);
         document.getElementById('lineupPartFilter')?.addEventListener('change', renderLineup);
-        
+
+        // ========================================
+        // 라인업 번호 부여 시스템
+        // ========================================
+
+        // 번호 부여 상태 업데이트
+        function updateLineupNumberStatus(dateFilter, partFilter) {
+            const statusDiv = document.getElementById('lineupNumberStatus');
+            const iconSpan = document.getElementById('lineupNumberStatusIcon');
+            const textSpan = document.getElementById('lineupNumberStatusText');
+            const infoSpan = document.getElementById('lineupNumberStatusInfo');
+
+            if (!dateFilter || !partFilter) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            // 해당 일정의 예약자들 lineup_number 확인
+            const reservations = data.reservations.filter(r => {
+                const matchDate = normalizeDateStr(r.eventDate) === normalizeDateStr(dateFilter);
+                const matchPart = r.eventPart === partFilter;
+                const notCancelled = r.status !== '취소';
+                return matchDate && matchPart && notCancelled;
+            });
+
+            const virtualAssigns = data.virtualAssignments.filter(v =>
+                normalizeDateStr(v.scheduleDate) === normalizeDateStr(dateFilter) &&
+                v.schedulePart === partFilter
+            );
+
+            const hasNumbers = reservations.some(r => r.lineupNumber || r.lineup_number) ||
+                              virtualAssigns.some(v => v.lineupNumber || v.lineup_number);
+
+            const maleWithNum = reservations.filter(r => (r.lineupNumber || r.lineup_number) && findGenderForReservation(r) === '남자').length +
+                               virtualAssigns.filter(v => (v.lineupNumber || v.lineup_number) && v.gender === '남자').length;
+            const femaleWithNum = reservations.filter(r => (r.lineupNumber || r.lineup_number) && findGenderForReservation(r) === '여자').length +
+                                 virtualAssigns.filter(v => (v.lineupNumber || v.lineup_number) && v.gender === '여자').length;
+
+            statusDiv.style.display = 'block';
+
+            if (hasNumbers) {
+                iconSpan.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i>';
+                textSpan.innerHTML = '<strong style="color: var(--success);">번호 부여 완료</strong>';
+                infoSpan.textContent = `남자 ${maleWithNum}명, 여자 ${femaleWithNum}명`;
+                document.getElementById('assignNumbersBtn').textContent = '번호 재부여';
+            } else {
+                iconSpan.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--warning);"></i>';
+                textSpan.innerHTML = '<span style="color: var(--warning);">번호 미부여</span> - 매칭을 위해 번호를 부여하세요';
+                infoSpan.textContent = '';
+                document.getElementById('assignNumbersBtn').innerHTML = '<i class="fas fa-sort-numeric-down"></i> 번호 부여';
+            }
+        }
+
+        // 예약의 성별 찾기 헬퍼
+        function findGenderForReservation(res) {
+            const phone = normalizePhone(res.phone);
+            const customer = data.customers.find(c => normalizePhone(c.id) === phone);
+            if (customer?.gender) return customer.gender;
+
+            const survey = data.surveys.find(s => normalizePhone(s.phone) === phone);
+            if (survey?.gender) return survey.gender;
+
+            return null;
+        }
+
+        // 번호 부여 실행
+        async function assignLineupNumbers() {
+            const dateFilter = document.getElementById('lineupDateFilter').value;
+            const partFilter = document.getElementById('lineupPartFilter').value;
+
+            if (!dateFilter || !partFilter) {
+                showToast('날짜와 세션을 선택하세요', 'error');
+                return;
+            }
+
+            // 해당 일정의 예약자들 (취소 제외)
+            const reservations = data.reservations.filter(r => {
+                const matchDate = normalizeDateStr(r.eventDate) === normalizeDateStr(dateFilter);
+                const matchPart = r.eventPart === partFilter;
+                const notCancelled = r.status !== '취소';
+                return matchDate && matchPart && notCancelled;
+            });
+
+            // 해당 일정의 가상 참여자들
+            const virtualAssigns = data.virtualAssignments.filter(v =>
+                normalizeDateStr(v.scheduleDate) === normalizeDateStr(dateFilter) &&
+                v.schedulePart === partFilter
+            );
+
+            if (reservations.length === 0 && virtualAssigns.length === 0) {
+                showToast('해당 일정에 참가자가 없습니다', 'error');
+                return;
+            }
+
+            // 확인
+            const totalMale = reservations.filter(r => findGenderForReservation(r) === '남자').length +
+                             virtualAssigns.filter(v => v.gender === '남자').length;
+            const totalFemale = reservations.filter(r => findGenderForReservation(r) === '여자').length +
+                               virtualAssigns.filter(v => v.gender === '여자').length;
+
+            const confirmMsg = `${dateFilter} ${partFilter}\n\n` +
+                              `남자 ${totalMale}명, 여자 ${totalFemale}명에게\n` +
+                              `가나다순으로 번호를 부여하시겠습니까?\n\n` +
+                              `(기존 번호가 있으면 덮어씁니다)`;
+
+            if (!confirm(confirmMsg)) return;
+
+            showToast('번호 부여 중...', 'info');
+
+            try {
+                // 성별별로 분리하여 가나다순 정렬 후 번호 부여
+                for (const gender of ['남자', '여자']) {
+                    // 실제 참가자
+                    const realParticipants = reservations
+                        .filter(r => findGenderForReservation(r) === gender)
+                        .map(r => ({
+                            type: 'real',
+                            id: r.id,
+                            name: r.crewName || '',
+                            data: r
+                        }));
+
+                    // 가상 참가자
+                    const virtualParticipants = virtualAssigns
+                        .filter(v => v.gender === gender)
+                        .map(v => ({
+                            type: 'virtual',
+                            id: v.id,
+                            name: v.name || v.job || '',
+                            data: v
+                        }));
+
+                    // 합쳐서 가나다순 정렬
+                    const all = [...realParticipants, ...virtualParticipants]
+                        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+
+                    // 번호 부여 (1번부터)
+                    for (let i = 0; i < all.length; i++) {
+                        const p = all[i];
+                        const number = i + 1;
+
+                        if (p.type === 'real') {
+                            // reservations 테이블 업데이트
+                            await fetch(`${API_BASE}/${TB.RESERVATIONS}?id=eq.${encodeURIComponent(p.id)}`, {
+                                method: 'PATCH',
+                                headers: SUPABASE_HEADERS,
+                                body: JSON.stringify({ lineup_number: number })
+                            });
+                        } else {
+                            // party_virtual_assignments 테이블 업데이트
+                            await fetch(`${API_BASE}/${TB.VIRTUAL_ASSIGN}?id=eq.${encodeURIComponent(p.id)}`, {
+                                method: 'PATCH',
+                                headers: SUPABASE_HEADERS,
+                                body: JSON.stringify({ lineup_number: number })
+                            });
+                        }
+                    }
+
+                    console.log(`[번호부여] ${gender} ${all.length}명 완료`);
+                }
+
+                showToast('번호 부여 완료!', 'success');
+                await refreshAllData();
+                renderLineup();
+
+            } catch (error) {
+                console.error('번호 부여 오류:', error);
+                showToast('번호 부여 실패: ' + error.message, 'error');
+            }
+        }
+
         // 라인업에서 개별 가상참여자 공개
         async function revealFromLineup(id) {
             try {
@@ -9373,6 +9708,9 @@
                         (schedule.maleCapacity && schedule.maleCapacity !== defaultMale) ? schedule.maleCapacity : '';
                     document.getElementById('scheduleFemaleCapacity').value =
                         (schedule.femaleCapacity && schedule.femaleCapacity !== defaultFemale) ? schedule.femaleCapacity : '';
+                    // 매칭 선택 한도 로드
+                    document.getElementById('scheduleMaleSelectionLimit').value = schedule.maleSelectionLimit || schedule.male_selection_limit || 3;
+                    document.getElementById('scheduleFemaleSelectionLimit').value = schedule.femaleSelectionLimit || schedule.female_selection_limit || 3;
                 }
             } else {
                 // 기본값 설정
@@ -9385,6 +9723,8 @@
                 document.getElementById('scheduleMaxBirthYear').value = '';
                 document.getElementById('scheduleMaleCapacity').value = '';
                 document.getElementById('scheduleFemaleCapacity').value = '';
+                document.getElementById('scheduleMaleSelectionLimit').value = 3;
+                document.getElementById('scheduleFemaleSelectionLimit').value = 3;
             }
 
             // 힌트 업데이트
@@ -9442,6 +9782,10 @@
             const maleCapacityInput = document.getElementById('scheduleMaleCapacity').value;
             const femaleCapacityInput = document.getElementById('scheduleFemaleCapacity').value;
 
+            // 매칭 선택 한도 읽기
+            const maleSelectionLimit = parseInt(document.getElementById('scheduleMaleSelectionLimit').value) || 3;
+            const femaleSelectionLimit = parseInt(document.getElementById('scheduleFemaleSelectionLimit').value) || 3;
+
             // 세션 템플릿에서 시간 가져오기
             const session = data.sessions.find(s => s.id === part);
             const time = session?.time || '12:00';
@@ -9471,6 +9815,8 @@
                 party_type: partyTypeId,
                 male_capacity: maleCapacity,
                 female_capacity: femaleCapacity,
+                male_selection_limit: maleSelectionLimit,
+                female_selection_limit: femaleSelectionLimit,
                 is_active: true,
                 memo,
                 min_birth_year: minBirthYear,
@@ -11811,7 +12157,435 @@
                 showToast('❌ 오류: ' + error.message, 'error');
             }
         }
-        
+
+        // ========================================
+        // 매칭 관리 함수들
+        // ========================================
+
+        let matchingSubmissions = [];
+        let matchingResults = [];
+        let currentMatchingPartyType = 'coffee';
+
+        // 매칭 탭 날짜 필터 초기화
+        async function initMatchingDateFilter() {
+            const select = document.getElementById('matchingDateFilter');
+            if (!select) return;
+
+            const existingOptions = select.querySelectorAll('option:not(:first-child)');
+            existingOptions.forEach(opt => opt.remove());
+
+            const uniqueDates = [...new Set(schedules.map(s => s.date))].sort();
+            uniqueDates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                const d = new Date(date);
+                option.textContent = `${d.getMonth() + 1}/${d.getDate()}`;
+                select.appendChild(option);
+            });
+        }
+
+        // 매칭 데이터 로드
+        async function loadMatchingData() {
+            const dateFilter = document.getElementById('matchingDateFilter').value;
+            const partFilter = document.getElementById('matchingPartFilter').value;
+
+            if (!dateFilter || !partFilter) {
+                showToast('날짜와 세션을 선택해주세요', 'warning');
+                return;
+            }
+
+            try {
+                // 스케줄에서 파티 유형 확인
+                const schedule = schedules.find(s => s.date === dateFilter && s.part === partFilter);
+                currentMatchingPartyType = schedule?.party_type || 'coffee';
+
+                // 제출 데이터 로드
+                const { data: submissions, error } = await supabaseClient
+                    .from('match_submissions')
+                    .select('*')
+                    .eq('event_date', dateFilter)
+                    .eq('event_part', partFilter)
+                    .eq('is_latest', true)
+                    .order('lineup_number', { ascending: true });
+
+                if (error) throw error;
+                matchingSubmissions = submissions || [];
+
+                // 매칭 결과 로드
+                const { data: results, error: resultsError } = await supabaseClient
+                    .from('match_results')
+                    .select('*')
+                    .eq('event_date', dateFilter)
+                    .eq('event_part', partFilter)
+                    .order('male_number', { ascending: true });
+
+                if (resultsError) throw resultsError;
+                matchingResults = results || [];
+
+                renderMatchingData();
+                showToast('매칭 데이터 로드 완료', 'success');
+            } catch (error) {
+                console.error('매칭 데이터 로드 오류:', error);
+                showToast('매칭 데이터 로드 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 매칭 데이터 렌더링
+        function renderMatchingData() {
+            const males = matchingSubmissions.filter(s => s.gender === '남자');
+            const females = matchingSubmissions.filter(s => s.gender === '여자');
+
+            // 요약 표시
+            document.getElementById('matchingSummaryCard').style.display = 'block';
+            document.getElementById('matchingPartyType').textContent =
+                currentMatchingPartyType === 'wine' ? '🍷 와인 (쌍방)' : '☕ 커피 (일방향)';
+            document.getElementById('matchingMaleSubmit').textContent = males.length;
+            document.getElementById('matchingFemaleSubmit').textContent = females.length;
+            document.getElementById('matchingResultCount').textContent = matchingResults.length;
+
+            // 제출 현황 표시
+            document.getElementById('matchingSubmissions').style.display = 'block';
+
+            // 남자 테이블
+            const maleBody = document.getElementById('matchingMaleBody');
+            maleBody.innerHTML = males.length > 0
+                ? males.map(s => `
+                    <tr>
+                        <td style="font-weight: 600;">${s.lineup_number}번</td>
+                        <td>${s.name}</td>
+                        <td>${s.selected_numbers ? s.selected_numbers.join(', ') + '번' : '-'}</td>
+                        <td style="font-size: 11px;">${formatContactInfo(s.contact_type, s.contact_value)}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="4" class="empty-state">제출 없음</td></tr>';
+
+            // 여자 테이블
+            const femaleBody = document.getElementById('matchingFemaleBody');
+            femaleBody.innerHTML = females.length > 0
+                ? females.map(s => `
+                    <tr>
+                        <td style="font-weight: 600;">${s.lineup_number}번</td>
+                        <td>${s.name}</td>
+                        <td>${s.selected_numbers ? s.selected_numbers.join(', ') + '번' : '-'}</td>
+                        <td style="font-size: 11px;">${formatContactInfo(s.contact_type, s.contact_value)}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="4" class="empty-state">제출 없음</td></tr>';
+
+            // 매칭 결과 표시
+            document.getElementById('matchingResults').style.display = 'block';
+            renderMatchingResults();
+        }
+
+        // 연락처 정보 포맷
+        function formatContactInfo(type, value) {
+            if (!type || !value) return '-';
+            const icons = { phone: '📱', kakao: '💬', instagram: '📷' };
+            return `${icons[type] || ''} ${value}`;
+        }
+
+        // 매칭 결과 렌더링
+        function renderMatchingResults() {
+            const body = document.getElementById('matchingResultsBody');
+
+            if (matchingResults.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="empty-state">매칭 처리를 실행해주세요</td></tr>';
+                return;
+            }
+
+            body.innerHTML = matchingResults.map(r => {
+                const typeLabel = r.is_mutual
+                    ? '<span style="color: var(--accent);">💕 쌍방</span>'
+                    : '<span style="color: var(--warning);">→ 일방향</span>';
+
+                const statusLabel = {
+                    'pending': '<span class="status-badge" style="background: var(--warning);">대기</span>',
+                    'approved': '<span class="status-badge" style="background: var(--primary);">승인</span>',
+                    'sent': '<span class="status-badge" style="background: var(--accent);">전송완료</span>'
+                }[r.status] || r.status;
+
+                return `
+                    <tr>
+                        <td>${typeLabel}</td>
+                        <td>
+                            <strong>${r.male_number}번</strong> ${r.male_name || ''}<br>
+                            <small style="color: var(--text-muted);">${formatContactInfo(r.male_contact_type, r.male_contact_value)}</small>
+                        </td>
+                        <td>
+                            <strong>${r.female_number}번</strong> ${r.female_name || ''}<br>
+                            <small style="color: var(--text-muted);">${formatContactInfo(r.female_contact_type, r.female_contact_value)}</small>
+                        </td>
+                        <td>${statusLabel}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="copyMatchingContact('${r.id}')" title="연락처 복사">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            ${r.status === 'pending' ? `
+                                <button class="btn btn-sm btn-primary" onclick="approveMatch('${r.id}')" title="승인">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            ${r.status === 'approved' ? `
+                                <button class="btn btn-sm btn-accent" onclick="markMatchSent('${r.id}')" title="전송완료 표시">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-danger" onclick="deleteMatch('${r.id}')" title="삭제">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 매칭 처리 (커피: 일방향 / 와인: 쌍방)
+        async function processMatching() {
+            const dateFilter = document.getElementById('matchingDateFilter').value;
+            const partFilter = document.getElementById('matchingPartFilter').value;
+
+            if (!dateFilter || !partFilter) {
+                showToast('날짜와 세션을 선택해주세요', 'warning');
+                return;
+            }
+
+            if (matchingSubmissions.length === 0) {
+                showToast('제출 데이터가 없습니다', 'warning');
+                return;
+            }
+
+            const males = matchingSubmissions.filter(s => s.gender === '남자');
+            const females = matchingSubmissions.filter(s => s.gender === '여자');
+
+            const newResults = [];
+
+            if (currentMatchingPartyType === 'wine') {
+                // 와인: 쌍방 선택만 매칭
+                for (const male of males) {
+                    for (const female of females) {
+                        const maleSelectedFemale = male.selected_numbers?.includes(female.lineup_number);
+                        const femaleSelectedMale = female.selected_numbers?.includes(male.lineup_number);
+
+                        if (maleSelectedFemale && femaleSelectedMale) {
+                            // 쌍방 선택!
+                            newResults.push({
+                                event_date: dateFilter,
+                                event_part: partFilter,
+                                party_type: 'wine',
+                                male_number: male.lineup_number,
+                                female_number: female.lineup_number,
+                                male_name: male.name,
+                                female_name: female.name,
+                                male_contact_type: male.contact_type,
+                                male_contact_value: male.contact_value,
+                                female_contact_type: female.contact_type,
+                                female_contact_value: female.contact_value,
+                                is_mutual: true,
+                                status: 'pending'
+                            });
+                        }
+                    }
+                }
+            } else {
+                // 커피: 일방향 (선택한 사람 연락처 → 선택받은 사람에게 전달)
+                // 남자가 여자를 선택한 경우
+                for (const male of males) {
+                    for (const femaleNum of (male.selected_numbers || [])) {
+                        const female = females.find(f => f.lineup_number === femaleNum);
+                        newResults.push({
+                            event_date: dateFilter,
+                            event_part: partFilter,
+                            party_type: 'coffee',
+                            male_number: male.lineup_number,
+                            female_number: femaleNum,
+                            male_name: male.name,
+                            female_name: female?.name || '',
+                            male_contact_type: male.contact_type,
+                            male_contact_value: male.contact_value,
+                            female_contact_type: female?.contact_type || '',
+                            female_contact_value: female?.contact_value || '',
+                            is_mutual: false,
+                            status: 'pending'
+                        });
+                    }
+                }
+
+                // 여자가 남자를 선택한 경우
+                for (const female of females) {
+                    for (const maleNum of (female.selected_numbers || [])) {
+                        const male = males.find(m => m.lineup_number === maleNum);
+                        newResults.push({
+                            event_date: dateFilter,
+                            event_part: partFilter,
+                            party_type: 'coffee',
+                            male_number: maleNum,
+                            female_number: female.lineup_number,
+                            male_name: male?.name || '',
+                            female_name: female.name,
+                            male_contact_type: male?.contact_type || '',
+                            male_contact_value: male?.contact_value || '',
+                            female_contact_type: female.contact_type,
+                            female_contact_value: female.contact_value,
+                            is_mutual: false,
+                            status: 'pending'
+                        });
+                    }
+                }
+            }
+
+            if (newResults.length === 0) {
+                showToast(currentMatchingPartyType === 'wine' ? '쌍방 선택이 없습니다' : '매칭 결과가 없습니다', 'info');
+                return;
+            }
+
+            try {
+                // 기존 결과 삭제
+                await supabaseClient
+                    .from('match_results')
+                    .delete()
+                    .eq('event_date', dateFilter)
+                    .eq('event_part', partFilter);
+
+                // 새 결과 삽입
+                const { error } = await supabaseClient
+                    .from('match_results')
+                    .insert(newResults);
+
+                if (error) throw error;
+
+                showToast(`✅ 매칭 처리 완료: ${newResults.length}건`, 'success');
+                await loadMatchingData();
+            } catch (error) {
+                console.error('매칭 처리 오류:', error);
+                showToast('매칭 처리 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 매칭 연락처 복사
+        async function copyMatchingContact(id) {
+            const result = matchingResults.find(r => r.id === id);
+            if (!result) return;
+
+            let text = '';
+            if (result.is_mutual) {
+                // 쌍방: 양쪽 연락처 모두
+                text = `[쌍방 매칭]\n남자 ${result.male_number}번 ${result.male_name}: ${result.male_contact_value}\n여자 ${result.female_number}번 ${result.female_name}: ${result.female_contact_value}`;
+            } else {
+                // 일방향: 선택한 사람 연락처만
+                text = `${result.male_number}번 → ${result.female_number}번\n연락처: ${result.male_contact_value}`;
+            }
+
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('연락처 복사됨', 'success');
+            } catch (error) {
+                prompt('연락처:', text);
+            }
+        }
+
+        // 매칭 승인
+        async function approveMatch(id) {
+            try {
+                const { error } = await supabaseClient
+                    .from('match_results')
+                    .update({ status: 'approved', approved_at: new Date().toISOString() })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                const result = matchingResults.find(r => r.id === id);
+                if (result) result.status = 'approved';
+                renderMatchingResults();
+                showToast('승인 완료', 'success');
+            } catch (error) {
+                showToast('승인 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 매칭 전송 완료 표시
+        async function markMatchSent(id) {
+            try {
+                const { error } = await supabaseClient
+                    .from('match_results')
+                    .update({ status: 'sent', sent_at: new Date().toISOString() })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                const result = matchingResults.find(r => r.id === id);
+                if (result) result.status = 'sent';
+                renderMatchingResults();
+                showToast('전송완료 표시됨', 'success');
+            } catch (error) {
+                showToast('실패: ' + error.message, 'error');
+            }
+        }
+
+        // 매칭 삭제
+        async function deleteMatch(id) {
+            if (!confirm('이 매칭 결과를 삭제하시겠습니까?')) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('match_results')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                matchingResults = matchingResults.filter(r => r.id !== id);
+                renderMatchingResults();
+                document.getElementById('matchingResultCount').textContent = matchingResults.length;
+                showToast('삭제 완료', 'success');
+            } catch (error) {
+                showToast('삭제 실패: ' + error.message, 'error');
+            }
+        }
+
+        // QR 코드 생성
+        function generateMatchingQR() {
+            const dateFilter = document.getElementById('matchingDateFilter').value;
+            const partFilter = document.getElementById('matchingPartFilter').value;
+
+            if (!dateFilter || !partFilter) {
+                showToast('날짜와 세션을 선택해주세요', 'warning');
+                return;
+            }
+
+            const url = `https://svvys.com/match.html?date=${dateFilter}&part=${encodeURIComponent(partFilter)}`;
+
+            // QR 코드 API 사용
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="text-align: center;">
+                    <div class="modal-header">
+                        <h3>매칭 제출 QR코드</h3>
+                        <button class="btn btn-icon" onclick="this.closest('.modal').remove()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <img src="${qrUrl}" alt="QR Code" style="width: 250px; height: 250px; margin: 20px auto;">
+                        <p style="color: var(--text-muted); margin-top: 16px;">${dateFilter} ${partFilter}</p>
+                        <p style="font-size: 12px; color: var(--text-muted); word-break: break-all;">${url}</p>
+                        <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${url}'); showToast('URL 복사됨', 'success');" style="margin-top: 16px;">
+                            <i class="fas fa-copy"></i> URL 복사
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 스케줄 로드 후 매칭 날짜 필터 초기화
+        const originalFetchSchedules = fetchSchedules;
+        fetchSchedules = async function() {
+            await originalFetchSchedules.apply(this, arguments);
+            initMatchingDateFilter();
+        };
+
     </script>
 </body>
 </html>

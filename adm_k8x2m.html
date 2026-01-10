@@ -889,11 +889,11 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>번호</th>
-                                    <th>티어</th>
-                                    <th>이름</th>
-                                    <th>나이</th>
-                                    <th>키</th>
+                                    <th class="sortable" onclick="sortLineupBy('lineupNumber')" style="cursor: pointer;">번호 <span id="lineupSort_lineupNumber"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('name')" style="cursor: pointer;">이름 <span id="lineupSort_name"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height"></span></th>
                                     <th>직업</th>
                                     <th>유형</th>
                                 </tr>
@@ -918,11 +918,11 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>번호</th>
-                                    <th>티어</th>
-                                    <th>이름</th>
-                                    <th>나이</th>
-                                    <th>키</th>
+                                    <th class="sortable" onclick="sortLineupBy('lineupNumber')" style="cursor: pointer;">번호 <span id="lineupSort_lineupNumber2"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('tier')" style="cursor: pointer;">티어 <span id="lineupSort_tier2"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('name')" style="cursor: pointer;">이름 <span id="lineupSort_name2"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('birthYear')" style="cursor: pointer;">나이 <span id="lineupSort_birthYear2"></span></th>
+                                    <th class="sortable" onclick="sortLineupBy('height')" style="cursor: pointer;">키 <span id="lineupSort_height2"></span></th>
                                     <th>직업</th>
                                     <th>유형</th>
                                 </tr>
@@ -7757,7 +7757,62 @@
             if (!birthYear || !minBirthYear || !maxBirthYear) return true; // 조건 없으면 통과
             return birthYear >= minBirthYear && birthYear <= maxBirthYear;
         }
-        
+
+        // 라인업 정렬 상태
+        let lineupSortField = 'tier';  // 기본: 티어순
+        let lineupSortAsc = true;
+
+        // 라인업 정렬 함수
+        function sortLineupBy(field) {
+            if (lineupSortField === field) {
+                lineupSortAsc = !lineupSortAsc;  // 같은 필드면 방향 토글
+            } else {
+                lineupSortField = field;
+                lineupSortAsc = true;
+            }
+
+            // 정렬 아이콘 업데이트
+            ['lineupNumber', 'tier', 'name', 'birthYear', 'height'].forEach(f => {
+                const el1 = document.getElementById(`lineupSort_${f}`);
+                const el2 = document.getElementById(`lineupSort_${f}2`);
+                if (el1) el1.textContent = '';
+                if (el2) el2.textContent = '';
+            });
+            const sortIcon = lineupSortAsc ? '▲' : '▼';
+            const el1 = document.getElementById(`lineupSort_${field}`);
+            const el2 = document.getElementById(`lineupSort_${field}2`);
+            if (el1) el1.textContent = sortIcon;
+            if (el2) el2.textContent = sortIcon;
+
+            renderLineup();
+        }
+
+        // 정렬 비교 함수
+        function compareLineupItems(a, b, field, asc) {
+            let aVal = a[field];
+            let bVal = b[field];
+
+            // null/undefined 처리 (항상 뒤로)
+            if (aVal == null && bVal == null) return 0;
+            if (aVal == null) return 1;
+            if (bVal == null) return -1;
+
+            // 숫자 비교
+            if (field === 'lineupNumber' || field === 'birthYear' || field === 'height' || field === 'tier') {
+                aVal = Number(aVal) || 0;
+                bVal = Number(bVal) || 0;
+            }
+
+            let result = 0;
+            if (typeof aVal === 'string') {
+                result = aVal.localeCompare(bVal, 'ko');
+            } else {
+                result = aVal - bVal;
+            }
+
+            return asc ? result : -result;
+        }
+
         function renderLineup() {
             const dateFilter = document.getElementById('lineupDateFilter')?.value || '';
             const partFilter = document.getElementById('lineupPartFilter')?.value || '';
@@ -7975,11 +8030,15 @@
             
             // 합치기
             const allPeople = [...realPeople, ...virtualPeople];
-            
-            // 남녀 분리 후 티어순 정렬
-            const males = sortByTier([...realMalesPeople, ...virtualMalesPeople]);
-            const females = sortByTier([...realFemalesPeople, ...virtualFemalesPeople]);
+
+            // 남녀 분리
+            let males = [...realMalesPeople, ...virtualMalesPeople];
+            let females = [...realFemalesPeople, ...virtualFemalesPeople];
             const unknowns = sortByTier([...realUnknownGender]);  // 성별 미상
+
+            // 정렬 적용
+            males.sort((a, b) => compareLineupItems(a, b, lineupSortField, lineupSortAsc));
+            females.sort((a, b) => compareLineupItems(a, b, lineupSortField, lineupSortAsc));
 
             currentLineupData = { male: males, female: females, unknown: unknowns };
 
@@ -8050,7 +8109,7 @@
                             <td>${idx + 1}</td>
                             <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
                             <td><span class="tier tier-pending">?</span></td>
-                            <td style="color: var(--text-muted);">-</td>
+                            <td>${p.name || '-'}</td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--text-muted);">-</td>
                             <td style="color: var(--warning); font-weight: 500;">정보확인중 ${p.type === 'virtual' ? '<i class="fas fa-edit" style="font-size: 11px;"></i>' : ''}</td>
@@ -8074,7 +8133,7 @@
                         <td>${idx + 1}</td>
                         <td style="font-weight: 600; color: var(--primary);">${p.lineupNumber || '-'}</td>
                         <td><span class="tier tier-${p.tier}">${p.tier}</span></td>
-                        <td style="color: var(--text-muted);">-</td>
+                        <td>${p.name || '-'}</td>
                         <td style="${ageStyle}">${formatBirthYear(p.birthYear)}${ageWarning}</td>
                         <td>${p.height || '-'}</td>
                         <td>${p.job}</td>

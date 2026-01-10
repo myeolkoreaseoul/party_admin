@@ -12233,11 +12233,12 @@
             const existingOptions = select.querySelectorAll('option:not(:first-child)');
             existingOptions.forEach(opt => opt.remove());
 
+            const schedules = data.schedules || [];
             const uniqueDates = [...new Set(schedules.map(s => s.date))].sort();
             uniqueDates.forEach(date => {
                 const option = document.createElement('option');
                 option.value = date;
-                const d = new Date(date);
+                const d = new Date(date + 'T00:00:00');
                 option.textContent = `${d.getMonth() + 1}/${d.getDate()}`;
                 select.appendChild(option);
             });

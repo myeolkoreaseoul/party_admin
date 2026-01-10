@@ -2,317 +2,475 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>뭘 좀 아는 사람들 - 매칭</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>매칭 제출 | 뭘 좀 아는 사람들</title>
+    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --accent: #a8e063;
-            --accent-hover: #96cc54;
+            --primary: #00E676;
+            --primary-dark: #00C853;
+            --bg: #0a0a0a;
+            --card-bg: #141414;
+            --border: #2a2a2a;
+            --text: #fff;
+            --text-muted: #888;
+            --danger: #ff4757;
+            --pink: #ff6b9d;
+            --blue: #4a9eff;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Pretendard Variable', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
         }
-        .btn-accent {
-            background-color: var(--accent);
-            transition: background-color 0.2s;
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
         }
-        .btn-accent:hover {
-            background-color: var(--accent-hover);
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-top: 20px;
         }
-        .btn-accent:active {
-            transform: scale(0.98);
+
+        .header-logo {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
         }
-        .btn-accent:disabled {
-            background-color: #4a4a4a;
-            color: #888;
-            cursor: not-allowed;
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
-        .number-btn {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            border: 2px solid #444;
-            background: #1a1a1a;
-            color: white;
-            font-size: 18px;
+
+        .header h1 span {
+            color: var(--primary);
+        }
+
+        .header-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
             font-weight: 600;
-            transition: all 0.2s;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .form-group label .required {
+            color: var(--danger);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        select.form-control {
             cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
         }
+
+        .radio-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .radio-option {
+            flex: 1;
+            padding: 14px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        .radio-option:hover {
+            border-color: #444;
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary);
+            background: rgba(0, 230, 118, 0.1);
+        }
+
+        .radio-option.male.selected {
+            border-color: var(--blue);
+            background: rgba(74, 158, 255, 0.1);
+        }
+
+        .radio-option.female.selected {
+            border-color: var(--pink);
+            background: rgba(255, 107, 157, 0.1);
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .number-btn {
+            aspect-ratio: 1;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
         .number-btn:hover {
-            border-color: var(--accent);
+            border-color: var(--primary);
         }
+
         .number-btn.selected {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: black;
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #000;
         }
+
         .number-btn:disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
-        .contact-option {
-            padding: 16px;
-            border: 2px solid #333;
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .checkbox-btn {
+            aspect-ratio: 1;
+            border: 2px solid var(--border);
             border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .contact-option:hover {
-            border-color: #555;
+
+        .checkbox-btn:hover {
+            border-color: var(--pink);
         }
-        .contact-option.selected {
-            border-color: var(--accent);
-            background: rgba(168, 224, 99, 0.1);
+
+        .checkbox-btn.checked {
+            border-color: var(--pink);
+            background: var(--pink);
+            color: #fff;
         }
-        input[type="text"], input[type="tel"] {
-            background: #1a1a1a;
-            border: 2px solid #333;
+
+        .selection-info {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .selection-info .count {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .submit-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .success-card {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-radius: 16px;
+            padding: 40px 24px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-card.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .success-card h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .success-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .result-box {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .result-box .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .result-box .value {
+            font-size: 18px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-bottom: 40px;
+        }
+
+        .footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .footer a:hover {
+            color: var(--primary);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .my-info-card {
+            background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px solid rgba(0, 230, 118, 0.3);
             border-radius: 12px;
             padding: 16px;
-            color: white;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .my-info-card.show {
+            display: block;
+        }
+
+        .my-info-card .my-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .my-info-card .my-name {
             font-size: 16px;
-            width: 100%;
-        }
-        input[type="text"]:focus, input[type="tel"]:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-        .step-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #333;
-        }
-        .step-dot.active {
-            background: var(--accent);
-        }
-        .step-dot.done {
-            background: #666;
+            color: var(--text);
+            margin-top: 4px;
         }
     </style>
 </head>
-<body class="bg-black min-h-screen">
-    <!-- 로딩 화면 -->
-    <div id="loading" class="min-h-screen flex items-center justify-center">
-        <div class="text-[#a8e063] text-xl">로딩 중...</div>
-    </div>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <div class="header-logo">뭘 좀 아는 사람들</div>
+            <h1>💕 <span>매칭</span> 제출</h1>
+            <p class="header-desc">마음에 드는 상대를 선택해주세요</p>
+        </div>
 
-    <!-- Step 1: 날짜/세션 선택 -->
-    <div id="step1" class="min-h-screen flex-col px-6 py-10 hidden">
-        <div class="w-full max-w-md mx-auto">
-            <!-- 브랜드 -->
-            <div class="text-center mb-8">
-                <span class="text-[#a8e063] text-sm font-medium">뭘 좀 아는 사람들</span>
-                <h1 class="text-white text-2xl font-bold mt-2">매칭 제출</h1>
-            </div>
-
-            <!-- Step Indicator -->
-            <div class="step-indicator">
-                <div class="step-dot active"></div>
-                <div class="step-dot"></div>
-                <div class="step-dot"></div>
-                <div class="step-dot"></div>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-gray-400 text-sm mb-2">파티 날짜</label>
-                <select id="dateSelect" class="w-full bg-gray-800 text-white py-4 px-4 rounded-xl border-2 border-gray-700 focus:border-[#a8e063] outline-none">
-                    <option value="">날짜 선택...</option>
+        <!-- 폼 -->
+        <form id="matchForm" class="form-card">
+            <!-- 날짜 선택 -->
+            <div class="form-group">
+                <label>파티 날짜 <span class="required">*</span></label>
+                <select id="eventDate" class="form-control" required>
+                    <option value="">선택하세요</option>
                 </select>
             </div>
 
-            <div class="mb-8">
-                <label class="block text-gray-400 text-sm mb-2">세션</label>
-                <select id="partSelect" class="w-full bg-gray-800 text-white py-4 px-4 rounded-xl border-2 border-gray-700 focus:border-[#a8e063] outline-none">
-                    <option value="">세션 선택...</option>
-                    <option value="1부">1부 (커피)</option>
-                    <option value="2부">2부 (커피)</option>
-                    <option value="3부">3부 (와인)</option>
-                </select>
-            </div>
-
-            <button onclick="goToStep2()" class="w-full btn-accent text-black font-bold py-4 rounded-xl" id="step1Next" disabled>
-                다음
-            </button>
-        </div>
-    </div>
-
-    <!-- Step 2: 본인 확인 -->
-    <div id="step2" class="min-h-screen flex-col px-6 py-10 hidden">
-        <div class="w-full max-w-md mx-auto">
-            <!-- 브랜드 -->
-            <div class="text-center mb-8">
-                <span class="text-[#a8e063] text-sm font-medium">뭘 좀 아는 사람들</span>
-                <h1 class="text-white text-2xl font-bold mt-2">본인 확인</h1>
-            </div>
-
-            <!-- Step Indicator -->
-            <div class="step-indicator">
-                <div class="step-dot done"></div>
-                <div class="step-dot active"></div>
-                <div class="step-dot"></div>
-                <div class="step-dot"></div>
-            </div>
-
-            <p class="text-gray-400 text-center mb-6">예약하신 전화번호 뒷자리 4자리를 입력해주세요</p>
-
-            <div class="mb-8">
-                <input type="tel" id="phoneLast4" placeholder="예: 1234" maxlength="4" pattern="[0-9]*" inputmode="numeric"
-                    class="text-center text-2xl tracking-widest">
-            </div>
-
-            <button onclick="verifyPhone()" class="w-full btn-accent text-black font-bold py-4 rounded-xl" id="step2Next" disabled>
-                확인
-            </button>
-
-            <button onclick="goBack(1)" class="w-full text-gray-500 py-4 mt-4 hover:text-white transition-colors">
-                이전으로
-            </button>
-
-            <div id="verifyError" class="text-red-500 text-center mt-4 hidden"></div>
-        </div>
-    </div>
-
-    <!-- Step 3: 정보 확인 및 연락처 입력 -->
-    <div id="step3" class="min-h-screen flex-col px-6 py-10 hidden">
-        <div class="w-full max-w-md mx-auto">
-            <!-- 브랜드 -->
-            <div class="text-center mb-8">
-                <span class="text-[#a8e063] text-sm font-medium">뭘 좀 아는 사람들</span>
-                <h1 class="text-white text-2xl font-bold mt-2">내 정보</h1>
-            </div>
-
-            <!-- Step Indicator -->
-            <div class="step-indicator">
-                <div class="step-dot done"></div>
-                <div class="step-dot done"></div>
-                <div class="step-dot active"></div>
-                <div class="step-dot"></div>
-            </div>
-
-            <!-- 본인 정보 카드 -->
-            <div class="bg-gray-800 rounded-2xl p-6 mb-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-[#a8e063] rounded-full flex items-center justify-center">
-                        <span id="myNumber" class="text-3xl font-bold text-black">?</span>
-                    </div>
-                    <div>
-                        <div id="myName" class="text-white text-xl font-bold">-</div>
-                        <div id="myGender" class="text-gray-400">-</div>
-                    </div>
+            <!-- 세션 선택 -->
+            <div class="form-group">
+                <label>세션 <span class="required">*</span></label>
+                <div class="radio-group" id="partGroup">
+                    <div class="radio-option" data-value="1부" onclick="selectPart('1부')">1부</div>
+                    <div class="radio-option" data-value="2부" onclick="selectPart('2부')">2부</div>
+                    <div class="radio-option" data-value="3부" onclick="selectPart('3부')">3부</div>
                 </div>
             </div>
 
-            <p class="text-gray-400 mb-4">상대방에게 전달할 연락처를 선택해주세요</p>
-
-            <!-- 연락처 타입 선택 -->
-            <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="contact-option text-center" onclick="selectContactType('phone')">
-                    <div class="text-2xl mb-1">📱</div>
-                    <div class="text-white text-sm">전화번호</div>
-                </div>
-                <div class="contact-option text-center" onclick="selectContactType('kakao')">
-                    <div class="text-2xl mb-1">💬</div>
-                    <div class="text-white text-sm">카카오톡</div>
-                </div>
-                <div class="contact-option text-center" onclick="selectContactType('instagram')">
-                    <div class="text-2xl mb-1">📷</div>
-                    <div class="text-white text-sm">인스타</div>
+            <!-- 성별 선택 -->
+            <div class="form-group">
+                <label>성별 <span class="required">*</span></label>
+                <div class="radio-group" id="genderGroup">
+                    <div class="radio-option male" data-value="남자" onclick="selectGender('남자')">👨 남자</div>
+                    <div class="radio-option female" data-value="여자" onclick="selectGender('여자')">👩 여자</div>
                 </div>
             </div>
 
-            <!-- 연락처 값 입력 -->
-            <div id="contactInputWrap" class="mb-8 hidden">
-                <input type="text" id="contactValue" placeholder="연락처 입력">
-                <p id="contactHint" class="text-gray-500 text-sm mt-2"></p>
+            <!-- 내 번호 선택 -->
+            <div class="form-group">
+                <label>내 번호 <span class="required">*</span></label>
+                <div class="number-grid" id="myNumberGrid">
+                    <!-- 동적 생성 -->
+                </div>
+                <p class="hint">명찰에 적힌 번호를 선택하세요</p>
             </div>
 
-            <button onclick="goToStep4()" class="w-full btn-accent text-black font-bold py-4 rounded-xl" id="step3Next" disabled>
-                다음
-            </button>
+            <!-- 내 정보 확인 카드 -->
+            <div class="my-info-card" id="myInfoCard">
+                <div class="my-number" id="displayMyNumber">-</div>
+                <div class="my-name" id="displayMyName">이름을 입력하세요</div>
+            </div>
 
-            <button onclick="goBack(2)" class="w-full text-gray-500 py-4 mt-4 hover:text-white transition-colors">
-                이전으로
-            </button>
+            <!-- 이름 입력 -->
+            <div class="form-group">
+                <label>이름 <span class="required">*</span></label>
+                <input type="text" id="myName" class="form-control" placeholder="본인 이름" required>
+            </div>
+
+            <!-- 연락처 타입 -->
+            <div class="form-group">
+                <label>연락 방법 <span class="required">*</span></label>
+                <div class="radio-group" id="contactTypeGroup">
+                    <div class="radio-option" data-value="phone" onclick="selectContactType('phone')">📱 전화</div>
+                    <div class="radio-option" data-value="kakao" onclick="selectContactType('kakao')">💬 카톡</div>
+                    <div class="radio-option" data-value="instagram" onclick="selectContactType('instagram')">📷 인스타</div>
+                </div>
+            </div>
+
+            <!-- 연락처 값 -->
+            <div class="form-group">
+                <label>연락처 <span class="required">*</span></label>
+                <input type="text" id="contactValue" class="form-control" placeholder="연락처 입력" required>
+                <p class="hint" id="contactHint">상대방에게 전달될 연락처입니다</p>
+            </div>
+
+            <!-- 상대 번호 선택 -->
+            <div class="form-group">
+                <label>마음에 드는 상대 번호 <span class="required">*</span></label>
+                <div class="selection-info">
+                    선택: <span class="count" id="selectedCount">0</span> / <span id="maxCount">3</span>명
+                </div>
+                <div class="checkbox-grid" id="targetNumberGrid">
+                    <!-- 동적 생성 -->
+                </div>
+                <p class="hint">여러 명 선택 가능합니다</p>
+            </div>
+
+            <!-- 제출 버튼 -->
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>제출하기</button>
+            <p class="error-msg" id="errorMsg"></p>
+        </form>
+
+        <!-- 성공 화면 -->
+        <div class="success-card" id="successCard">
+            <div class="success-icon">✅</div>
+            <h2>제출 완료!</h2>
+            <div class="result-box">
+                <div class="label">내가 선택한 번호</div>
+                <div class="value" id="submittedNumbers">-</div>
+            </div>
+            <p>매칭 결과는 파티 종료 후<br>관리자가 개별 연락드립니다.</p>
+            <p style="margin-top: 16px; font-size: 12px;">수정이 필요하면 다시 제출해주세요.<br>마지막 제출만 유효합니다.</p>
+            <button onclick="location.reload()" class="submit-btn" style="margin-top: 20px;">다시 제출하기</button>
         </div>
-    </div>
 
-    <!-- Step 4: 상대 선택 -->
-    <div id="step4" class="min-h-screen flex-col px-6 py-10 hidden">
-        <div class="w-full max-w-md mx-auto">
-            <!-- 브랜드 -->
-            <div class="text-center mb-8">
-                <span class="text-[#a8e063] text-sm font-medium">뭘 좀 아는 사람들</span>
-                <h1 class="text-white text-2xl font-bold mt-2">매칭 선택</h1>
-            </div>
-
-            <!-- Step Indicator -->
-            <div class="step-indicator">
-                <div class="step-dot done"></div>
-                <div class="step-dot done"></div>
-                <div class="step-dot done"></div>
-                <div class="step-dot active"></div>
-            </div>
-
-            <p class="text-gray-400 text-center mb-2">마음에 드는 상대의 번호를 선택해주세요</p>
-            <p id="selectionLimitText" class="text-[#a8e063] text-center text-lg font-bold mb-6">최대 3명 선택 가능</p>
-
-            <!-- 선택 카운터 -->
-            <div class="text-center mb-6">
-                <span class="text-white text-lg">선택: </span>
-                <span id="selectedCount" class="text-[#a8e063] text-2xl font-bold">0</span>
-                <span id="selectionMax" class="text-gray-500 text-lg"> / 3</span>
-            </div>
-
-            <!-- 번호 그리드 -->
-            <div id="numberGrid" class="flex flex-wrap justify-center gap-3 mb-8">
-                <!-- 동적 생성 -->
-            </div>
-
-            <button onclick="submitMatch()" class="w-full btn-accent text-black font-bold py-4 rounded-xl" id="submitBtn" disabled>
-                제출하기
-            </button>
-
-            <button onclick="goBack(3)" class="w-full text-gray-500 py-4 mt-4 hover:text-white transition-colors">
-                이전으로
-            </button>
-        </div>
-    </div>
-
-    <!-- Step 5: 완료 -->
-    <div id="step5" class="min-h-screen flex-col items-center justify-center px-6 py-10 hidden">
-        <div class="w-full max-w-md mx-auto text-center">
-            <div class="text-6xl mb-6">✅</div>
-            <h1 class="text-white text-2xl font-bold mb-4">제출 완료!</h1>
-            <p class="text-gray-400 mb-8">매칭 결과는 파티 종료 후<br>관리자가 연락드립니다.</p>
-
-            <div class="bg-gray-800 rounded-2xl p-6 mb-8">
-                <div class="text-gray-400 text-sm mb-2">내가 선택한 번호</div>
-                <div id="submittedNumbers" class="text-[#a8e063] text-2xl font-bold"></div>
-            </div>
-
-            <p class="text-gray-500 text-sm">
-                수정이 필요하시면 다시 제출해주세요.<br>
-                마지막 제출만 유효합니다.
-            </p>
-
-            <button onclick="location.reload()" class="w-full bg-gray-800 text-white font-bold py-4 rounded-xl mt-8 hover:bg-gray-700 transition-colors">
-                다시 제출하기
-            </button>
-
-            <a href="https://instagram.com/svvy.s" target="_blank" rel="noopener noreferrer"
-               class="block mt-8 text-gray-500 text-sm hover:text-[#a8e063] transition-colors">
-                @svvy.s
-            </a>
+        <!-- 푸터 -->
+        <div class="footer">
+            <a href="https://instagram.com/svvy.s" target="_blank">@svvy.s</a>
         </div>
     </div>
 
@@ -321,380 +479,311 @@
         const SUPABASE_URL = 'https://bqpxdxsgxoapguknxwul.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcHhkeHNneG9hcGd1a254d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjUyNDAsImV4cCI6MjA4MzEwMTI0MH0.v_r3wIIIe024k-H-9dyHH-LJj73kP9iU_eYgHZX7CGA';
         const API_BASE = `${SUPABASE_URL}/rest/v1`;
+        const HEADERS = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+        };
 
         // 상태
         let selectedDate = '';
         let selectedPart = '';
-        let currentUser = null;  // { name, lineup_number, gender, reservation_id }
+        let selectedGender = '';
+        let selectedMyNumber = null;
         let selectedContactType = '';
-        let contactValue = '';
-        let selectedNumbers = new Set();
+        let selectedTargets = new Set();
         let selectionLimit = 3;
-        let partyType = 'coffee';  // coffee or wine
-        let oppositeGenderCount = 0;
+        let partyType = 'coffee';
+        let maxOppositeNumber = 10;  // 상대 성별 최대 번호
 
-        // DOM 요소
-        const loadingEl = document.getElementById('loading');
-        const step1El = document.getElementById('step1');
-        const step2El = document.getElementById('step2');
-        const step3El = document.getElementById('step3');
-        const step4El = document.getElementById('step4');
-        const step5El = document.getElementById('step5');
+        // DOM
+        const form = document.getElementById('matchForm');
+        const successCard = document.getElementById('successCard');
 
         // 초기화
         async function init() {
-            // URL 파라미터 확인
+            // URL 파라미터
             const params = new URLSearchParams(window.location.search);
-            const dateParam = params.get('date');
-            const partParam = params.get('part');
-
-            // 날짜 옵션 로드
-            await loadDateOptions();
-
-            if (dateParam) {
-                document.getElementById('dateSelect').value = dateParam;
-                selectedDate = dateParam;
+            if (params.get('date')) {
+                selectedDate = params.get('date');
             }
-            if (partParam) {
-                document.getElementById('partSelect').value = partParam;
-                selectedPart = partParam;
+            if (params.get('part')) {
+                selectedPart = params.get('part');
+                document.querySelectorAll('#partGroup .radio-option').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === selectedPart);
+                });
             }
 
-            updateStep1Button();
+            await loadDates();
+            generateMyNumberGrid();
+            generateTargetNumberGrid();
 
-            loadingEl.classList.add('hidden');
-            step1El.classList.remove('hidden');
-            step1El.classList.add('flex');
-
-            // 이벤트 리스너
-            document.getElementById('dateSelect').addEventListener('change', (e) => {
-                selectedDate = e.target.value;
-                updateStep1Button();
-            });
-            document.getElementById('partSelect').addEventListener('change', (e) => {
-                selectedPart = e.target.value;
-                updateStep1Button();
-            });
-            document.getElementById('phoneLast4').addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                document.getElementById('step2Next').disabled = e.target.value.length !== 4;
-            });
-            document.getElementById('contactValue').addEventListener('input', (e) => {
-                contactValue = e.target.value.trim();
-                updateStep3Button();
-            });
+            // 이벤트
+            document.getElementById('eventDate').addEventListener('change', onDateChange);
+            document.getElementById('myName').addEventListener('input', updateMyInfoCard);
+            document.getElementById('contactValue').addEventListener('input', validateForm);
+            form.addEventListener('submit', handleSubmit);
         }
 
-        // 날짜 옵션 로드
-        async function loadDateOptions() {
+        // 날짜 로드
+        async function loadDates() {
             try {
                 const today = new Date().toISOString().split('T')[0];
-                const response = await fetch(
-                    `${API_BASE}/party_schedules?select=date&date=gte.${today}&order=date.asc`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                        }
-                    }
+                const res = await fetch(
+                    `${API_BASE}/party_schedules?select=date,part,party_type,male_selection_limit,female_selection_limit&date=gte.${today}&order=date.asc`,
+                    { headers: HEADERS }
                 );
+                const schedules = await res.json();
 
-                if (response.ok) {
-                    const schedules = await response.json();
-                    const uniqueDates = [...new Set(schedules.map(s => s.date))];
-                    const dateSelect = document.getElementById('dateSelect');
+                const dateSelect = document.getElementById('eventDate');
+                const uniqueDates = [...new Set(schedules.map(s => s.date))];
 
-                    uniqueDates.forEach(date => {
-                        const option = document.createElement('option');
-                        option.value = date;
-                        const d = new Date(date);
-                        option.textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
-                        dateSelect.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('날짜 로드 오류:', error);
-            }
-        }
-
-        function updateStep1Button() {
-            document.getElementById('step1Next').disabled = !selectedDate || !selectedPart;
-        }
-
-        function updateStep3Button() {
-            document.getElementById('step3Next').disabled = !selectedContactType || !contactValue;
-        }
-
-        // 화면 전환
-        function showScreen(stepNum) {
-            [step1El, step2El, step3El, step4El, step5El].forEach((el, idx) => {
-                el.classList.add('hidden');
-                el.classList.remove('flex');
-                if (idx + 1 === stepNum) {
-                    el.classList.remove('hidden');
-                    el.classList.add('flex');
-                }
-            });
-        }
-
-        function goBack(toStep) {
-            showScreen(toStep);
-        }
-
-        async function goToStep2() {
-            // 스케줄 정보 로드
-            try {
-                const response = await fetch(
-                    `${API_BASE}/party_schedules?date=eq.${selectedDate}&part=eq.${selectedPart}&select=*`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                        }
-                    }
-                );
-
-                if (response.ok) {
-                    const schedules = await response.json();
-                    if (schedules.length > 0) {
-                        const schedule = schedules[0];
-                        partyType = schedule.party_type || 'coffee';
-                    }
-                }
-            } catch (error) {
-                console.error('스케줄 로드 오류:', error);
-            }
-
-            showScreen(2);
-        }
-
-        async function verifyPhone() {
-            const phoneLast4 = document.getElementById('phoneLast4').value;
-            const errorEl = document.getElementById('verifyError');
-            errorEl.classList.add('hidden');
-
-            try {
-                // 해당 날짜/세션의 예약에서 전화번호 뒷자리로 검색
-                const response = await fetch(
-                    `${API_BASE}/reservations?event_date=eq.${selectedDate}&event_part=eq.${selectedPart}&select=*,customers(name,gender)`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                        }
-                    }
-                );
-
-                if (!response.ok) throw new Error('검색 실패');
-
-                const reservations = await response.json();
-
-                // 전화번호 뒷자리 매칭
-                const matched = reservations.find(r => {
-                    const phone = r.phone || '';
-                    return phone.slice(-4) === phoneLast4;
+                uniqueDates.forEach(date => {
+                    const d = new Date(date + 'T00:00:00');
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+                    if (date === selectedDate) option.selected = true;
+                    dateSelect.appendChild(option);
                 });
 
-                if (matched) {
-                    currentUser = {
-                        name: matched.customers?.name || matched.name || '참가자',
-                        lineup_number: matched.lineup_number,
-                        gender: matched.customers?.gender || matched.gender || '',
-                        reservation_id: matched.id,
-                        phone: matched.phone
-                    };
+                // 스케줄 저장
+                window.scheduleData = schedules;
 
-                    // 선택 한도 가져오기
-                    await loadSelectionLimit();
-
-                    // 상대 성별 인원수 가져오기
-                    await loadOppositeGenderCount(reservations);
-
-                    goToStep3();
-                } else {
-                    errorEl.textContent = '일치하는 예약을 찾을 수 없습니다.';
-                    errorEl.classList.remove('hidden');
+                if (selectedDate) {
+                    onDateChange();
                 }
-            } catch (error) {
-                console.error('확인 오류:', error);
-                errorEl.textContent = '오류가 발생했습니다. 다시 시도해주세요.';
-                errorEl.classList.remove('hidden');
+            } catch (e) {
+                console.error('날짜 로드 실패:', e);
             }
         }
 
-        async function loadSelectionLimit() {
-            try {
-                const response = await fetch(
-                    `${API_BASE}/party_schedules?date=eq.${selectedDate}&part=eq.${selectedPart}&select=male_selection_limit,female_selection_limit`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                        }
-                    }
-                );
-
-                if (response.ok) {
-                    const schedules = await response.json();
-                    if (schedules.length > 0) {
-                        const schedule = schedules[0];
-                        if (currentUser.gender === '남자') {
-                            selectionLimit = schedule.male_selection_limit || 3;
-                        } else {
-                            selectionLimit = schedule.female_selection_limit || 3;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('한도 로드 오류:', error);
-            }
+        function onDateChange() {
+            selectedDate = document.getElementById('eventDate').value;
+            updateSelectionLimit();
+            loadParticipantCounts();
         }
 
-        async function loadOppositeGenderCount(reservations) {
-            const oppositeGender = currentUser.gender === '남자' ? '여자' : '남자';
-
-            // 실제 예약자 중 상대 성별 인원 (lineup_number가 있는)
-            const realOpposite = reservations.filter(r => {
-                const gender = r.customers?.gender || r.gender;
-                return gender === oppositeGender && r.lineup_number;
+        function selectPart(part) {
+            selectedPart = part;
+            document.querySelectorAll('#partGroup .radio-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.value === part);
             });
+            updateSelectionLimit();
+            loadParticipantCounts();
+            validateForm();
+        }
 
-            // 가상 참여자도 포함
-            try {
-                const response = await fetch(
-                    `${API_BASE}/party_virtual_assignments?schedule_date=eq.${selectedDate}&schedule_part=eq.${selectedPart}&gender=eq.${oppositeGender}&lineup_number=not.is.null&select=lineup_number`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                        }
-                    }
-                );
+        function selectGender(gender) {
+            selectedGender = gender;
+            document.querySelectorAll('#genderGroup .radio-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.value === gender);
+            });
+            updateSelectionLimit();
+            loadParticipantCounts();
+            validateForm();
+        }
 
-                if (response.ok) {
-                    const virtuals = await response.json();
-                    oppositeGenderCount = realOpposite.length + virtuals.length;
-                } else {
-                    oppositeGenderCount = realOpposite.length;
-                }
-            } catch (error) {
-                oppositeGenderCount = realOpposite.length;
+        function updateSelectionLimit() {
+            if (!selectedDate || !selectedPart || !selectedGender) return;
+
+            const schedule = window.scheduleData?.find(s =>
+                s.date === selectedDate && s.part === selectedPart
+            );
+
+            if (schedule) {
+                partyType = schedule.party_type || 'coffee';
+                selectionLimit = selectedGender === '남자'
+                    ? (schedule.male_selection_limit || 3)
+                    : (schedule.female_selection_limit || 3);
+                document.getElementById('maxCount').textContent = selectionLimit;
             }
         }
 
-        function goToStep3() {
-            // 본인 정보 표시
-            document.getElementById('myNumber').textContent = currentUser.lineup_number || '?';
-            document.getElementById('myName').textContent = currentUser.name;
-            document.getElementById('myGender').textContent = currentUser.gender;
+        async function loadParticipantCounts() {
+            if (!selectedDate || !selectedPart || !selectedGender) return;
 
-            showScreen(3);
+            try {
+                // 상대 성별
+                const oppositeGender = selectedGender === '남자' ? '여자' : '남자';
+
+                // 예약에서 상대 성별 인원 수 (lineup_number가 있는)
+                const resReservations = await fetch(
+                    `${API_BASE}/reservations?event_date=eq.${selectedDate}&event_part=eq.${selectedPart}&lineup_number=not.is.null&select=lineup_number,customers(gender)`,
+                    { headers: HEADERS }
+                );
+                const reservations = await resReservations.json();
+
+                // 가상 참여자
+                const resVirtual = await fetch(
+                    `${API_BASE}/party_virtual_assignments?schedule_date=eq.${selectedDate}&schedule_part=eq.${selectedPart}&gender=eq.${oppositeGender}&lineup_number=not.is.null&select=lineup_number`,
+                    { headers: HEADERS }
+                );
+                const virtuals = await resVirtual.json();
+
+                // 상대 성별 최대 번호 계산
+                const oppositeReservations = reservations.filter(r =>
+                    r.customers?.gender === oppositeGender
+                );
+                const allOppositeNumbers = [
+                    ...oppositeReservations.map(r => r.lineup_number),
+                    ...virtuals.map(v => v.lineup_number)
+                ].filter(n => n);
+
+                maxOppositeNumber = allOppositeNumbers.length > 0
+                    ? Math.max(...allOppositeNumbers)
+                    : 10;
+
+                // 내 성별 최대 번호
+                const myGenderReservations = reservations.filter(r =>
+                    r.customers?.gender === selectedGender
+                );
+                const resMyVirtual = await fetch(
+                    `${API_BASE}/party_virtual_assignments?schedule_date=eq.${selectedDate}&schedule_part=eq.${selectedPart}&gender=eq.${selectedGender}&lineup_number=not.is.null&select=lineup_number`,
+                    { headers: HEADERS }
+                );
+                const myVirtuals = await resMyVirtual.json();
+
+                const allMyNumbers = [
+                    ...myGenderReservations.map(r => r.lineup_number),
+                    ...myVirtuals.map(v => v.lineup_number)
+                ].filter(n => n);
+
+                const maxMyNumber = allMyNumbers.length > 0 ? Math.max(...allMyNumbers) : 10;
+
+                generateMyNumberGrid(maxMyNumber);
+                generateTargetNumberGrid();
+            } catch (e) {
+                console.error('인원 로드 실패:', e);
+            }
+        }
+
+        function generateMyNumberGrid(max = 10) {
+            const grid = document.getElementById('myNumberGrid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= max; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'number-btn';
+                btn.textContent = i;
+                btn.onclick = () => selectMyNumber(i, btn);
+                if (selectedMyNumber === i) btn.classList.add('selected');
+                grid.appendChild(btn);
+            }
+        }
+
+        function selectMyNumber(num, btn) {
+            selectedMyNumber = num;
+            document.querySelectorAll('#myNumberGrid .number-btn').forEach(b => {
+                b.classList.toggle('selected', b === btn);
+            });
+            updateMyInfoCard();
+            validateForm();
+        }
+
+        function updateMyInfoCard() {
+            const card = document.getElementById('myInfoCard');
+            const name = document.getElementById('myName').value.trim();
+
+            if (selectedMyNumber) {
+                card.classList.add('show');
+                document.getElementById('displayMyNumber').textContent = selectedMyNumber + '번';
+                document.getElementById('displayMyName').textContent = name || '이름을 입력하세요';
+            } else {
+                card.classList.remove('show');
+            }
+            validateForm();
         }
 
         function selectContactType(type) {
             selectedContactType = type;
-
-            // UI 업데이트
-            document.querySelectorAll('.contact-option').forEach(el => {
-                el.classList.remove('selected');
+            document.querySelectorAll('#contactTypeGroup .radio-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.value === type);
             });
-            event.currentTarget.classList.add('selected');
 
-            // 입력 필드 표시
-            const inputWrap = document.getElementById('contactInputWrap');
             const input = document.getElementById('contactValue');
             const hint = document.getElementById('contactHint');
-
-            inputWrap.classList.remove('hidden');
 
             switch(type) {
                 case 'phone':
                     input.placeholder = '010-0000-0000';
-                    input.type = 'tel';
-                    hint.textContent = '전화번호를 입력해주세요';
-                    // 예약 전화번호로 자동 채우기
-                    if (currentUser.phone) {
-                        input.value = currentUser.phone;
-                        contactValue = currentUser.phone;
-                    }
+                    hint.textContent = '전화번호를 입력하세요';
                     break;
                 case 'kakao':
                     input.placeholder = '카카오톡 ID';
-                    input.type = 'text';
-                    hint.textContent = '카카오톡 ID를 입력해주세요';
-                    input.value = '';
-                    contactValue = '';
+                    hint.textContent = '카카오톡 ID를 입력하세요';
                     break;
                 case 'instagram':
                     input.placeholder = '@username';
-                    input.type = 'text';
-                    hint.textContent = '인스타그램 아이디를 입력해주세요';
-                    input.value = '';
-                    contactValue = '';
+                    hint.textContent = '인스타그램 아이디를 입력하세요';
                     break;
             }
-
-            updateStep3Button();
+            validateForm();
         }
 
-        function goToStep4() {
-            // 선택 한도 표시
-            document.getElementById('selectionLimitText').textContent = `최대 ${selectionLimit}명 선택 가능`;
-            document.getElementById('selectionMax').textContent = ` / ${selectionLimit}`;
-
-            // 번호 버튼 생성
-            const grid = document.getElementById('numberGrid');
+        function generateTargetNumberGrid() {
+            const grid = document.getElementById('targetNumberGrid');
             grid.innerHTML = '';
 
-            for (let i = 1; i <= oppositeGenderCount; i++) {
+            for (let i = 1; i <= maxOppositeNumber; i++) {
                 const btn = document.createElement('button');
-                btn.className = 'number-btn';
+                btn.type = 'button';
+                btn.className = 'checkbox-btn';
                 btn.textContent = i;
-                btn.onclick = () => toggleNumber(i, btn);
+                btn.onclick = () => toggleTarget(i, btn);
+                if (selectedTargets.has(i)) btn.classList.add('checked');
                 grid.appendChild(btn);
             }
-
-            if (oppositeGenderCount === 0) {
-                grid.innerHTML = '<p class="text-gray-500">선택 가능한 상대가 없습니다.</p>';
-            }
-
-            showScreen(4);
         }
 
-        function toggleNumber(num, btn) {
-            if (selectedNumbers.has(num)) {
-                selectedNumbers.delete(num);
-                btn.classList.remove('selected');
+        function toggleTarget(num, btn) {
+            if (selectedTargets.has(num)) {
+                selectedTargets.delete(num);
+                btn.classList.remove('checked');
             } else {
-                if (selectedNumbers.size >= selectionLimit) {
-                    // 한도 초과 - 첫 번째 선택 해제
+                if (selectedTargets.size >= selectionLimit) {
+                    // 한도 초과
                     return;
                 }
-                selectedNumbers.add(num);
-                btn.classList.add('selected');
+                selectedTargets.add(num);
+                btn.classList.add('checked');
             }
-
-            document.getElementById('selectedCount').textContent = selectedNumbers.size;
-            document.getElementById('submitBtn').disabled = selectedNumbers.size === 0;
+            document.getElementById('selectedCount').textContent = selectedTargets.size;
+            validateForm();
         }
 
-        async function submitMatch() {
+        function validateForm() {
+            const name = document.getElementById('myName').value.trim();
+            const contact = document.getElementById('contactValue').value.trim();
+
+            const isValid = selectedDate && selectedPart && selectedGender &&
+                           selectedMyNumber && name && selectedContactType &&
+                           contact && selectedTargets.size > 0;
+
+            document.getElementById('submitBtn').disabled = !isValid;
+            return isValid;
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            if (!validateForm()) return;
+
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = '제출 중...';
 
             try {
+                const name = document.getElementById('myName').value.trim();
+                const contact = document.getElementById('contactValue').value.trim();
+
                 // 기존 제출 비활성화
                 await fetch(
-                    `${API_BASE}/match_submissions?event_date=eq.${selectedDate}&event_part=eq.${selectedPart}&lineup_number=eq.${currentUser.lineup_number}&gender=eq.${currentUser.gender}`,
+                    `${API_BASE}/match_submissions?event_date=eq.${selectedDate}&event_part=eq.${selectedPart}&lineup_number=eq.${selectedMyNumber}&gender=eq.${selectedGender}`,
                     {
                         method: 'PATCH',
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
+                        headers: { ...HEADERS, 'Prefer': 'return=minimal' },
                         body: JSON.stringify({ is_latest: false })
                     }
                 );
@@ -704,44 +793,40 @@
                     event_date: selectedDate,
                     event_part: selectedPart,
                     party_type: partyType,
-                    gender: currentUser.gender,
-                    lineup_number: currentUser.lineup_number,
-                    name: currentUser.name,
+                    gender: selectedGender,
+                    lineup_number: selectedMyNumber,
+                    name: name,
                     contact_type: selectedContactType,
-                    contact_value: contactValue,
-                    selected_numbers: Array.from(selectedNumbers),
-                    reservation_id: currentUser.reservation_id,
+                    contact_value: contact,
+                    selected_numbers: Array.from(selectedTargets),
                     is_latest: true
                 };
 
-                const response = await fetch(`${API_BASE}/match_submissions`, {
+                const res = await fetch(`${API_BASE}/match_submissions`, {
                     method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
+                    headers: { ...HEADERS, 'Prefer': 'return=minimal' },
                     body: JSON.stringify(submission)
                 });
 
-                if (!response.ok) throw new Error('제출 실패');
+                if (!res.ok) throw new Error('제출 실패');
 
-                // 완료 화면
+                // 성공
                 document.getElementById('submittedNumbers').textContent =
-                    Array.from(selectedNumbers).sort((a,b) => a-b).join(', ') + '번';
+                    Array.from(selectedTargets).sort((a,b) => a-b).join(', ') + '번';
 
-                showScreen(5);
+                form.classList.add('hidden');
+                successCard.classList.add('show');
 
             } catch (error) {
                 console.error('제출 오류:', error);
-                alert('제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+                document.getElementById('errorMsg').textContent = '제출 중 오류가 발생했습니다. 다시 시도해주세요.';
+                document.getElementById('errorMsg').style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.textContent = '제출하기';
             }
         }
 
-        // 초기화 실행
+        // 시작
         init();
     </script>
 </body>

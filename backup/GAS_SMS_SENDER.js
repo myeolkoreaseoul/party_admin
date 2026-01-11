@@ -1,18 +1,24 @@
 /**
  * 뭘 좀 아는 사람들 - 문자 발송 GAS (v3)
- * 
+ *
  * 기능:
  * - Tasker → GAS → DB 저장 → 솔라피 문자 발송
  * - 판매 알림: 예약 추가, 사전조사 문자 발송
  * - 같은 날 추가 예약: 추가 예약 안내 문자 발송
  * - 취소 알림: 진행일시 + 크루명으로 검색 후 삭제
  * - 미확인 패턴: 로그 저장
+ *
+ * ===== 변경 이력 =====
+ * 2026-01-12: 솔라피 계정 변경
+ *   - 발신번호: 010-4684-3327 → 010-2684-6826
+ *   - API KEY: NCSQ5HS2GW70JNEP → NCSE7Y7XJIXQAF6L
+ *   - API SECRET: 변경됨
  */
 
 // ===== 설정 =====
-const SOLAPI_API_KEY = 'NCSQ5HS2GW70JNEP';
-const SOLAPI_API_SECRET = '2FOI1GOGLN0E8JIFIFBQOMCDGQV6D3WK';
-const SOLAPI_SENDER = '01046843327';
+const SOLAPI_API_KEY = 'NCSE7Y7XJIXQAF6L';
+const SOLAPI_API_SECRET = 'T3LMVNXFHABOY1PWXIDWMFFQC7MFLMUK';
+const SOLAPI_SENDER = '01026846826';
 const PROJECT_API_BASE = 'https://invite.svvys.com/tables';
 
 // ===== 메인 엔트리 포인트 =====

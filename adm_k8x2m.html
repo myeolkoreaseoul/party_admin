@@ -9251,31 +9251,34 @@
                 return;
             }
             isGeneratingPublicLineup = true;
-            
+
             const date = document.getElementById('publicLineupDate')?.value;
             const part = document.getElementById('publicLineupPart')?.value;
-            
+
             if (!date || !part) {
                 showToast('날짜와 세션을 선택하세요', 'error');
                 isGeneratingPublicLineup = false;
                 return;
             }
-            
-            // 라인업 필터가 다르면 동기화
-            const lineupDate = document.getElementById('lineupDateFilter')?.value;
-            const lineupPart = document.getElementById('lineupPartFilter')?.value;
-            
-            if (lineupDate !== date || lineupPart !== part) {
-                showToast('라인업 탭에서 같은 날짜/세션을 먼저 선택하세요', 'error');
-                return;
+
+            // 🔧 FIX: 라인업 필터 자동 동기화 후 렌더링
+            const lineupDateSelect = document.getElementById('lineupDateFilter');
+            const lineupPartSelect = document.getElementById('lineupPartFilter');
+
+            if (lineupDateSelect && lineupPartSelect) {
+                lineupDateSelect.value = date;
+                lineupPartSelect.value = part;
+                // 라인업 강제 렌더링하여 currentLineupData 최신화
+                renderLineup();
             }
-            
+
             // currentLineupData 사용 (최종 라인업과 100% 동일)
             if (!currentLineupData || (!currentLineupData.male?.length && !currentLineupData.female?.length)) {
-                showToast('라인업 데이터가 없습니다. 먼저 라인업 탭에서 날짜/세션을 선택하세요.', 'error');
+                showToast('해당 날짜/세션에 라인업 데이터가 없습니다.', 'error');
+                isGeneratingPublicLineup = false;
                 return;
             }
-            
+
             const males = currentLineupData.male || [];
             const females = currentLineupData.female || [];
             

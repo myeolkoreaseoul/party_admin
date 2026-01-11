@@ -147,6 +147,12 @@ function handleFripNotify(message) {
         });
       }
 
+      // 고객 정보 확인/생성 (먼저 실행하여 customer_id 확보)
+      const customerId = ensureCustomerExists(parsed.phone, parsed.crewName);
+
+      // 고객 백업
+      backupCustomer(parsed.phone, parsed.crewName);
+
       const reservationId = 'RES-' + Date.now();
       const reservation = {
         id: reservationId,
@@ -156,7 +162,8 @@ function handleFripNotify(message) {
         event_part: getEventPart(parsed.eventDate),
         option: parsed.option,
         is_invitation: parsed.option.includes('인비테이션'),
-        status: '예약완료'
+        status: '예약완료',
+        customer_id: customerId  // 고객 고유번호 연결
       };
 
       // Supabase에 저장
@@ -164,12 +171,6 @@ function handleFripNotify(message) {
 
       // 스프레드시트 백업
       backupReservation(reservation);
-
-      // 고객 정보 확인/생성
-      ensureCustomerExists(parsed.phone, parsed.crewName);
-
-      // 고객 백업
-      backupCustomer(parsed.phone, parsed.crewName);
 
       // 같은 날 예약 체크
       if (checkSmsSent(parsed.phone, parsed.eventDate, 'survey')) {
@@ -337,20 +338,27 @@ function ensureCustomerExists(phone, crewName) {
       },
       muteHttpExceptions: true
     };
-    
+
     const response = UrlFetchApp.fetch(searchUrl, searchOptions);
     const result = JSON.parse(response.getContentText());
-    
+
     if (!result || result.length === 0) {
-      // 신규 고객 생성
+      // 신규 고객 생성 (고객 고유번호 포함)
+      const customerId = 'CUS-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
       saveToSupabase('customers', {
         id: phone,
         name: crewName,
-        source: 'organic'
+        source: 'organic',
+        customer_id: customerId
       });
+      return customerId;
+    } else {
+      // 기존 고객 → 기존 customer_id 반환
+      return result[0].customer_id || null;
     }
   } catch (error) {
     console.error('고객 확인 오류:', error);
+    return null;
   }
 }
 
